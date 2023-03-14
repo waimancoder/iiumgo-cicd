@@ -5,6 +5,8 @@ from rest_framework.authentication import get_user_model
 from .models import Driver, DriverLocation, Location, Block 
 import base64
 from user_account.models import User
+from django.core.files.uploadedfile import UploadedFile
+
 
 User = get_user_model()
 
@@ -153,12 +155,12 @@ class UserDriverDetailsSerializer(serializers.ModelSerializer):
 
 class DriverVehicleInfo(serializers.ModelSerializer):
 
-    vehicle_manufacturer = serializers.CharField(required=False)
-    vehicle_model = serializers.CharField(required=False)
-    vehicle_color = serializers.CharField(required=False)
-    vehicle_ownership = serializers.CharField(required=False)
-    vehicle_registration_number = serializers.CharField(required=False)
-    roadtax = serializers.CharField()
+    vehicle_manufacturer = serializers.CharField(required=False, allow_blank=True)
+    vehicle_model = serializers.CharField(required=False, allow_blank=True)
+    vehicle_color = serializers.CharField(required=False, allow_blank=True)
+    vehicle_ownership = serializers.CharField(required=False, allow_blank=True)
+    vehicle_registration_number = serializers.CharField(required=False, allow_blank=True)
+    roadtax = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = Driver
@@ -166,16 +168,23 @@ class DriverVehicleInfo(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         print("Update method called")
-        roadtax = validated_data.get('roadtax', None)
+        roadtax_file = validated_data.get('roadtax', None)
         
-        if roadtax:
+        if roadtax_file and isinstance(roadtax_file, UploadedFile):
             # Decode the base64-encoded image data
-            format, imgstr = roadtax.split(';base64,') 
+            format, imgstr = roadtax_file.split(';base64,') 
             ext = format.split('/')[-1]
             data = ContentFile(base64.b64decode(imgstr), name=f'{instance.user_id}_roadtax.{ext}')
 
             instance.roadtax = data
-            instance.save()
+        
+        instance.vehicle_color = validated_data.get('vehicle_color', None) or None
+        instance.vehicle_ownership = validated_data.get('vehicle_ownership', None) or None
+        instance.vehicle_manufacturer = validated_data.get('vehicle_manufacturer',None) or None
+        instance.vehicle_model = validated_data.get('vehicle_model',None) or None
+        instance.vehicle_registration_number = validated_data.get('vehicle_registration_number',None) or None
+        
+        instance.save()
 
         return instance
 
@@ -230,3 +239,12 @@ class LocationSerializer(serializers.ModelSerializer):
             block.delete()
 
         return instance
+
+
+class DriverStatusSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Driver
+            fields = ('statusDriver')
+
+        
+

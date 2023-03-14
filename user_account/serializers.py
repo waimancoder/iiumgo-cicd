@@ -121,7 +121,7 @@ class RegisterSerializer(serializers.ModelSerializer):
                 driver_license_img_back = None,
                 idConfirmation = None,
                 vehicle_img = None,
-                statusDriver = '',  
+                statusDriver = "submitting",  
             )
             DriverLocation.objects.create(
                 user = user,

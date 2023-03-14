@@ -4,7 +4,7 @@ from user_account.models import User
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
 from rest_framework import generics, permissions, status, serializers, mixins
-from .serializers import DriverIdConfirmationSerializer, DriverLicenseSerializer, DriverVehicleInfo, LocationSerializer, UserDriverDetailsSerializer
+from .serializers import DriverIdConfirmationSerializer, DriverLicenseSerializer, DriverStatusSerializer, DriverVehicleInfo, LocationSerializer, UserDriverDetailsSerializer
 from .models import Driver, Location
 from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
@@ -422,9 +422,9 @@ class UserSubmissionForm(viewsets.ModelViewSet):
                 "dialCode": user.dialCode,
                 "phone_no": user.phone_no,
                 "birthdate": user.birthdate if user.birthdate else "",
-                "gender": user.gender,
+                "gender": user.gender if user.gender else "",
                 "nationality" : user.nationality if user.nationality else "",
-                "profile_img": user.get_profile_img_url(),
+                "profile_img": user.get_profile_img_url() if user.get_profile_img_url() else "",
                 "isFilled": True if user.id and user.email and user.fullname and user.birthdate and user.get_profile_img_url() else False,
             }
 
@@ -456,11 +456,11 @@ class UserSubmissionForm(viewsets.ModelViewSet):
             except:
                 roadtax = None
             vehicleinfo = {
-                "vehicle_manufacturer": driver.vehicle_manufacturer,
-                "vehicle_model": driver.vehicle_model,
-                "vehicle_color": driver.vehicle_color,
-                "vehicle_ownership": driver.vehicle_ownership,
-                "vehicle_registration_number": driver.vehicle_registration_number,
+                "vehicle_manufacturer": driver.vehicle_manufacturer if driver.vehicle_manufacturer else "",
+                "vehicle_model": driver.vehicle_model if  driver.vehicle_model else "",
+                "vehicle_color": driver.vehicle_color if driver.vehicle_color else "",
+                "vehicle_ownership": driver.vehicle_ownership if driver.vehicle_ownership else "",
+                "vehicle_registration_number": driver.vehicle_registration_number if driver.vehicle_registration_number else "",
                 "roadtax": str(roadtax) if roadtax else '',
                 "isFilled" : True if driver.vehicle_manufacturer and driver.vehicle_model and driver.vehicle_color 
                                 and driver.vehicle_ownership and roadtax else False
@@ -500,13 +500,13 @@ class DriverVehicleInfoViewSet(viewsets.ModelViewSet):
             drivers = []
             for driver in queryset:
                 driver_data = {
-                    "user_id": driver.user_id,
-                    "vehicle_manufacturer": driver.vehicle_manufacturer,
-                    "vehicle_model": driver.vehicle_model,
-                    "vehicle_color": driver.vehicle_color,
-                    "vehicle_ownership": driver.vehicle_ownership,
-                    "vehicle_registration_number": driver.vehicle_registration_number,
-                    "roadtax" : driver.roadtax
+                    "user_id": driver.user_id if driver.user_id else "",
+                    "vehicle_manufacturer": driver.vehicle_manufacturer if driver.vehicle_manufacturer else "",
+                    "vehicle_model": driver.vehicle_model if driver.vehicle_model else "",
+                    "vehicle_color": driver.vehicle_color if driver.vehicle_color else "",
+                    "vehicle_ownership": driver.vehicle_ownership if driver.vehicle_ownership else "",
+                    "vehicle_registration_number": driver.vehicle_registration_number if driver.vehicle_registration_number else "",
+                    "roadtax" : driver.roadtax if driver.roadtax else ""
                 }
                 drivers.append(driver_data)
             return Response(drivers)
@@ -532,11 +532,11 @@ class DriverVehicleInfoViewSet(viewsets.ModelViewSet):
 
             response = {
                 "user_id": user.id,
-                "vehicle_manufacturer": driver.vehicle_manufacturer,
-                "vehicle_model": driver.vehicle_model,
-                "vehicle_color": driver.vehicle_color,
-                "vehicle_ownership": driver.vehicle_ownership,
-                "vehicle_registration_number": driver.vehicle_registration_number,
+                "vehicle_manufacturer": driver.vehicle_manufacturer if driver.vehicle_manufacturer else "",
+                "vehicle_model": driver.vehicle_model if driver.vehicle_model else "",
+                "vehicle_color": driver.vehicle_color if driver.vehicle_color else "",
+                "vehicle_ownership": driver.vehicle_ownership if driver.vehicle_ownership else "",
+                "vehicle_registration_number": driver.vehicle_registration_number if driver.vehicle_registration_number else "",
                 "roadtax" : roadtax if roadtax else ""
             }
             return Response(response)
@@ -564,14 +564,18 @@ class DriverVehicleInfoViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(instance, data=request.data, partial=partial)
             serializer.is_valid(raise_exception=True)
             self.perform_update(serializer)
+            try:
+                roadtax = instance.roadtax.url
+            except:
+                roadtax = None
             response_data = {
                 "user_id": str(instance.user.id),
-                "vehicle_manufacturer": instance.vehicle_manufacturer,
-                "vehicle_model": instance.vehicle_model,
-                "vehicle_color": instance.vehicle_color,
-                "vehicle_ownership": instance.vehicle_ownership,
-                "vehicle_registration_number": instance.vehicle_registration_number,
-                "roadtax" : instance.roadtax.url
+                "vehicle_manufacturer": instance.vehicle_manufacturer if instance.vehicle_manufacturer else "" ,
+                "vehicle_model": instance.vehicle_model if instance.vehicle_model else "" ,
+                "vehicle_color": instance.vehicle_color if instance.vehicle_color else "",
+                "vehicle_ownership": instance.vehicle_ownership if instance.vehicle_ownership else "",
+                "vehicle_registration_number": instance.vehicle_registration_number if instance.vehicle_registration_number else "",
+                "roadtax" : roadtax if roadtax else ""
             }
             return Response(response_data)
         except Http404:
@@ -597,3 +601,33 @@ class DriverVehicleInfoViewSet(viewsets.ModelViewSet):
         except Exception as e:
             print(e)
             raise exceptions.APIException("Failed to update driver")
+        
+
+class DriverStatus(viewsets.ModelViewSet):
+    queryset = Driver.objects.all()
+    serializer_class = DriverStatusSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get', 'put', 'options']
+
+    lookup_field = 'user_id'
+
+    metadata_class = CustomMetadata
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            driver = self.get_object()
+            user = driver.user
+            
+            response_data = {
+                "user_id": user.id,
+                "statusDriver": driver.statusDriver
+            }
+            return Response(response_data)
+        except Http404:
+            return Response({
+                "success": False,
+                "statusCode": status.HTTP_404_NOT_FOUND,
+                "error": "Not Found",
+                "message": "Driver not found",
+            }, status=status.HTTP_404_NOT_FOUND)
+

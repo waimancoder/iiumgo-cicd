@@ -7,19 +7,19 @@ import uuid
 class Driver(models.Model):
     user = models.OneToOneField(to=User, on_delete=models.CASCADE)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    vehicle_manufacturer = models.CharField(max_length=128)
-    vehicle_model = models.CharField(max_length=128)
-    vehicle_color = models.CharField(max_length=128)
-    vehicle_registration_number = models.CharField(max_length=128)
-    driver_license_id = models.CharField(max_length=128)
+    vehicle_manufacturer = models.CharField(max_length=128, null=True, blank=True)
+    vehicle_model = models.CharField(max_length=128, null=True, blank=True)
+    vehicle_color = models.CharField(max_length=128, null=True, blank=True  )
+    vehicle_registration_number = models.CharField(max_length=128, null=True, blank=True )
+    driver_license_id = models.CharField(max_length=128, null=True, blank=True )
     driver_license_img_front = models.ImageField(upload_to='driver-license/front', null=True, blank=True, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])])
     driver_license_img_back = models.ImageField(upload_to='driver-license/back', null=True, blank=True, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])])
     idConfirmation = models.ImageField(upload_to='driver-id-confirmation', null=True, blank=True, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])])
     vehicle_img = models.ImageField(upload_to='driver-vehicle-img', null=True, blank=True, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])])
     roadtax = models.ImageField(upload_to='driver-roadtax', null=True, blank=True, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])])
     
-    statusChoices = [    ('submitted', 'Submitted'),    ('pending', 'Pending'),    ('activated', 'Activated'),    ('failed', 'Failed'),    ('verified', 'Verified')]
-    statusDriver = models.CharField(max_length=20, blank=True,choices=statusChoices,null=True)
+    statusChoices = [ ('submitting', 'Submitting'), ('pending', 'Pending'),    ('activated', 'Activated'),    ('failed', 'Failed'),    ('verified', 'Verified')]
+    statusDriver = models.CharField(max_length=20, blank=True,choices=statusChoices,null=True, default="submitting")
 
     CHOICES =[('owned', 'Owned'),('rented', 'Rented')]
     vehicle_ownership = models.CharField(max_length=20, blank=True,choices=CHOICES,null=True)
