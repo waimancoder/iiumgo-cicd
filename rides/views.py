@@ -438,8 +438,8 @@ class UserSubmissionForm(viewsets.ModelViewSet):
                 behind = None
 
             driver_license = {
-                'front': settings.MEDIA_URL + str(front) if front else '',
-                'back': settings.MEDIA_URL + str(behind) if behind else '',
+                'front': str(front) if front else '',
+                'back': str(behind) if behind else '',
                 'isFilled': True if front and behind else False
             }
             try:
@@ -448,7 +448,7 @@ class UserSubmissionForm(viewsets.ModelViewSet):
                 idConfirmation = None
 
             license_confirmation = {
-                'idConfirmation': settings.MEDIA_URL + str(idConfirmation) if idConfirmation else '',
+                'idConfirmation': str(idConfirmation) if idConfirmation else '',
                 'isFilled': True if idConfirmation else False
             }
             try:
@@ -461,9 +461,9 @@ class UserSubmissionForm(viewsets.ModelViewSet):
                 "vehicle_color": driver.vehicle_color,
                 "vehicle_ownership": driver.vehicle_ownership,
                 "vehicle_registration_number": driver.vehicle_registration_number,
-                "roadtax": settings.MEDIA_URL + str(roadtax) if roadtax else '',
+                "roadtax": str(roadtax) if roadtax else '',
                 "isFilled" : True if driver.vehicle_manufacturer and driver.vehicle_model and driver.vehicle_color 
-                                and driver.vehicle_ownership else False
+                                and driver.vehicle_ownership and roadtax else False
             }
             data['basicinfo'] = basicinfo
             data['driver_license'] = driver_license
