@@ -333,7 +333,7 @@ class UserDriverDetailsViewSet(viewsets.ModelViewSet):
                 "user_id": user.id,
                 "email": user.email,
                 "fullname": user.fullname,
-                "dialCode": user.dialCode,
+                "dialCode": user.dialCode if user.dialCode else "",
                 "phone_no": user.phone_no,
                 "birthdate": user.birthdate if user.birthdate else "",
                 "gender": user.gender,
@@ -622,7 +622,8 @@ class DriverStatusViewset(viewsets.ModelViewSet):
 
             response_data = {
                 "user_id": user.id,
-                "statusDriver": driver.statusDriver
+                "statusDriver": driver.statusDriver,
+                "message" : driver.statusMessage if driver.statusMessage else ""
             }
             return Response(response_data)
         except Http404:
@@ -642,7 +643,8 @@ class DriverStatusViewset(viewsets.ModelViewSet):
             self.perform_update(serializer)
             response_data = {
                 "user_id": str(instance.user.id),
-                "statusDriver": instance.statusDriver
+                "statusDriver": instance.statusDriver,
+                "message" : instance.statusMessage if instance.statusMessage else ""
             }
             return Response(response_data)
 

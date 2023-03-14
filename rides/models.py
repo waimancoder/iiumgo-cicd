@@ -20,6 +20,7 @@ class Driver(models.Model):
     
     statusChoices = [ ('submitting', 'Submitting'), ('pending', 'Pending'),    ('activated', 'Activated'),    ('failed', 'Failed'),    ('verified', 'Verified')]
     statusDriver = models.CharField(max_length=20, blank=True,choices=statusChoices,null=True, default="submitting")
+    statusMessage = models.CharField(max_length=128, null=True, blank=True)
 
     CHOICES =[('owned', 'Owned'),('rented', 'Rented')]
     vehicle_ownership = models.CharField(max_length=20, blank=True,choices=CHOICES,null=True)
