@@ -63,7 +63,8 @@ REST_FRAMEWORK = {
         # 'rest_framework.authentication.BasicAuthentication',
         # 'rest_framework.authentication.SessionAuthentication',
         'knox.auth.TokenAuthentication',
-    ]
+    ],
+    'EXCEPTION_HANDLER': 'mytaxi.customexceptions.custom_exception_handler'
 }
 
 MIDDLEWARE = [
@@ -75,7 +76,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-      
+
 ]
 
 ROOT_URLCONF = 'mytaxi.urls'

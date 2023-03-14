@@ -14,11 +14,11 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.conf import settings
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+
 
 
 User = get_user_model
+
 
 class CustomMetadata(SimpleMetadata):
     def determine_metadata(self, request, view):
@@ -186,6 +186,7 @@ class DriverLicenseViewSet(viewsets.ModelViewSet):
         }
         
         return Response(response_data, status=status.HTTP_200_OK)
+    
 
 
 class DriverIdConfirmationViewSet(viewsets.ModelViewSet):
@@ -283,7 +284,7 @@ class DriverIdConfirmationViewSet(viewsets.ModelViewSet):
                 "message": "Please Contact Server Admin",
                 "traceback": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+    
 
 
 class UserDriverDetailsViewSet(viewsets.ModelViewSet):
@@ -400,6 +401,8 @@ class UserDriverDetailsViewSet(viewsets.ModelViewSet):
         except Exception as e:
             print(e)
             raise exceptions.APIException("Failed to update driver")
+    
+
 
 
 class UserSubmissionForm(viewsets.ModelViewSet):
@@ -486,6 +489,9 @@ class UserSubmissionForm(viewsets.ModelViewSet):
                 "message": "Please Contact Server Admin",
                 "traceback": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+ 
+
       
 
 class DriverVehicleInfoViewSet(viewsets.ModelViewSet):
@@ -604,6 +610,8 @@ class DriverVehicleInfoViewSet(viewsets.ModelViewSet):
         except Exception as e:
             print(e)
             raise exceptions.APIException("Failed to update driver")
+    
+
         
 
 class DriverStatusViewset(viewsets.ModelViewSet):
@@ -683,5 +691,6 @@ class DriverStatusViewset(viewsets.ModelViewSet):
         except Exception as e:
             print(e)
             raise exceptions.APIException("Failed to update driver")
-
+        
+  
 

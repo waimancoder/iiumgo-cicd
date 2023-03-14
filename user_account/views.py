@@ -31,6 +31,7 @@ from django.contrib.auth.signals import user_logged_in
 User = get_user_model()
 
 
+
 def custom_500_page_not_found(request):
     tb = traceback.format_exc().splitlines()[-5:]
     error_msg = f"Internal Server Error: {tb}"
@@ -58,6 +59,7 @@ class UserRetrieveAPIView(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get', 'put', 'options']
     lookup_field = 'id'
+
 
 
 
@@ -342,6 +344,9 @@ class UserUpdateAPI(generics.RetrieveUpdateAPIView):
             "error": "Bad Request",
             "message": user_serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
 
 
 class UserListView(generics.ListAPIView):
@@ -384,3 +389,4 @@ class ProfilePictureView(generics.RetrieveUpdateAPIView):
         serializer.save()
 
         return self.get(request, *args, **kwargs)
+    
