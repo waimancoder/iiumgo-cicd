@@ -1,7 +1,7 @@
 from django.urls import path, include
 from . import views
 from rest_framework import routers
-from rides.views import DriverIdConfirmationViewSet, DriverVehicleInfoViewSet, LocationDetailView, DriverLicenseViewSet, UserDriverDetailsViewSet, UserSubmissionForm
+from rides.views import DriverIdConfirmationViewSet, DriverVehicleInfoViewSet, LocationDetailView, DriverLicenseViewSet, UserDriverDetailsViewSet, UserSubmissionForm, DriverStatusViewset
 from django.contrib.auth import get_user_model
 
 router = routers.SimpleRouter(trailing_slash=False)
@@ -10,6 +10,7 @@ router.register(r'api/driver/id-confirmation', DriverIdConfirmationViewSet)
 router.register(r'api/driver/driver-detail', UserDriverDetailsViewSet)
 router.register(r'api/driver/driver-vehicle-detail', DriverVehicleInfoViewSet)
 router.register(r'api/driver/driver-submission', UserSubmissionForm)
+router.register(r'api/driver/driver-status', DriverStatusViewset)
 
 
 urlpatterns = [

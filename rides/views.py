@@ -14,6 +14,8 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 User = get_user_model
@@ -603,7 +605,7 @@ class DriverVehicleInfoViewSet(viewsets.ModelViewSet):
             raise exceptions.APIException("Failed to update driver")
         
 
-class DriverStatus(viewsets.ModelViewSet):
+class DriverStatusViewset(viewsets.ModelViewSet):
     queryset = Driver.objects.all()
     serializer_class = DriverStatusSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -617,7 +619,7 @@ class DriverStatus(viewsets.ModelViewSet):
         try:
             driver = self.get_object()
             user = driver.user
-            
+
             response_data = {
                 "user_id": user.id,
                 "statusDriver": driver.statusDriver
@@ -630,4 +632,58 @@ class DriverStatus(viewsets.ModelViewSet):
                 "error": "Not Found",
                 "message": "Driver not found",
             }, status=status.HTTP_404_NOT_FOUND)
+        
+    def update(self, request, *args, **kwargs):
+        try:
+            partial = kwargs.pop('partial', False)
+            instance = self.get_object()
+            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            response_data = {
+                "user_id": str(instance.user.id),
+                "statusDriver": instance.statusDriver
+            }
+            return Response(response_data)
 
+        except Http404:
+            return Response({
+                "success": False,
+                "statusCode": status.HTTP_404_NOT_FOUND,
+                "error": "Not Found",
+                "message": "Driver not found",
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            print(e)
+            return Response({
+                "success": False,
+                "statusCode": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "error": "Internal Server Error",
+                "message": "Please Contact Server Admin",
+                "traceback": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    
+    def perform_update(self, serializer):
+        try:
+            serializer.save()
+        except Exception as e:
+            print(e)
+            raise exceptions.APIException("Failed to update driver")
+
+
+@receiver(post_save, sender=Driver)
+def update_driver_status(sender, instance, **kwargs):
+    if (instance.vehicle_manufacturer and 
+        instance.vehicle_model and 
+        instance.vehicle_color and 
+        instance.vehicle_registration_number and 
+        instance.driver_license_id and 
+        instance.driver_license_img_front and 
+        instance.driver_license_img_back and 
+        instance.idConfirmation and 
+        instance.vehicle_img and 
+        instance.roadtax):
+        instance.statusDriver = 'pending'
+    else:
+        instance.statusDriver = 'submitting'
