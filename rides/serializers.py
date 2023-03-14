@@ -244,7 +244,7 @@ class LocationSerializer(serializers.ModelSerializer):
 class DriverStatusSerializer(serializers.ModelSerializer):
         class Meta:
             model = Driver
-            fields = ('statusDriver')
+            fields = ('statusDriver',)
 
         
 

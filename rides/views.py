@@ -672,18 +672,3 @@ class DriverStatusViewset(viewsets.ModelViewSet):
             raise exceptions.APIException("Failed to update driver")
 
 
-@receiver(post_save, sender=Driver)
-def update_driver_status(sender, instance, **kwargs):
-    if (instance.vehicle_manufacturer and 
-        instance.vehicle_model and 
-        instance.vehicle_color and 
-        instance.vehicle_registration_number and 
-        instance.driver_license_id and 
-        instance.driver_license_img_front and 
-        instance.driver_license_img_back and 
-        instance.idConfirmation and 
-        instance.vehicle_img and 
-        instance.roadtax):
-        instance.statusDriver = 'pending'
-    else:
-        instance.statusDriver = 'submitting'
