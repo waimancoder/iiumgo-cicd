@@ -158,10 +158,26 @@ class DriverVehicleInfo(serializers.ModelSerializer):
     vehicle_color = serializers.CharField(required=False)
     vehicle_ownership = serializers.CharField(required=False)
     vehicle_registration_number = serializers.CharField(required=False)
+    roadtax = serializers.CharField()
 
     class Meta:
         model = Driver
-        fields = ('vehicle_manufacturer', 'vehicle_model', 'vehicle_color', 'vehicle_ownership', 'vehicle_registration_number')
+        fields = ('vehicle_manufacturer', 'vehicle_model', 'vehicle_color', 'vehicle_ownership', 'vehicle_registration_number', 'roadtax')
+
+    def update(self, instance, validated_data):
+        print("Update method called")
+        roadtax = validated_data.get('roadtax', None)
+        
+        if roadtax:
+            # Decode the base64-encoded image data
+            format, imgstr = roadtax.split(';base64,') 
+            ext = format.split('/')[-1]
+            data = ContentFile(base64.b64decode(imgstr), name=f'{instance.user_id}_roadtax.{ext}')
+
+            instance.roadtax = data
+            instance.save()
+
+        return instance
 
 class DriverLocationSerializer(serializers.ModelSerializer):
     user_id = serializers.UUIDField(source='user.id', read_only=True)

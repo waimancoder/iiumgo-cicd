@@ -16,6 +16,7 @@ class Driver(models.Model):
     driver_license_img_back = models.ImageField(upload_to='driver-license/back', null=True, blank=True, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])])
     idConfirmation = models.ImageField(upload_to='driver-id-confirmation', null=True, blank=True, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])])
     vehicle_img = models.ImageField(upload_to='driver-vehicle-img', null=True, blank=True, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])])
+    roadtax = models.ImageField(upload_to='driver-roadtax', null=True, blank=True, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])])
     
     statusChoices = [    ('submitted', 'Submitted'),    ('pending', 'Pending'),    ('activated', 'Activated'),    ('failed', 'Failed'),    ('verified', 'Verified')]
     statusDriver = models.CharField(max_length=20, blank=True,choices=statusChoices,null=True)

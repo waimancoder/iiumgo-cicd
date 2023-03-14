@@ -451,12 +451,17 @@ class UserSubmissionForm(viewsets.ModelViewSet):
                 'idConfirmation': settings.MEDIA_URL + str(idConfirmation) if idConfirmation else '',
                 'isFilled': True if idConfirmation else False
             }
+            try:
+                roadtax = driver.roadtax.url
+            except:
+                roadtax = None
             vehicleinfo = {
                 "vehicle_manufacturer": driver.vehicle_manufacturer,
                 "vehicle_model": driver.vehicle_model,
                 "vehicle_color": driver.vehicle_color,
                 "vehicle_ownership": driver.vehicle_ownership,
                 "vehicle_registration_number": driver.vehicle_registration_number,
+                "roadtax": settings.MEDIA_URL + str(roadtax) if roadtax else '',
                 "isFilled" : True if driver.vehicle_manufacturer and driver.vehicle_model and driver.vehicle_color 
                                 and driver.vehicle_ownership else False
             }
@@ -500,7 +505,8 @@ class DriverVehicleInfoViewSet(viewsets.ModelViewSet):
                     "vehicle_model": driver.vehicle_model,
                     "vehicle_color": driver.vehicle_color,
                     "vehicle_ownership": driver.vehicle_ownership,
-                    "vehicle_registration_number": driver.vehicle_registration_number
+                    "vehicle_registration_number": driver.vehicle_registration_number,
+                    "roadtax" : driver.roadtax
                 }
                 drivers.append(driver_data)
             return Response(drivers)
@@ -518,13 +524,20 @@ class DriverVehicleInfoViewSet(viewsets.ModelViewSet):
         try:
             driver = self.get_object()
             user = driver.user
+            
+            try:
+                roadtax = driver.roadtax.url
+            except:
+                roadtax = None
+
             response = {
                 "user_id": user.id,
                 "vehicle_manufacturer": driver.vehicle_manufacturer,
                 "vehicle_model": driver.vehicle_model,
                 "vehicle_color": driver.vehicle_color,
                 "vehicle_ownership": driver.vehicle_ownership,
-                "vehicle_registration_number": driver.vehicle_registration_number
+                "vehicle_registration_number": driver.vehicle_registration_number,
+                "roadtax" : roadtax if roadtax else ""
             }
             return Response(response)
         except Http404:
@@ -557,7 +570,8 @@ class DriverVehicleInfoViewSet(viewsets.ModelViewSet):
                 "vehicle_model": instance.vehicle_model,
                 "vehicle_color": instance.vehicle_color,
                 "vehicle_ownership": instance.vehicle_ownership,
-                "vehicle_registration_number": instance.vehicle_registration_number
+                "vehicle_registration_number": instance.vehicle_registration_number,
+                "roadtax" : instance.roadtax.url
             }
             return Response(response_data)
         except Http404:
