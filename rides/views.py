@@ -473,6 +473,7 @@ class UserSubmissionForm(viewsets.ModelViewSet):
             data['vehicleinfo'] = vehicleinfo
             return Response({
                 "success": True,
+                "statusCode": status.HTTP_200_OK,
                 "message" : "Driver Application Form Data",
                 "data": data
             }, status=status.HTTP_200_OK)
@@ -625,7 +626,12 @@ class DriverStatusViewset(viewsets.ModelViewSet):
                 "statusDriver": driver.statusDriver,
                 "message" : driver.statusMessage if driver.statusMessage else ""
             }
-            return Response(response_data)
+            return Response({
+                "success": True,
+                "statusCode": status.HTTP_200_OK,
+                "message" : "Driver Application Status",
+                "data": response_data
+            }, status=status.HTTP_200_OK)
         except Http404:
             return Response({
                 "success": False,
@@ -646,7 +652,12 @@ class DriverStatusViewset(viewsets.ModelViewSet):
                 "statusDriver": instance.statusDriver,
                 "message" : instance.statusMessage if instance.statusMessage else ""
             }
-            return Response(response_data)
+            return Response({
+                "success": True,
+                "statusCode": status.HTTP_200_OK,
+                "message" : "Driver Application Status",
+                "data": response_data
+            }, status=status.HTTP_200_OK)
 
         except Http404:
             return Response({
