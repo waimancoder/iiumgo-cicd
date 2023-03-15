@@ -16,7 +16,7 @@ router.register(r'api/driver/driver-status', DriverStatusViewset)
 urlpatterns = [
     path('api/locations', LocationDetailView.as_view(), name='location-list'),
     path('api/locations/<str:name>/', LocationDetailView.as_view(), name='location-detail'),
-    path('api/driver/driverlicenses/<uuid:user_id>', DriverLicenseViewSet.as_view({'get': 'driver_license_img'}), name='driver_license_img'),
+    path('api/driver/driverlicenses/<uuid:user_id>', DriverLicenseViewSet.as_view({'get': 'driver_license_img', 'put': 'updateDriverLicense'}), name='driver_license_img'),
     path('api/driver/id-confirmation/<uuid:user_id>', DriverIdConfirmationViewSet.as_view({'get': 'driver_id_confirmation_img','put': 'update_idConfirm'}), name='driver_id_confirmation_img'),
 ]
 

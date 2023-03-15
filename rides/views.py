@@ -168,8 +168,8 @@ class DriverLicenseViewSet(viewsets.ModelViewSet):
                 "message": "Details not found",
             }, status=status.HTTP_400_BAD_REQUEST)
         
-
-    def update(self, request, *args, **kwargs):
+    @action(detail=True, methods=['put'])
+    def updateDriverLicense(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data)
         serializer.is_valid(raise_exception=True)
