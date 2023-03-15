@@ -262,7 +262,7 @@ class DriverIdConfirmationViewSet(viewsets.ModelViewSet):
             'statusCode': status.HTTP_200_OK,
             'data': {
                 'user_id': serializer.data['user_id'],
-                'idConfirmation': str(serializer.data['idConfirmation']),
+                'idConfirmation': settings.MEDIA_URL + str(serializer.data['idConfirmation']),
                 }
             }
             return Response(response_data, status=status.HTTP_200_OK)

@@ -22,7 +22,7 @@ import rides.consumers as rides_consumers
 
 websocket_urlpatterns = [
     re_path(r'ws/dummy/$', mytaxi_consumers.DummyConsumer.as_asgi()),
-    re_path(r'ws/driver/(?P<user_id>[^/]+)/$', rides_consumers.DriverConsumer.as_asgi()),
+    re_path(r'ws/driver/(?P<user_id>[^/]+)$', rides_consumers.DriverConsumer.as_asgi()),
 ]
 
 
