@@ -170,7 +170,7 @@ class DriverVehicleInfo(serializers.ModelSerializer):
         print("Update method called")
         roadtax_file = validated_data.get('roadtax', None)
         
-        if roadtax_file and isinstance(roadtax_file, UploadedFile):
+        if roadtax_file:
             # Decode the base64-encoded image data
             format, imgstr = roadtax_file.split(';base64,') 
             ext = format.split('/')[-1]
