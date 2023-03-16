@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'rides',
     'payment',
     'chat',
+    'ride_request'
 
 ]
 

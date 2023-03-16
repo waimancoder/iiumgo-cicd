@@ -13,10 +13,6 @@ from django.core.exceptions import ValidationError
 import base64
 from django.core.files.base import ContentFile
 from rides.models import Driver, DriverLocation
-import os
-from django.core.files import File
-import requests
-import uuid
 from datetime import datetime
 
 
@@ -94,17 +90,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.phone_no = validated_data['phone_no']
         user.dialCode = validated_data['dialCode']
         user.role = validated_data['role']
-        
-        
-        default_pic_url = user.get_profile_img_url()
-        response = requests.get(default_pic_url)
-        print(response.status_code)
-
-        if response.status_code == 200:
-            ext = os.path.splitext(default_pic_url)[1]
-            filename = str(uuid.uuid4()) + ext
-            image_file = ContentFile(response.content, name=filename)
-            user.profile_img.save(filename, image_file, save=True)
         
         user.save()
 
