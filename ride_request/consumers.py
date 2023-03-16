@@ -129,7 +129,12 @@ class DriverConsumer(AsyncWebsocketConsumer):
         )
 
         await self.accept()
-
+    
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(
+            "drivers",
+            self.channel_name
+        )
     
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -138,6 +143,9 @@ class DriverConsumer(AsyncWebsocketConsumer):
         if action == 'create_ride_request':
             result = await self.create_ride_request(data)
             await self.send(json.dumps(result))
+        elif action == 'accept_ride_request':
+            result = await self.accept_ride_request(data)
+            await self.send(json.dumps(result))
     
 
     async def send_pending_ride_request(self, event):
@@ -145,3 +153,27 @@ class DriverConsumer(AsyncWebsocketConsumer):
             'action': 'send_pending_ride_request',
             **event,
         }))
+
+    @database_sync_to_async
+    def accept_ride_request(self, data):
+        try:
+            ride_request_id = data['ride_request_id']
+            ride_request = RideRequest.objects.get(id=ride_request_id)
+
+            if ride_request.status != RideRequest.STATUS_PENDING:
+                return {'success': False, 'message': 'Ride request is not pending'}
+
+            ride_request.status = RideRequest.STATUS_ACCEPTED
+            ride_request.driver = self.user.driver
+            ride_request.save()
+
+            return {
+                'success': True,
+                'message': 'Ride request accepted successfully',
+                'id': str(ride_request.id),
+                'status': ride_request.status
+            }
+        except RideRequest.DoesNotExist:
+            return {'success': False, 'message': 'Ride request does not exist'}
+        except Exception as e:
+            return {'success': False, 'message': str(e)}
