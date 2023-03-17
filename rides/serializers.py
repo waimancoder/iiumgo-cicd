@@ -13,10 +13,12 @@ User = get_user_model()
 
 class DateField(serializers.DateTimeField):
     def to_internal_value(self, value):
+        if value == '':
+            return None
         try:
             date_obj = datetime.strptime(value, '%Y-%m-%d')
         except ValueError:
-            raise serializers.ValidationError('Invalid date format. Date should be in yyyy-mm-dd hh:mm:ss format.')
+            raise serializers.ValidationError('Invalid date format. Date should be in yyyy-mm-dd format.')
         return date_obj
 
     def to_representation(self, value):
