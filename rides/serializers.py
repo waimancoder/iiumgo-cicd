@@ -1,4 +1,5 @@
 from dataclasses import fields
+from datetime import datetime
 from rest_framework import serializers, status
 from django.core.files.base import ContentFile
 from rest_framework.authentication import get_user_model
@@ -10,11 +11,21 @@ from django.core.files.uploadedfile import UploadedFile
 
 User = get_user_model()
 
+class DateField(serializers.DateTimeField):
+    def to_internal_value(self, value):
+        try:
+            date_obj = datetime.strptime(value, '%Y-%m-%d')
+        except ValueError:
+            raise serializers.ValidationError('Invalid date format. Date should be in yyyy-mm-dd format.')
+
+        cleaned_date_str = date_obj.strftime('%Y-%m-%d %H:%M:%S')
+        return super().to_internal_value(cleaned_date_str)
+
 class DriverLicenseSerializer(serializers.ModelSerializer):
     user_id = serializers.CharField(read_only=True)
     driver_license_img_front = serializers.CharField(required = False, allow_blank=True)
     driver_license_img_back = serializers.CharField(required= False, allow_blank=True)
-    driver_license_expiry_date = serializers.DateField(required = False, allow_null=True)
+    driver_license_expiry_date = DateField(required = False, allow_null=True)
 
     class Meta:
         model = Driver
@@ -53,7 +64,7 @@ class DriverLicenseSerializer(serializers.ModelSerializer):
 
 class DriverIdConfirmationSerializer(serializers.ModelSerializer):
     user_id = serializers.CharField(read_only=True)
-    idConfirmation = serializers.CharField()
+    idConfirmation = serializers.CharField(allow_blank=True)
 
     class Meta:
         model = Driver
