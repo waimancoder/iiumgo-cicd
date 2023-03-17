@@ -12,16 +12,18 @@ User = get_user_model()
 
 class DriverLicenseSerializer(serializers.ModelSerializer):
     user_id = serializers.CharField(read_only=True)
-    driver_license_img_front = serializers.CharField()
-    driver_license_img_back = serializers.CharField()
+    driver_license_img_front = serializers.CharField(allow_blank=True)
+    driver_license_img_back = serializers.CharField(allow_blank=True)
+    driver_license_expiry_date = serializers.DateField(allow_null=True)
 
     class Meta:
         model = Driver
-        fields = ['user_id','driver_license_img_front', 'driver_license_img_back']
+        fields = ['user_id','driver_license_img_front', 'driver_license_img_back','driver_license_expiry_date']
         read_only_fields = ['user_id']
 
     def update(self, instance, validated_data):
         print("Update method called")
+        driver_license_expiry_date = validated_data.get('driver_license_expiry_date', None)
         driver_license_img_front = validated_data.get('driver_license_img_front', None)
         driver_license_img_back = validated_data.get('driver_license_img_back', None)
         
@@ -42,6 +44,10 @@ class DriverLicenseSerializer(serializers.ModelSerializer):
 
             instance.driver_license_img_back = data
             instance.save()
+        
+        instance.driver_license_expiry_date = driver_license_expiry_date
+        instance.save()
+
         return instance
     
 

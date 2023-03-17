@@ -12,6 +12,7 @@ class Driver(models.Model):
     vehicle_color = models.CharField(max_length=128, null=True, blank=True  )
     vehicle_registration_number = models.CharField(max_length=128, null=True, blank=True )
     driver_license_id = models.CharField(max_length=128, null=True, blank=True )
+    driver_license_expiry_date = models.DateField(null=True, blank=True)
     driver_license_img_front = models.ImageField(upload_to='driver-license/front', null=True, blank=True, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])])
     driver_license_img_back = models.ImageField(upload_to='driver-license/back', null=True, blank=True, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])])
     idConfirmation = models.ImageField(upload_to='driver-id-confirmation', null=True, blank=True, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])])

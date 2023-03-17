@@ -125,8 +125,9 @@ class DriverLicenseViewSet(viewsets.ModelViewSet):
                 back = ''
             data.append({
                 'user_id': driver['user_id'],
-                'front': settings.MEDIA_URL + str(front) if front else '',
-                'back': settings.MEDIA_URL + str(back) if back else '',
+                'driver_license_expiry_date': driver['driver_license_expiry_date'] if driver['driver_license_expiry_date'] else "",
+                'driver_license_img_front': settings.MEDIA_URL + str(front) if front else '',
+                'driver_license_img_back': settings.MEDIA_URL + str(back) if back else '',
             })
         return Response({
                         "success": True,
@@ -151,9 +152,10 @@ class DriverLicenseViewSet(viewsets.ModelViewSet):
             except ValueError:
                 pass
             data = {
-                'user_id': driver.user_id,
-                'front': front_url,
-                'back': back_url,
+                'user_id': driver.user_id if driver.user_id else "",
+                'driver_license_expiry_date': driver.driver_license_expiry_date,
+                'driver_license_img_front': front_url,
+                'driver_license_img_back': back_url,
             }
             return Response({
                         "success": True,
@@ -179,7 +181,8 @@ class DriverLicenseViewSet(viewsets.ModelViewSet):
         'status': "OK",
         'statusCode': status.HTTP_200_OK,
         'data': {
-            'user_id': serializer.data['user_id'],
+            'user_id': serializer.data['user_id'] if serializer.data['user_id'] else "",
+            'driver_license_expiry_date': str(serializer.data['driver_license_expiry_date']),
             'driver_license_img_front': settings.MEDIA_URL + str(serializer.data['driver_license_img_front']),
             'driver_license_img_back': settings.MEDIA_URL + str(serializer.data['driver_license_img_back']),
          }
@@ -443,9 +446,10 @@ class UserSubmissionForm(viewsets.ModelViewSet):
                 behind = None
 
             driver_license = {
-                'front': str(front) if front else '',
-                'back': str(behind) if behind else '',
-                'isFilled': True if front and behind else False
+                'driver_license_expiry_date': driver.driver_license_expiry_date if driver.driver_license_expiry_date  else "",
+                'driver_license_img_front': str(front) if front else '',
+                'driver_license_img_back': str(behind) if behind else '',
+                'isFilled': True if front and behind and driver.driver_license_expiry_date  else False
             }
             try:
                 idConfirmation = driver.idConfirmation.url
