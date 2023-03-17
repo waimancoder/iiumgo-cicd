@@ -17,9 +17,11 @@ class DateField(serializers.DateTimeField):
             date_obj = datetime.strptime(value, '%Y-%m-%d')
         except ValueError:
             raise serializers.ValidationError('Invalid date format. Date should be in yyyy-mm-dd format.')
+        return date_obj
 
-        cleaned_date_str = date_obj.strftime('%Y-%m-%d %H:%M:%S')
-        return super().to_internal_value(cleaned_date_str)
+    def to_representation(self, value):
+        iso_date_str = value.strftime('%Y-%m-%dT%H:%M:%SZ')
+        return iso_date_str
 
 class DriverLicenseSerializer(serializers.ModelSerializer):
     user_id = serializers.CharField(read_only=True)
@@ -34,7 +36,10 @@ class DriverLicenseSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         print("Update method called")
-        driver_license_expiry_date = validated_data.get('driver_license_expiry_date', None)
+        try:
+            driver_license_expiry_date = validated_data.get('driver_license_expiry_date')
+        except:
+            pass
         driver_license_img_front = validated_data.get('driver_license_img_front', None)
         driver_license_img_back = validated_data.get('driver_license_img_back', None)
         
