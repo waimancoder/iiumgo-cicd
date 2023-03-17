@@ -182,7 +182,7 @@ class DriverLicenseViewSet(viewsets.ModelViewSet):
         'statusCode': status.HTTP_200_OK,
         'data': {
             'user_id': serializer.data['user_id'] if serializer.data['user_id'] else "",
-            'driver_license_expiry_date': str(serializer.data['driver_license_expiry_date']),
+            'driver_license_expiry_date': str(serializer.data['driver_license_expiry_date']) if serializer.data['driver_license_expiry_date'] else "",
             'driver_license_img_front': settings.MEDIA_URL + str(serializer.data['driver_license_img_front']),
             'driver_license_img_back': settings.MEDIA_URL + str(serializer.data['driver_license_img_back']),
          }
