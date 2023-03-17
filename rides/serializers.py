@@ -12,9 +12,9 @@ User = get_user_model()
 
 class DriverLicenseSerializer(serializers.ModelSerializer):
     user_id = serializers.CharField(read_only=True)
-    driver_license_img_front = serializers.CharField(allow_blank=True)
-    driver_license_img_back = serializers.CharField(allow_blank=True)
-    driver_license_expiry_date = serializers.DateField(allow_null=True)
+    driver_license_img_front = serializers.CharField(required = False, allow_blank=True)
+    driver_license_img_back = serializers.CharField(required= False, allow_blank=True)
+    driver_license_expiry_date = serializers.DateField(required = False, allow_null=True)
 
     class Meta:
         model = Driver
