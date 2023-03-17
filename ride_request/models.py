@@ -13,8 +13,8 @@ class RideRequest(models.Model):
     dropoff_longitude = models.FloatField()
     pickup_address = models.CharField(max_length=255)
     dropoff_address = models.CharField(max_length=255)
-    pickup_time = models.DateTimeField()
-    dropoff_time = models.DateTimeField()
+    pickup_time = models.DateTimeField(blank=True, null=True)
+    dropoff_time = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
