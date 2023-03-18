@@ -12,44 +12,46 @@ import os
 
 load_dotenv(find_dotenv())
 
+
 # Create your models here.
 class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    username = models.CharField(max_length = 50, blank = True, null = True, unique = True)
-    email = models.EmailField(_('email address'), unique = True)
+    username = models.CharField(max_length=50, blank=True, null=True, unique=True)
+    email = models.EmailField(_("email address"), unique=True)
     fullname = models.CharField(max_length=125)
-    phone_no = models.CharField(max_length = 12)
+    phone_no = models.CharField(max_length=12)
     isVerified = models.BooleanField(default=False)
-    birthdate = models.DateTimeField(blank=True, null = True)
-    profile_img = models.ImageField(upload_to='profile/', null=True, blank=True, validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])])
-    nationality = models.CharField(max_length=125,null = True, blank = True)
-    dialCode = models.CharField(max_length=5, null = True, blank = True)
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['native_name']
+    birthdate = models.DateTimeField(blank=True, null=True)
+    profile_img = models.ImageField(
+        upload_to="profile/", null=True, blank=True, validators=[FileExtensionValidator(["jpg", "jpeg", "png"])]
+    )
+    nationality = models.CharField(max_length=125, null=True, blank=True)
+    dialCode = models.CharField(max_length=5, null=True, blank=True)
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["native_name"]
 
+    GENDER_CHOICES = [("male", "Male"), ("female", "Female")]
+    gender = models.CharField(blank=True, max_length=10, choices=[("male", "Male"), ("female", "Female")])
 
-    GENDER_CHOICES =[('male', 'Male'),('female', 'Female')]
-    gender = models.CharField(blank=True, max_length=10,choices=[('male', 'Male'), ('female', 'Female')])
-                              
-    CHOICES = [('student', 'Student'),('staff', 'Staff'),('outsider', 'Outsider')]
-    role = models.CharField(max_length=10,choices=[('student', 'Student'), ('staff', 'Staff'),('outsider', 'Outsider')],)
+    CHOICES = [("student", "Student"), ("staff", "Staff"), ("outsider", "Outsider")]
+    role = models.CharField(
+        max_length=10,
+        choices=[("student", "Student"), ("staff", "Staff"), ("outsider", "Outsider")],
+    )
 
     class Meta:
-            # set the ordering to use the UUID field
-        ordering = ['id']
+        # set the ordering to use the UUID field
+        ordering = ["id"]
 
     def get_profile_img_url(self):
-        AWS_STORAGE_BUCKET_NAME = 'mytaxi-1'
-        AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
-        awslocation = os.environ.get('AWS_LOCATION_DEFAULT_PIC')
+        AWS_STORAGE_BUCKET_NAME = "mytaxi-1"
+        AWS_S3_CUSTOM_DOMAIN = "%s.s3.amazonaws.com" % AWS_STORAGE_BUCKET_NAME
+        awslocation = os.environ.get("AWS_LOCATION_DEFAULT_PIC")
         if self.profile_img:
             return self.profile_img.url
-        return f'https://{AWS_S3_CUSTOM_DOMAIN}/{awslocation}/pic.png'
+        return f"https://{AWS_S3_CUSTOM_DOMAIN}/{awslocation}/pic.png"
 
 
 class StudentID(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     matricNo = models.CharField(max_length=20, null=True, blank=True, unique=True)
-
-
-

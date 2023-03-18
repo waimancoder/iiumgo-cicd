@@ -3,6 +3,7 @@ import uuid
 from user_account.models import User
 from rides.models import Driver
 
+
 # Create your models here.
 class RideRequest(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -18,18 +19,18 @@ class RideRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    STATUS_PENDING = 'pending'
-    STATUS_ACCEPTED = 'accepted'
-    STATUS_IN_PROGRESS = 'in_progress'
-    STATUS_COMPLETED = 'completed'
-    STATUS_CANCELED = 'canceled'
+    STATUS_PENDING = "pending"
+    STATUS_ACCEPTED = "accepted"
+    STATUS_IN_PROGRESS = "in_progress"
+    STATUS_COMPLETED = "completed"
+    STATUS_CANCELED = "canceled"
 
     STATUS_CHOICES = (
-        (STATUS_PENDING, 'Pending'),
-        (STATUS_ACCEPTED, 'Accepted'),
-        (STATUS_IN_PROGRESS, 'In Progress'),
-        (STATUS_COMPLETED, 'Completed'),
-        (STATUS_CANCELED, 'Canceled'),
+        (STATUS_PENDING, "Pending"),
+        (STATUS_ACCEPTED, "Accepted"),
+        (STATUS_IN_PROGRESS, "In Progress"),
+        (STATUS_COMPLETED, "Completed"),
+        (STATUS_CANCELED, "Canceled"),
     )
 
     status = models.CharField(
@@ -38,7 +39,7 @@ class RideRequest(models.Model):
         default=STATUS_PENDING,
     )
 
-    driver = models.ForeignKey(Driver, null=True, blank=True, on_delete=models.SET_NULL, related_name='driver_rides')
+    driver = models.ForeignKey(Driver, null=True, blank=True, on_delete=models.SET_NULL, related_name="driver_rides")
     estimated_fare = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     actual_fare = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     payment_method = models.CharField(max_length=20, null=True, blank=True)

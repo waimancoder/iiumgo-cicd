@@ -12,7 +12,6 @@ import os, django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mytaxi.settings")
 django.setup()
 
-
 from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
@@ -21,17 +20,15 @@ import mytaxi.consumers as mytaxi_consumers
 import ride_request.consumers as riderequest_consumers
 
 websocket_urlpatterns = [
-    re_path(r'ws/dummy/$', mytaxi_consumers.DummyConsumer.as_asgi()),
-    re_path(r'ws/driver/(?P<user_id>[^/]+)$', riderequest_consumers.DriverConsumer.as_asgi()),
-    re_path(r'ws/passenger/(?P<user_id>[^/]+)$', riderequest_consumers.PassengerConsumer.as_asgi()),
+    re_path(r"ws/dummy/$", mytaxi_consumers.DummyConsumer.as_asgi()),
+    re_path(r"ws/driver/(?P<user_id>[^/]+)$", riderequest_consumers.DriverConsumer.as_asgi()),
+    re_path(r"ws/passenger/(?P<user_id>[^/]+)$", riderequest_consumers.PassengerConsumer.as_asgi()),
 ]
 
 
-application = ProtocolTypeRouter({
-  "http": get_asgi_application(),
-  "websocket": AuthMiddlewareStack(
-        URLRouter(
-            websocket_urlpatterns 
-        )
-    ),
-})
+application = ProtocolTypeRouter(
+    {
+        "http": get_asgi_application(),
+        "websocket": AuthMiddlewareStack(URLRouter(websocket_urlpatterns)),
+    }
+)
