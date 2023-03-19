@@ -10,6 +10,8 @@ class RideRequest(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     pickup_latitude = models.FloatField()
     pickup_longitude = models.FloatField()
+    pickup_polygon = models.CharField(max_length=255, null=True, blank=True)
+    dropoff_polygon = models.CharField(max_length=255, null=True, blank=True)
     dropoff_latitude = models.FloatField()
     dropoff_longitude = models.FloatField()
     pickup_address = models.CharField(max_length=255)

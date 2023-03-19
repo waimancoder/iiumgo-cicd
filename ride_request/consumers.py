@@ -9,12 +9,14 @@ from channels.layers import get_channel_layer
 from .models import RideRequest
 from django.core.cache import cache
 import asyncio
+from .mixins import RideRequestMixin
+from collections import OrderedDict
 
 
 channel_layer = get_channel_layer()
 
 
-class PassengerConsumer(AsyncWebsocketConsumer):
+class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     async def connect(self):
         # Extract the user ID from the WebSocket URL
         self.user_id = self.scope["url_route"]["kwargs"]["user_id"]
@@ -37,7 +39,7 @@ class PassengerConsumer(AsyncWebsocketConsumer):
         if action == "create_ride_request":
             result = await self.create_ride_request(data)
             await self.send(json.dumps(result))
-            await self.send_pending_ride_requests_to_drivers()
+            await self.send_new_ride_request_to_drivers(result)
         elif action == "send_chat_message":
             await self.send_chat_message(data)
 
@@ -75,7 +77,7 @@ class PassengerConsumer(AsyncWebsocketConsumer):
             )
 
             ride_request.save()
-            return {
+            response_data = {
                 "success": True,
                 "message": "Ride request created successfully",
                 "id": str(ride_request.id),
@@ -87,34 +89,20 @@ class PassengerConsumer(AsyncWebsocketConsumer):
                 "dropoff_address": ride_request.dropoff_address,
                 "status": ride_request.status,
             }
+
+            return response_data
         except Exception as e:
             return {"success": False, "message": str(e)}
 
-    @sync_to_async
-    def get_pending_ride_requests(self):
-        return list(RideRequest.objects.filter(status="pending"))
+    async def send_new_ride_request_to_drivers(self, data):
+        await self.channel_layer.group_send("drivers", {"type": "send_new_ride_request", "data": data})
 
-    async def send_pending_ride_requests_to_drivers(self):
-        ride_requests = await self.get_pending_ride_requests()
-
-        data_list = []
-        for ride_request in ride_requests:
-            data = {
-                "id": str(ride_request.id),
-                "pickup_latitude": ride_request.pickup_latitude,
-                "pickup_longitude": ride_request.pickup_longitude,
-                "dropoff_latitude": ride_request.dropoff_latitude,
-                "dropoff_longitude": ride_request.dropoff_longitude,
-                "pickup_address": ride_request.pickup_address,
-                "dropoff_address": ride_request.dropoff_address,
-                "status": ride_request.status,
-            }
-            data_list.append(data)
-
-            await self.channel_layer.group_send("drivers", {"type": "send_pending_ride_request", "data": data_list})
+    async def send_new_ride_request(self, event):
+        data = event["data"]
+        await self.send(json.dumps(data))
 
 
-class DriverConsumer(AsyncWebsocketConsumer):
+class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.group_name = None
@@ -135,6 +123,7 @@ class DriverConsumer(AsyncWebsocketConsumer):
             return
 
         await self.channel_layer.group_add("drivers", self.channel_name)
+        await self.send_pending_ride_requests_to_drivers()
 
         await self.accept()
 
@@ -210,14 +199,36 @@ class DriverConsumer(AsyncWebsocketConsumer):
             if passenger_channel_name:
                 await self.add_consumers_to_group(self.group_name, self.channel_name, passenger_channel_name)
 
-            return {
+            response_data = {
                 "success": True,
                 "message": "Ride request accepted successfully",
                 "id": str(ride_request.id),
                 "status": ride_request.status,
             }
+
+            await self.channel_layer.group_send(
+                "drivers", {"type": "driver_accepts_ride_request", "data": response_data}
+            )
+
+            return response_data
         except RideRequest.DoesNotExist:
             return {"success": False, "message": "Ride request does not exist"}
         except Exception as e:
             tb = traceback.format_exc()
             return {"success": False, "message": str(e), "traceback": tb}
+
+    async def driver_accepts_ride_request(self, event):
+        await self.send(json.dumps(event["data"]))
+
+    async def send_new_ride_request(self, event):
+        original_data = event["data"]
+
+        # Create a new ordered dictionary and add the keys in the desired order
+        data = OrderedDict()
+        data["success"] = original_data["success"]
+        data["action"] = "passenger_created_ride_request"
+        for key, value in original_data.items():
+            if key not in ["success", "message"]:
+                data[key] = value
+
+        await self.send(json.dumps(data))
