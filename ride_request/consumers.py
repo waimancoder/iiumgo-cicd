@@ -68,8 +68,10 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 user=self.user,
                 pickup_latitude=data["pickup_latitude"],
                 pickup_longitude=data["pickup_longitude"],
+                pickup_polygon=data["pickup_polygon"],
                 dropoff_latitude=data["dropoff_latitude"],
                 dropoff_longitude=data["dropoff_longitude"],
+                dropoff_polygon=data["dropoff_polygon"],
                 pickup_address=data["pickup_address"],
                 dropoff_address=data["dropoff_address"],
                 ## TODO: fares, payment method
@@ -83,10 +85,12 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 "id": str(ride_request.id),
                 "pickup_latitude": ride_request.pickup_latitude,
                 "pickup_longitude": ride_request.pickup_longitude,
+                "pickup_polygon": ride_request.pickup_polygon,
                 "dropoff_latitude": ride_request.dropoff_latitude,
                 "dropoff_longitude": ride_request.dropoff_longitude,
                 "pickup_address": ride_request.pickup_address,
                 "dropoff_address": ride_request.dropoff_address,
+                "dropoff_polygon": ride_request.dropoff_polygon,
                 "status": ride_request.status,
             }
 
