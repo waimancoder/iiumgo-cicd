@@ -782,7 +782,7 @@ class DriverJobStatusViewset(viewsets.ModelViewSet):
                 {
                     "success": True,
                     "statusCode": status.HTTP_200_OK,
-                    "message": "Driver Application Status",
+                    "message": "Driver Job Status",
                     "data": response_data,
                 },
                 status=status.HTTP_200_OK,
