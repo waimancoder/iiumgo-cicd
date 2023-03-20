@@ -257,8 +257,10 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 "success": True,
                 "type": "driver_accepts_ride_request",
                 "message": "Ride request accepted successfully",
-                "id": str(ride_request.id),
-                "status": ride_request.status,
+                "data": {
+                    "id": str(ride_request.id),
+                    "status": ride_request.status,
+                },
             }
             await self.channel_layer.group_send(
                 "drivers", {"type": "driver_accepts_ride_request", "data": response_data}
