@@ -228,6 +228,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             response_data_to_passenger = {
                 "success": True,
                 "message": "Ride request accepted successfully",
+                "type": "driver_passenger_ride_request_accepted",
                 "data": {
                     "id": str(ride_request.id),
                     "status": ride_request.status,
