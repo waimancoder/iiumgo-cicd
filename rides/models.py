@@ -1,5 +1,6 @@
 from pyexpat import model
 from django.db import models
+import ride_request
 from user_account.models import User
 from django.core.validators import FileExtensionValidator, MinValueValidator, MaxValueValidator
 import uuid
@@ -52,6 +53,12 @@ class Driver(models.Model):
     statusDriver = models.CharField(max_length=20, blank=True, choices=statusChoices, null=True, default="submitting")
     statusMessage = models.CharField(max_length=128, null=True, blank=True)
 
+    STATUS_AVAILABLE = "available"
+    STATUS_UNAVAILABLE = "unavailable"
+    STATUS_ENROUTE_PICKUP = "enroute_pickup"
+    STATUS_WAITING_PICKUP = "waiting_pickup"
+    STATUS_IN_TRANSIT = "in_transit"
+
     statusJobChoices = [
         ("available", "Available"),
         ("unavailable", "Unavailable"),
@@ -62,6 +69,7 @@ class Driver(models.Model):
     jobDriverStatus = models.CharField(choices=statusJobChoices, null=True, blank=True, max_length=50)
     CHOICES = [("owned", "Owned"), ("rented", "Rented")]
     vehicle_ownership = models.CharField(max_length=20, blank=True, choices=CHOICES, null=True)
+    ride_request = models.UUIDField(null=True, blank=True)
 
     class Meta:
         ordering = ["id"]

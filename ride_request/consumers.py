@@ -3,6 +3,7 @@ import traceback
 from channels.db import database_sync_to_async
 from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
+import ride_request
 from user_account.models import User
 import json
 from channels.layers import get_channel_layer
@@ -11,6 +12,7 @@ from django.core.cache import cache
 import asyncio
 from .mixins import RideRequestMixin
 from collections import OrderedDict
+from rides.models import Driver
 
 
 channel_layer = get_channel_layer()
@@ -134,9 +136,18 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             return
 
         print("user is a student")
-        await self.channel_layer.group_add("drivers", self.channel_name)
-        await self.send_pending_ride_requests_to_drivers()
-        print("connected")
+        driver = await sync_to_async(Driver.objects.get)(user=self.user)
+        driver_status = driver.jobDriverStatus
+
+        if driver_status == Driver.STATUS_ENROUTE_PICKUP and driver_status == Driver.STATUS_IN_TRANSIT:
+            ride_request_id = driver.ride_request.id
+            cache_key = f"chatgroup_{ride_request_id}"
+            group_name = cache.get(cache_key)
+            await self.channel_layer.group_add(group_name, self.channel_name)
+        else:
+            await self.channel_layer.group_add("drivers", self.channel_name)
+            await self.send_pending_ride_requests_to_drivers()
+            print("connected")
 
         await self.accept()
 
@@ -201,7 +212,10 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             driver = await database_sync_to_async(lambda: self.user.driver)()
             ride_request.status = RideRequest.STATUS_ACCEPTED
             ride_request.driver = driver
+            driver.jobDriverStatus = Driver.STATUS_ENROUTE_PICKUP
+            driver.ride_request = ride_request.user_id
             await database_sync_to_async(ride_request.save)()
+            await database_sync_to_async(driver.save)()
 
             await self.channel_layer.group_discard("drivers", self.channel_name)
             # Add both consumers to the group
@@ -222,8 +236,11 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 "vehicle_manufacturer": driver.vehicle_manufacturer if driver.vehicle_manufacturer else "",
                 "vehicle_model": driver.vehicle_model if driver.vehicle_model else "",
                 "vehicle_color": driver.vehicle_color if driver.vehicle_color else "",
-                "rating": driver.average_rating if driver.average_rating else "",
+                "rating": "__average_rating_placeholder__",
             }
+
+            average_rating = await sync_to_async(getattr)(driver, "average_rating")
+            response_data_to_passenger["rating"] = average_rating if average_rating else ""
 
             passenger_channel_name = cache.get(f"passengerconsumer_{ride_request.user_id}")
             print(passenger_channel_name)
@@ -249,6 +266,44 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         except Exception as e:
             tb = traceback.format_exc()
             return {"success": False, "message": str(e), "traceback": tb}
+
+    async def start_trip(self, data):
+        ride_request_id = data["ride_request_id"]
+        ride_request = await database_sync_to_async(RideRequest.objects.get)(id=ride_request_id)
+        ride_request.status = RideRequest.STATUS_IN_PROGRESS
+        await database_sync_to_async(ride_request.save)()
+
+        driver = await database_sync_to_async(lambda: self.user.driver)()
+        driver.jobDriverStatus = Driver.STATUS_IN_TRANSIT
+        await database_sync_to_async(driver.save)()
+
+    async def remove_consumers_to_group(self, group_name, channel_name, passenger_channel_name, response):
+        print("removing consumer")
+        print(channel_name)
+        ride_request_id = response["ride_request_id"]
+        ride_request = await database_sync_to_async(RideRequest.objects.get)(id=ride_request_id)
+        data = {
+            "message": "Ride Request is completed successfully",
+        }
+        await self.channel_layer.group_send(group_name, {"type": "driver_accepts_ride_request", "data": data})
+        await self.channel_layer.group_discard(group_name, channel_name)
+        await self.channel_layer.group_discard(group_name, passenger_channel_name)
+
+        cache.delete(f"chatgroup_{ride_request.user_id}")
+
+    async def complete_trip(self, data):
+        ride_request_id = data["ride_request_id"]
+        ride_request = await database_sync_to_async(RideRequest.objects.get)(id=ride_request_id)
+        ride_request.status = RideRequest.STATUS_COMPLETED
+        await database_sync_to_async(ride_request.save)()
+
+        driver = await database_sync_to_async(lambda: self.user.driver)()
+        driver.jobDriverStatus = Driver.STATUS_AVAILABLE
+        await database_sync_to_async(driver.save)()
+
+        passenger_channel_name = cache.get(f"passengerconsumer_{ride_request.user_id}")
+        if passenger_channel_name:
+            await self.remove_consumers_to_group(self.group_name, self.channel_name, passenger_channel_name, data)
 
     async def driver_accepts_ride_request(self, event):
         await self.send(json.dumps(event["data"]))
