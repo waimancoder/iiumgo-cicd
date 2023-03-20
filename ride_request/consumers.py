@@ -41,7 +41,8 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         if action == "create_ride_request":
             result = await self.create_ride_request(data)
             await self.send(json.dumps(result))
-            if result["status"] == "success":
+            print(result["success"])
+            if result["success"] == True:
                 await self.send_new_ride_request_to_drivers(result)
         elif action == "send_chat_message":
             await self.send_chat_message(data)
@@ -84,15 +85,18 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             response_data = {
                 "success": True,
                 "message": "Ride request created successfully",
-                "id": str(ride_request.id),
-                "pickup_latitude": ride_request.pickup_latitude,
-                "pickup_longitude": ride_request.pickup_longitude,
-                "route_polygon": ride_request.route_polygon,
-                "dropoff_latitude": ride_request.dropoff_latitude,
-                "dropoff_longitude": ride_request.dropoff_longitude,
-                "pickup_address": ride_request.pickup_address,
-                "dropoff_address": ride_request.dropoff_address,
-                "status": ride_request.status,
+                "type": "passenger_created_ride_request",
+                "data": {
+                    "id": str(ride_request.id),
+                    "pickup_latitude": ride_request.pickup_latitude,
+                    "pickup_longitude": ride_request.pickup_longitude,
+                    "route_polygon": ride_request.route_polygon,
+                    "dropoff_latitude": ride_request.dropoff_latitude,
+                    "dropoff_longitude": ride_request.dropoff_longitude,
+                    "pickup_address": ride_request.pickup_address,
+                    "dropoff_address": ride_request.dropoff_address,
+                    "status": ride_request.status,
+                },
             }
 
             return response_data
@@ -224,7 +228,6 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             response_data_to_passenger = {
                 "success": True,
                 "message": "Ride request accepted successfully",
-                "action": "driver-passenger-accepts-ride-request",
                 "data": {
                     "id": str(ride_request.id),
                     "status": ride_request.status,
@@ -317,7 +320,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         # Create a new ordered dictionary and add the keys in the desired order
         data = OrderedDict()
         data["success"] = original_data["success"]
-        data["action"] = "passenger_created_ride_request"
+        data["type"] = "passenger_created_ride_request"
         for key, value in original_data.items():
             if key not in ["success", "message"]:
                 data[key] = value
