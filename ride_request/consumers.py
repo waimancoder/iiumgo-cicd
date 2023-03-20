@@ -105,6 +105,9 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         data = event["data"]
         await self.send(json.dumps(data))
 
+    async def driver_accepts_ride_request(self, event):
+        await self.send(json.dumps(event["data"]))
+
 
 class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
@@ -114,20 +117,26 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     async def connect(self):
         # Extract the user ID from the WebSocket URL
         self.user_id = self.scope["url_route"]["kwargs"]["user_id"]
+        print(f"User ID: {self.user_id}")
 
         # Check if the user ID is valid (e.g. exists in the database)
         try:
             self.user = await sync_to_async(User.objects.get)(id=self.user_id)
+            print(self.user_id)
         except User.DoesNotExist:
+            print("user does not exist")
             await self.close()
             return
         # Check if the user is a student
         if self.user.role != "student":
+            print("user is not a student")
             await self.close()
             return
 
+        print("user is a student")
         await self.channel_layer.group_add("drivers", self.channel_name)
         await self.send_pending_ride_requests_to_drivers()
+        print("connected")
 
         await self.accept()
 
@@ -174,11 +183,12 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         user_id = event["user_id"]
         await self.send(json.dumps({"action": "chat_message", "user_id": user_id, "message": message}))
 
-    async def add_consumers_to_group(self, group_name, channel_name, passenger_channel_name):
+    async def add_consumers_to_group(self, group_name, channel_name, passenger_channel_name, data):
         print("adding consumer")
         print(channel_name)
         await self.channel_layer.group_add(group_name, channel_name)
         await self.channel_layer.group_add(group_name, passenger_channel_name)
+        await self.channel_layer.group_send(group_name, {"type": "driver_accepts_ride_request", "data": data})
 
     async def accept_ride_request(self, data):
         try:
@@ -198,10 +208,24 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             self.group_name = f"{ride_request.id}{driver.user_id}"
             cache.set(f"chatgroup_{ride_request.user_id}", self.group_name, None)
 
+            response_data_to_passenger = {
+                "success": True,
+                "message": "Ride request accepted successfully",
+                "id": str(ride_request.id),
+                "status": ride_request.status,
+                "driver_id": str(driver.user_id),
+                "driver_name": driver.user.fullname,
+                "vehicle_registration_number": driver.vehicle_registration_number,
+                "vehicle_model": driver.vehicle_model,
+                "vehicle_color": driver.vehicle_color,
+            }
+
             passenger_channel_name = cache.get(f"passengerconsumer_{ride_request.user_id}")
             print(passenger_channel_name)
             if passenger_channel_name:
-                await self.add_consumers_to_group(self.group_name, self.channel_name, passenger_channel_name)
+                await self.add_consumers_to_group(
+                    self.group_name, self.channel_name, passenger_channel_name, response_data_to_passenger
+                )
 
             response_data = {
                 "success": True,
