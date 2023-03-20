@@ -218,6 +218,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 "vehicle_registration_number": driver.vehicle_registration_number
                 if driver.vehicle_registration_number
                 else "",
+                "vehicle_manufacturer": driver.vehicle_manufacturer if driver.vehicle_manufacturer else "",
                 "vehicle_model": driver.vehicle_model if driver.vehicle_model else "",
                 "vehicle_color": driver.vehicle_color if driver.vehicle_color else "",
             }
