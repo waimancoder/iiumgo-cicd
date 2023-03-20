@@ -9,6 +9,7 @@ from rides.views import (
     UserDriverDetailsViewSet,
     UserSubmissionForm,
     DriverStatusViewset,
+    DriverJobStatusViewset,
 )
 from django.contrib.auth import get_user_model
 
@@ -19,6 +20,7 @@ router.register(r"api/driver/driver-detail", UserDriverDetailsViewSet)
 router.register(r"api/driver/driver-vehicle-detail", DriverVehicleInfoViewSet)
 router.register(r"api/driver/driver-submission", UserSubmissionForm)
 router.register(r"api/driver/driver-status", DriverStatusViewset)
+router.register(r"api/driver/driver-job-status", DriverJobStatusViewset)
 
 
 urlpatterns = [

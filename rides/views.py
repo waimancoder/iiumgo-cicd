@@ -11,6 +11,7 @@ from .serializers import (
     DriverVehicleInfo,
     LocationSerializer,
     UserDriverDetailsSerializer,
+    DriverJobStatusSerializer,
 )
 from .models import Driver, Location
 from django.contrib.auth import get_user_model
@@ -756,3 +757,43 @@ class DriverStatusViewset(viewsets.ModelViewSet):
         except Exception as e:
             print(e)
             raise exceptions.APIException("Failed to update driver")
+
+
+class DriverJobStatusViewset(viewsets.ModelViewSet):
+    queryset = Driver.objects.all()
+    serializer_class = DriverStatusSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ["get"]
+
+    lookup_field = "user_id"
+
+    metadata_class = CustomMetadata
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            driver = self.get_object()
+            user = driver.user
+
+            response_data = {
+                "user_id": user.id,
+                "driverJobStatus": driver.jobDriverStatus if driver.jobDriverStatus else "",
+            }
+            return Response(
+                {
+                    "success": True,
+                    "statusCode": status.HTTP_200_OK,
+                    "message": "Driver Application Status",
+                    "data": response_data,
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Http404:
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_404_NOT_FOUND,
+                    "error": "Not Found",
+                    "message": "Driver not found",
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )

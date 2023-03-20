@@ -290,3 +290,9 @@ class DriverStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Driver
         fields = ("statusDriver", "statusMessage")
+
+
+class DriverJobStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Driver
+        fields = "statusJob"
