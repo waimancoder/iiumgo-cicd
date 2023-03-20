@@ -1,6 +1,6 @@
 from django.db import models
 from user_account.models import User
-from django.core.validators import FileExtensionValidator
+from django.core.validators import FileExtensionValidator, MinValueValidator, MaxValueValidator
 import uuid
 
 
@@ -57,8 +57,30 @@ class Driver(models.Model):
     class Meta:
         ordering = ["id"]
 
+    @property
+    def average_rating(self):
+        if self.ratings.count() > 0:
+            total_ratings = sum(rating.rating for rating in self.ratings.all())
+            return total_ratings / self.ratings.count()
+        return None
+
     def __str__(self):
         return f"{self.user.username} ({self.vehicle_manufacturer} {self.vehicle_model})"
+
+
+class DriverRating(models.Model):
+    driver = models.ForeignKey(Driver, on_delete=models.CASCADE, related_name="ratings")
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    passenger = models.UUIDField(null=True, blank=True)
+    rating = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    review = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Rating: {self.rating} for {self.driver}"
 
 
 class DriverLocation(models.Model):

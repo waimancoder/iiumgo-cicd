@@ -222,6 +222,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 "vehicle_manufacturer": driver.vehicle_manufacturer if driver.vehicle_manufacturer else "",
                 "vehicle_model": driver.vehicle_model if driver.vehicle_model else "",
                 "vehicle_color": driver.vehicle_color if driver.vehicle_color else "",
+                "rating": driver.average_rating if driver.average_rating else "",
             }
 
             passenger_channel_name = cache.get(f"passengerconsumer_{ride_request.user_id}")
