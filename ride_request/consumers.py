@@ -41,7 +41,8 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         if action == "create_ride_request":
             result = await self.create_ride_request(data)
             await self.send(json.dumps(result))
-            await self.send_new_ride_request_to_drivers(result)
+            if result["status"] == "success":
+                await self.send_new_ride_request_to_drivers(result)
         elif action == "send_chat_message":
             await self.send_chat_message(data)
 
@@ -70,12 +71,11 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 user=self.user,
                 pickup_latitude=data["pickup_latitude"],
                 pickup_longitude=data["pickup_longitude"],
-                pickup_polygon=data["pickup_polygon"],
                 dropoff_latitude=data["dropoff_latitude"],
                 dropoff_longitude=data["dropoff_longitude"],
-                dropoff_polygon=data["dropoff_polygon"],
                 pickup_address=data["pickup_address"],
                 dropoff_address=data["dropoff_address"],
+                route_polygon=data["route_polygon"],
                 ## TODO: fares, payment method
                 # You can set the other fields, such as driver and actual_fare, when the ride is accepted or completed.
             )
@@ -87,12 +87,11 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 "id": str(ride_request.id),
                 "pickup_latitude": ride_request.pickup_latitude,
                 "pickup_longitude": ride_request.pickup_longitude,
-                "pickup_polygon": ride_request.pickup_polygon,
+                "route_polygon": ride_request.route_polygon,
                 "dropoff_latitude": ride_request.dropoff_latitude,
                 "dropoff_longitude": ride_request.dropoff_longitude,
                 "pickup_address": ride_request.pickup_address,
                 "dropoff_address": ride_request.dropoff_address,
-                "dropoff_polygon": ride_request.dropoff_polygon,
                 "status": ride_request.status,
             }
 
@@ -226,21 +225,23 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 "success": True,
                 "message": "Ride request accepted successfully",
                 "action": "driver-passenger-accepts-ride-request",
-                "id": str(ride_request.id),
-                "status": ride_request.status,
-                "driver_id": str(driver.user_id),
-                "driver_name": driver.user.fullname,
-                "vehicle_registration_number": driver.vehicle_registration_number
-                if driver.vehicle_registration_number
-                else "",
-                "vehicle_manufacturer": driver.vehicle_manufacturer if driver.vehicle_manufacturer else "",
-                "vehicle_model": driver.vehicle_model if driver.vehicle_model else "",
-                "vehicle_color": driver.vehicle_color if driver.vehicle_color else "",
-                "rating": "__average_rating_placeholder__",
+                "data": {
+                    "id": str(ride_request.id),
+                    "status": ride_request.status,
+                    "driver_id": str(driver.user_id),
+                    "driver_name": driver.user.fullname,
+                    "vehicle_registration_number": driver.vehicle_registration_number
+                    if driver.vehicle_registration_number
+                    else "",
+                    "vehicle_manufacturer": driver.vehicle_manufacturer if driver.vehicle_manufacturer else "",
+                    "vehicle_model": driver.vehicle_model if driver.vehicle_model else "",
+                    "vehicle_color": driver.vehicle_color if driver.vehicle_color else "",
+                    "rating": "__average_rating_placeholder__",
+                },
             }
 
             average_rating = await sync_to_async(getattr)(driver, "average_rating")
-            response_data_to_passenger["rating"] = average_rating if average_rating else ""
+            response_data_to_passenger["data"]["rating"] = average_rating if average_rating else ""
 
             passenger_channel_name = cache.get(f"passengerconsumer_{ride_request.user_id}")
             print(passenger_channel_name)
@@ -255,7 +256,6 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 "id": str(ride_request.id),
                 "status": ride_request.status,
             }
-
             await self.channel_layer.group_send(
                 "drivers", {"type": "driver_accepts_ride_request", "data": response_data}
             )
@@ -284,6 +284,8 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         ride_request = await database_sync_to_async(RideRequest.objects.get)(id=ride_request_id)
         data = {
             "message": "Ride Request is completed successfully",
+            "action": "driver-passenger-completes-ride-request",
+            "id": str(ride_request.id),
         }
         await self.channel_layer.group_send(group_name, {"type": "driver_accepts_ride_request", "data": data})
         await self.channel_layer.group_discard(group_name, channel_name)
