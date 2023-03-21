@@ -49,7 +49,7 @@ class User(AbstractUser):
         awslocation = os.environ.get("AWS_LOCATION_DEFAULT_PIC")
         if self.profile_img:
             return self.profile_img.url
-        return f"https://{AWS_S3_CUSTOM_DOMAIN}/{awslocation}/pic.png"
+        return ""
 
 
 class StudentID(models.Model):

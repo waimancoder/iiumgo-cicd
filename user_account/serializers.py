@@ -14,6 +14,7 @@ import base64
 from django.core.files.base import ContentFile
 from rides.models import Driver, DriverLocation
 from datetime import datetime
+import secrets
 
 
 User = get_user_model()
@@ -89,8 +90,19 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ("id", "email", "fullname", "password", "phone_no", "dialCode", "role")
         extra_kwargs = {"password": {"write_only": True}}
 
+    def create_unique_username(self, local_part):
+        while True:
+            random_str = secrets.token_hex(3)
+            username = f"{local_part}_{random_str}"
+            if not User.objects.filter(username=username).exists():
+                return username
+
     def create(self, validated_data):
-        username = validated_data["email"].split("@")[0]
+        email = validated_data["email"]
+        local_part = email.split("@")[0]
+
+        username = self.create_unique_username(local_part)
+
         user = User.objects.create_user(username, validated_data["email"], validated_data["password"])
         user.fullname = validated_data["fullname"]
         user.phone_no = validated_data["phone_no"]
