@@ -1,5 +1,5 @@
 from django.conf.urls import handler404
-from django.urls import path
+from django.urls import path, reverse
 from knox import views as knox_views
 from . import views
 from .views import (
@@ -9,6 +9,7 @@ from .views import (
     PasswordResetView,
     PasswordResetConfirmView,
     ProfilePictureView,
+    verify_email_page,
 )
 from .views import UserUpdateAPI, UserListView
 from django.contrib.auth import views as auth_views
@@ -20,6 +21,7 @@ from rest_framework import routers
 User = get_user_model()
 router = routers.SimpleRouter(trailing_slash=False)
 router.register(r"api/users", UserRetrieveAPIView, basename="users")
+
 
 urlpatterns = [
     path("api/login", LoginAPI.as_view(), name="login"),
@@ -36,6 +38,7 @@ urlpatterns = [
     path("api/userupdate/<str:email>", UserUpdateAPI.as_view(), name="userupdate"),
     path("api/userlist", UserListView.as_view(), name="userlist"),
     path("api/profile-pic", ProfilePictureView.as_view(), name="profile-pic"),
+    path("verify-email-page/<str:uidb64>/<str:token>/", verify_email_page, name="verify-email-page"),
 ]
 
 urlpatterns += router.urls

@@ -1,5 +1,6 @@
 import traceback
 from django.http import Http404, JsonResponse
+import requests
 from rest_framework import generics, permissions, status, serializers, mixins, viewsets
 from .serializers import (
     UserSerializer,
@@ -30,7 +31,7 @@ from django.db import IntegrityError
 import sys
 from django.core.mail import EmailMessage
 from .models import StudentID
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.conf import settings
 from django.contrib.auth.signals import user_logged_in
 
@@ -109,7 +110,13 @@ class RegisterAPI(generics.GenericAPIView):
             },
         )
 
-        # send_mail(subject=subject, message=message, from_email=settings.EMAIL_HOST_USER, recipient_list=[user.email], html_message=message)
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[user.email],
+            html_message=message,
+        )
         user_data = UserSerializer(user, context=self.get_serializer_context()).data
 
         userinfo = {
@@ -429,3 +436,12 @@ class ProfilePictureView(generics.RetrieveUpdateAPIView):
         serializer.save()
 
         return self.get(request, *args, **kwargs)
+
+
+def verify_email_page(request, uidb64, token):
+    context = {
+        "uidb64": uidb64,
+        "token": token,
+    }
+
+    return render(request, "verification.html", context)

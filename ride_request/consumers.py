@@ -141,18 +141,46 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         print("user is a student")
         driver = await sync_to_async(Driver.objects.get)(user=self.user)
         driver_status = driver.jobDriverStatus
+        print(driver_status)
+        response = None
 
-        if driver_status == Driver.STATUS_ENROUTE_PICKUP and driver_status == Driver.STATUS_IN_TRANSIT:
-            ride_request_id = driver.ride_request.id
+        if driver_status == "enroute_pickup" or driver_status == "in_transit":
+            ride_request_id = driver.ride_request
+            print(ride_request_id)
             cache_key = f"chatgroup_{ride_request_id}"
-            group_name = cache.get(cache_key)
-            await self.channel_layer.group_add(group_name, self.channel_name)
+
+            self.group_name = cache.get(cache_key)
+            print(self.group_name)
+            await self.channel_layer.group_add(self.group_name, self.channel_name)
         else:
+            ride_requests = await self.get_pending_ride_requests()
+            print(ride_requests)
+            data_list = []
+            for ride_request in ride_requests:
+                data = {
+                    "id": str(ride_request.id),
+                    "pickup_latitude": ride_request.pickup_latitude,
+                    "pickup_longitude": ride_request.pickup_longitude,
+                    "dropoff_latitude": ride_request.dropoff_latitude,
+                    "dropoff_longitude": ride_request.dropoff_longitude,
+                    "pickup_address": ride_request.pickup_address,
+                    "dropoff_address": ride_request.dropoff_address,
+                    "status": ride_request.status,
+                }
+                data_list.append(data)
+
+            print(data_list)
+            response = {
+                "action": "sending_pending_ride_request",
+                "type": "send_pending_ride_request",
+                "data": data_list,
+            }
             await self.channel_layer.group_add("drivers", self.channel_name)
-            await self.send_pending_ride_requests_to_drivers()
-            print("connected")
 
         await self.accept()
+
+        if response is not None:
+            await self.send(json.dumps(response))
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard("drivers", self.channel_name)
@@ -223,6 +251,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             await self.channel_layer.group_discard("drivers", self.channel_name)
             # Add both consumers to the group
             self.group_name = f"{ride_request.id}{driver.user_id}"
+            print(self.group_name)
             cache.set(f"chatgroup_{ride_request.user_id}", self.group_name, None)
 
             response_data_to_passenger = {

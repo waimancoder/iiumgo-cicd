@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verification Page</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              clifford: "#da373d",
+            },
+          },
+        },
+      };
+    </script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
+    <style type="text/tailwindcss">
+      @layer utilities {
+        .content-auto {
+          content-visibility: auto;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100">
+    <div class="min-h-screen flex flex-col items-center justify-center">
+      <div class="bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-2xl font-bold mb-4">Email Verification</h1>
+        <p id="message" class="mb-4">
+          Please click the button below to verify your email address:
+        </p>
+        <button
+          id="verifyBtn"
+          class="bg-blue-500 text-white rounded-lg py-2 px-4 hover:bg-blue-600"
+        >
+          Verify Email
+        </button>
+        {% if error %}
+        <p class="text-red-500 mt-4">{{ error }}</p>
+        {% endif %}
+      </div>
+    </div>
+    <script>
+      document
+        .getElementById("verifyBtn")
+        .addEventListener("click", async () => {
+          const uid = "{{ uid }}";
+          const token = "{{ token }}";
+          const url = `{% url 'verify-email' uidb64=uidb64 token=token %}`;
+
+          try {
+            const response = await fetch(url, {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}",
+              },
+            });
+
+            if (response.ok) {
+              // Handle successful email verification (e.g., show a success message or redirect)
+              document.getElementById("message").textContent =
+                "Your email has been verified successfully!";
+              document.getElementById("verifyBtn").style.display = "none";
+            } else {
+              // Handle error (e.g., show an error message)
+            }
+          } catch (error) {
+            // Handle network error (e.g., show an error message)
+          }
+        });
+    </script>
+  </body>
+</html>
