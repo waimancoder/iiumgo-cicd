@@ -48,3 +48,16 @@ class RideRequest(models.Model):
     duration = models.IntegerField(null=True, blank=True)
     special_requests = models.TextField(null=True, blank=True)
     rating = models.FloatField(null=True, blank=True)
+
+
+class Passenger(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    STATUS_AVAILABLE = "available"
+    STATUS_ACCEPTED = "accepted"
+    STATUS_IN_PROGRESS = "in_progress"
+
+    STATUS_CHOICES = ((STATUS_AVAILABLE, "Pending"), (STATUS_ACCEPTED, "Accepted"), (STATUS_IN_PROGRESS, "In Progress"))
+
+    passenger_status = models.CharField(max_length=255, null=True, blank=True, choices=STATUS_CHOICES)

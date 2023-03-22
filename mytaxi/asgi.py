@@ -23,6 +23,7 @@ websocket_urlpatterns = [
     re_path(r"ws/dummy/$", mytaxi_consumers.DummyConsumer.as_asgi()),
     re_path(r"ws/driver/(?P<user_id>[^/]+)$", riderequest_consumers.DriverConsumer.as_asgi()),
     re_path(r"ws/passenger/(?P<user_id>[^/]+)$", riderequest_consumers.PassengerConsumer.as_asgi()),
+    re_path(r"ws/location/(?P<user_id>[^/]+)$", riderequest_consumers.LocationConsumer.as_asgi()),
 ]
 
 

@@ -2,6 +2,8 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth import get_user_model, authenticate, update_session_auth_hash
 from django.utils.translation import gettext_lazy as _
+
+from ride_request.models import Passenger
 from .models import User, StudentID
 from django.shortcuts import get_list_or_404, get_object_or_404
 from django.utils.encoding import force_bytes, force_str
@@ -132,6 +134,7 @@ class RegisterSerializer(serializers.ModelSerializer):
                 latitude=None,
                 longitude=None,
             )
+            Passenger.objects.create(user=user, passenger_status=Passenger.STATUS_AVAILABLE)
             StudentID.objects.create(
                 user=user,
                 matricNo=None,
