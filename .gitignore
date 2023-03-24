@@ -6,3 +6,4 @@ server.csr
 server.key
 server.pem
 nginx-image/
+config/
