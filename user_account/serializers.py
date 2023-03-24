@@ -113,32 +113,32 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         user.save()
 
-        if user.role == "student":
-            Driver.objects.create(
-                user=user,
-                vehicle_manufacturer="",
-                vehicle_model="",
-                vehicle_color="",
-                vehicle_ownership="",
-                vehicle_registration_number="",
-                driver_license_id="",
-                driver_license_img_front=None,
-                driver_license_img_back=None,
-                idConfirmation=None,
-                vehicle_img=None,
-                statusDriver="submitting",
-                statusMessage="submitting",
-            )
-            DriverLocation.objects.create(
-                user=user,
-                latitude=None,
-                longitude=None,
-            )
-            Passenger.objects.create(user=user, passenger_status=Passenger.STATUS_AVAILABLE)
-            StudentID.objects.create(
-                user=user,
-                matricNo=None,
-            )
+        # if user.role == "student":
+        #     Driver.objects.create(
+        #         user=user,
+        #         vehicle_manufacturer="",
+        #         vehicle_model="",
+        #         vehicle_color="",
+        #         vehicle_ownership="",
+        #         vehicle_registration_number="",
+        #         driver_license_id="",
+        #         driver_license_img_front=None,
+        #         driver_license_img_back=None,
+        #         idConfirmation=None,
+        #         vehicle_img=None,
+        #         statusDriver="submitting",
+        #         statusMessage="submitting",
+        #     )
+        #     DriverLocation.objects.create(
+        #         user=user,
+        #         latitude=None,
+        #         longitude=None,
+        #     )
+        #     Passenger.objects.create(user=user, passenger_status=Passenger.STATUS_AVAILABLE)
+        #     StudentID.objects.create(
+        #         user=user,
+        #         matricNo=None,
+        #     )
 
         return user
 

@@ -55,7 +55,11 @@ INSTALLED_APPS = [
     "payment",
     "chat",
     "ride_request",
+    "mjml",
 ]
+
+MJML_BACKEND_MODE = "cmd"
+MJML_EXEC_CMD = "node_modules/.bin/mjml"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [

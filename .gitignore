@@ -8,3 +8,4 @@ server.pem
 nginx-image/
 config/
 docker-compose.yml
+node_modules/
