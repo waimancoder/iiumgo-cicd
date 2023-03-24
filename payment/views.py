@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from .payment import get_adyen_client, get_payment_methods, get_fpx_banks, get_issuer_id, make_fpx_payment
 from django.http import HttpRequest
 from django.http import JsonResponse
+import requests
 
 
 def get_current_domain(request: HttpRequest) -> str:
@@ -65,5 +66,27 @@ class MakePayment(APIView):
 
 
 def payment_return(request):
-    # Handle the payment return, e.g. save the payment result to the database
-    return JsonResponse({"status": "success", "message": "Payment processed successfully"})
+    redirect_result = request.GET.get("redirectResult", "")
+
+    if not redirect_result:
+        return JsonResponse({"status": "error", "message": "Missing redirectResult parameter"})
+
+    headers = {
+        "x-API-key": os.environ.get("ADYEN_API_KEY"),
+        "content-type": "application/json",
+    }
+    data = {
+        "details": {
+            "redirectResult": redirect_result,
+        }
+    }
+    response = requests.post("https://checkout-test.adyen.com/v68/payments/details", headers=headers, json=data)
+
+    if response.status_code == 200:
+        payment_details = response.json()
+        # Handle the payment details, e.g. save the payment result to the database
+        return JsonResponse(
+            {"status": "success", "message": "Payment processed successfully", "paymentDetails": payment_details}
+        )
+    else:
+        return JsonResponse({"status": "error", "message": "Error processing payment", "response": response.json()})

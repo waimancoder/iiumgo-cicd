@@ -7,3 +7,4 @@ server.key
 server.pem
 nginx-image/
 config/
+docker-compose.yml
