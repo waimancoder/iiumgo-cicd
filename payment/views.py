@@ -5,6 +5,14 @@ from rest_framework import exceptions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .payment import get_adyen_client, get_payment_methods, get_fpx_banks, get_issuer_id, make_fpx_payment
+from django.http import HttpRequest
+
+
+def get_current_domain(request: HttpRequest) -> str:
+    """
+    Get the domain name for the current request.
+    """
+    return request.META.get("HTTP_HOST", "")
 
 
 class FPXPaymentMethods(APIView):
@@ -36,11 +44,12 @@ class FPXPaymentMethods(APIView):
 class MakePayment(APIView):
     def post(self, request):
         try:
+            domain = get_current_domain(request)
             order_number = 1
             amount = request.data["amount"]
             currency = request.data["currency"]
             issuer = request.data["issuer"]
-            return_url = "https://localhost:8000/"
+            return_url = f"http://{domain}:8000/"
 
             result = make_fpx_payment(order_number, amount, currency, issuer, return_url)
             result_dict = result.__dict__
