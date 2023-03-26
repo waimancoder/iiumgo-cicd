@@ -122,12 +122,12 @@ class DriverLicenseViewSet(viewsets.ModelViewSet):
                 front = ""
             if not back:
                 back = ""
+            if not driver["driver_license_expiry_date"]:
+                driver["driver_license_expiry_date"] = ""
             data.append(
                 {
                     "user_id": driver["user_id"],
-                    "driver_license_expiry_date": driver["driver_license_expiry_date"]
-                    if driver["driver_license_expiry_date"]
-                    else "",
+                    "driver_license_expiry_date": driver["driver_license_expiry_date"],
                     "driver_license_img_front": settings.MEDIA_URL + str(front) if front else "",
                     "driver_license_img_back": settings.MEDIA_URL + str(back) if back else "",
                 }
