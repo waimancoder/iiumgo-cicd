@@ -151,7 +151,9 @@ class DriverLicenseViewSet(viewsets.ModelViewSet):
                 pass
             data = {
                 "user_id": driver.user_id if driver.user_id else "",
-                "driver_license_expiry_date": driver.driver_license_expiry_date,
+                "driver_license_expiry_date": driver.driver_license_expiry_date
+                if driver.driver_license_expiry_date
+                else "",
                 "driver_license_img_front": front_url,
                 "driver_license_img_back": back_url,
             }
