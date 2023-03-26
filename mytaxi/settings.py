@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "chat",
     "ride_request",
     "mjml",
+    "website",
 ]
 
 MJML_BACKEND_MODE = "cmd"
@@ -88,7 +89,7 @@ ROOT_URLCONF = "mytaxi.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR + "/templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
