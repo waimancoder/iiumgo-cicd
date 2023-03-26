@@ -7,6 +7,7 @@
     <title>iiumGO: Welcome to iiumGO</title>
     <link rel="stylesheet" href="{% static "css/output.css" %}">
   </head>
+  {% comment %}
   <div class="navbar bg-base-100">
     <div class="flex-none">
       <div class="dropdown">
@@ -65,4 +66,19 @@
       <a class="btn px-4">Get started</a>
     </div>
   </div>
+  {% endcomment %}
+  <body class="bg-gray-100">
+    <div class="flex justify-center items-center h-screen">
+      <div class="container mx-auto text-center">
+        <h1 class="text-3xl font-bold text-gray-800 my-8">
+          Currently on Building the Website
+        </h1>
+        <img
+          src="{% static 'svg/undraw_Building_blocks_re_5ahy.png' %}"
+          alt="Building Blocks"
+          class="mx-auto my-4 w-1/2 sm:w-1/3"
+        />
+      </div>
+    </div>
+  </body>
 </html>
