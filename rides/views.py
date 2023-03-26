@@ -136,7 +136,6 @@ class DriverLicenseViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["get"])
     def driver_license_img(self, request, user_id=None):
-        print("driver_license_img method is called")
         try:
             driver = self.get_object()
             front_url = ""
@@ -219,7 +218,6 @@ class DriverIdConfirmationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["get"])
     def driver_id_confirmation_img(self, request, user_id=None):
         try:
-            print("driver_id_confirmation_img method is called")
             driver = self.get_object()
             idConfirmation_url = ""
             try:
@@ -241,7 +239,6 @@ class DriverIdConfirmationViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as e:
-            print(e)
             return Response(
                 {
                     "success": False,
@@ -283,7 +280,6 @@ class DriverIdConfirmationViewSet(viewsets.ModelViewSet):
             )
 
         except Exception as e:
-            print(e)
             return Response(
                 {
                     "success": False,
@@ -324,7 +320,6 @@ class UserDriverDetailsViewSet(viewsets.ModelViewSet):
                 drivers.append(driver_data)
             return Response(drivers)
         except Exception as e:
-            print(e)
             return Response(
                 {
                     "success": False,
@@ -363,7 +358,6 @@ class UserDriverDetailsViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
         except Exception as e:
-            print(e)
             return Response(
                 {
                     "success": False,
@@ -405,7 +399,6 @@ class UserDriverDetailsViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
         except Exception as e:
-            print(e)
             return Response(
                 {
                     "success": False,
@@ -421,7 +414,6 @@ class UserDriverDetailsViewSet(viewsets.ModelViewSet):
         try:
             serializer.save()
         except Exception as e:
-            print(e)
             raise exceptions.APIException("Failed to update driver")
 
 
@@ -516,7 +508,6 @@ class UserSubmissionForm(viewsets.ModelViewSet):
                 status=status.HTTP_200_OK,
             )
         except Exception as e:
-            print(e)
             return Response(
                 {
                     "success": False,
@@ -557,7 +548,6 @@ class DriverVehicleInfoViewSet(viewsets.ModelViewSet):
                 drivers.append(driver_data)
             return Response(drivers)
         except Exception as e:
-            print(e)
             return Response(
                 {
                     "success": False,
@@ -602,7 +592,6 @@ class DriverVehicleInfoViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
         except Exception as e:
-            print(e)
             return Response(
                 {
                     "success": False,
@@ -648,7 +637,6 @@ class DriverVehicleInfoViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
         except Exception as e:
-            print(e)
             return Response(
                 {
                     "success": False,
@@ -664,7 +652,6 @@ class DriverVehicleInfoViewSet(viewsets.ModelViewSet):
         try:
             serializer.save()
         except Exception as e:
-            print(e)
             raise exceptions.APIException("Failed to update driver")
 
 
@@ -741,7 +728,6 @@ class DriverStatusViewset(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
         except Exception as e:
-            print(e)
             return Response(
                 {
                     "success": False,
@@ -757,7 +743,6 @@ class DriverStatusViewset(viewsets.ModelViewSet):
         try:
             serializer.save()
         except Exception as e:
-            print(e)
             raise exceptions.APIException("Failed to update driver")
 
 
