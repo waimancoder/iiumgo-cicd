@@ -7,7 +7,7 @@ class RideRequestSerializer(serializers.ModelSerializer):
     dropoff_time = serializers.SerializerMethodField()
     actual_fare = serializers.SerializerMethodField()
     rating = serializers.SerializerMethodField()
-    payment_method = serializers.SerializerMethodField()
+    # payment_method = serializers.SerializerMethodField()
 
     class Meta:
         model = RideRequest
@@ -22,7 +22,7 @@ class RideRequestSerializer(serializers.ModelSerializer):
             "dropoff_time",
             "actual_fare",
             "rating",
-            "payment_method",
+            # "payment_method",
         )
 
     def get_pickup_time(self, obj):
@@ -37,5 +37,5 @@ class RideRequestSerializer(serializers.ModelSerializer):
     def get_rating(self, obj):
         return obj.rating if obj.rating else ""
 
-    def get_payment_method(self, obj):
-        return obj.payment_method if obj.payment_method else ""
+    # def get_payment_method(self, obj):
+    #     return obj.payment_method if obj.payment_method else ""
