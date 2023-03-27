@@ -38,7 +38,7 @@ urlpatterns = [
     path("api/userupdate/<str:email>", UserUpdateAPI.as_view(), name="userupdate"),
     path("api/userlist", UserListView.as_view(), name="userlist"),
     path("api/profile-pic", ProfilePictureView.as_view(), name="profile-pic"),
-    path("verify-email-page/<str:uidb64>/<str:token>/", verify_email_page, name="verify-email-page"),
+    path("api/verify-email-page/<str:uidb64>/<str:token>/", verify_email_page, name="verify-email-page"),
 ]
 
 urlpatterns += router.urls

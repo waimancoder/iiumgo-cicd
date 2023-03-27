@@ -7,7 +7,7 @@ from django.contrib.messages import success
 from user_account.models import User
 import json
 from channels.layers import get_channel_layer
-from .models import RideRequest
+from .models import RideRequest, Passenger
 from django.core.cache import cache
 from .mixins import RideRequestMixin
 from collections import OrderedDict
@@ -28,6 +28,18 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         except User.DoesNotExist:
             await self.close()
             return
+
+        passenger = await sync_to_async(Passenger.objects.get)(user_id=self.user_id)
+
+        if (
+            passenger.passenger_status == Passenger.STATUS_ACCEPTED
+            or passenger.passenger_status == Passenger.STATUS_IN_PROGRESS
+        ):
+            cache_key = f"chatgroup_{self.user_id}"
+            print(cache_key)
+            group_name = cache.get(cache_key)
+            print(group_name)
+            await self.channel_layer.group_add(group_name, self.channel_name)
 
         cache.set(f"passengerconsumer_{self.user_id}", self.channel_name, 86400)  # 86400 seconds = 1 day
 
@@ -198,6 +210,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             await self.send_chat_message(data)
         elif action == "start_trip":
             result = await self.start_trip(data)
+            await self.send(json.dumps(result))
         elif action == "complete_trip":
             await self.complete_trip(data)
 
@@ -250,10 +263,15 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             await database_sync_to_async(ride_request.save)()
             await database_sync_to_async(driver.save)()
 
+            passenger = await database_sync_to_async(Passenger.objects.get)(user_id=ride_request.user_id)
+            passenger.passenger_status = Passenger.STATUS_ACCEPTED
+            await database_sync_to_async(passenger.save)()
+
             await self.channel_layer.group_discard("drivers", self.channel_name)
             # Add both consumers to the group
             self.group_name = f"{ride_request.id}{driver.user_id}"
             cache.set(f"chatgroup_{ride_request.user_id}", self.group_name, None)
+            print(f"chatgroup_{ride_request.user_id}")
 
             response_data_to_passenger = {
                 "success": True,
@@ -320,8 +338,8 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             ride_request_id = data["ride_request_id"]
             ride_request = await database_sync_to_async(RideRequest.objects.get)(id=ride_request_id)
 
-            if ride_request.status != RideRequest.STATUS_PENDING:
-                return {"success": False, "message": "Ride request is not pending"}
+            if ride_request.status != RideRequest.STATUS_ACCEPTED:
+                return {"success": False, "message": "Ride request is not accepted"}
 
             ride_request.status = RideRequest.STATUS_IN_PROGRESS
             ride_request.pickup_time = datetime.now()
