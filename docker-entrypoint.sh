@@ -2,7 +2,6 @@
 
 # Apply migrations
 npm install
-npm run tailwind-watch 
 python manage.py makemigrations
 python manage.py migrate
   
