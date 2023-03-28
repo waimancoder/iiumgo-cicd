@@ -1,3 +1,4 @@
+from datetime import datetime
 import hashlib
 import json
 import os
@@ -227,6 +228,7 @@ class ToyyibPayReturnAPIView(APIView):
             print("Bill not found with the given billCode")
 
         if result:  # Check if the result is not empty
+            invalid_datetime = "0000-00-00 00:00:00"
             bill_data = result[0]  # Get the first item in the result list
             bill.billName = bill_data.get("billName")
             bill.billDescription = bill_data.get("billDescription")
@@ -241,9 +243,16 @@ class ToyyibPayReturnAPIView(APIView):
             bill.billSplitPayment = bill_data.get("billSplitPayment")
             bill.billSplitPaymentArgs = bill_data.get("billSplitPaymentArgs")
             bill.billpaymentSettlement = bill_data.get("billpaymentSettlement")
-            bill.billpaymentSettlementDate = bill_data.get("billpaymentSettlementDate")
+            billpayment_settlement_date = bill_data.get("billpaymentSettlementDate")
+            billpayment_settlement_date = bill_data.get("billpaymentSettlementDate")
+            if billpayment_settlement_date != invalid_datetime:
+                bill.billpaymentSettlementDate = datetime.datetime.strptime(
+                    billpayment_settlement_date, "%Y-%m-%d %H:%M:%S"
+                )
             bill.SettlementReferenceNo = bill_data.get("SettlementReferenceNo")
-            bill.billPaymentDate = bill_data.get("billPaymentDate")
+            bill_payment_date = bill_data.get("billPaymentDate")
+            if bill_payment_date != invalid_datetime:
+                bill.billPaymentDate = datetime.datetime.strptime(bill_payment_date, "%d-%m-%Y %H:%M:%S")
             bill.billExternalReferenceNo = bill_data.get("billExternalReferenceNo")
             bill.save()
         else:
