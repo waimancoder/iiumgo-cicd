@@ -92,6 +92,7 @@ class CreateBillAPIView(APIView):
             callback_url = request.build_absolute_uri(reverse("payment_callback"))
 
             print(return_url)
+            print(callback_url)
 
             ref_number = uuid4()
             user = User.objects.get(id=user_id)
@@ -196,6 +197,15 @@ class ToyyibPayReturnAPIView(APIView):
         # Implement your payment status handling logic here, such as updating the payment status of an order in the database or sending a confirmation email
         # ...
         payment = Payment.objects.get(billCode=billcode)
+
+        if status_id == "1":
+            payment.payment_status = "success"
+        elif status_id == "2":
+            payment.payment_status = "pending"
+        elif status_id == "3":
+            payment.payment_status = "failed"
+
+        payment.save()
 
         data = {
             "user_id": payment.user_id,
