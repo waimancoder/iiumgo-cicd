@@ -1,8 +1,15 @@
 # payment.py
 
+import email
+import hashlib
 import json
 import os
+from uuid import uuid4
 import Adyen
+from django.urls import reverse
+import requests
+
+from user_account.models import User
 
 
 # Configure Adyen client
@@ -64,53 +71,31 @@ def make_fpx_payment(order_number, amount, currency, issuer, return_url):
     return result
 
 
-# request = {
-#     "merchantAccount": adyen.merchant_account,
-#     "countryCode": "MY",
-#     "shopperLocale": "en-US",
-#     "amount": {"value": 1000, "currency": "MYR"},
-#     "channel": "Web",
-# }
-# payment_methods_result = adyen.checkout.payments_api.payment_methods(request)
+def create_bill(user_id, amount, return_url):
+    ref_number = uuid4()
+    user = User.objects.get(id=user_id)
+    billName = f"DriverEwallet-{user.id}{ref_number}{amount}"
+    billDescription = hashlib.sha256(billName.encode("utf-8")).hexdigest()
 
-# {
-#     "message": {
-#         "paymentMethods": [
-#             {
-#                 "issuers": [
-#                     {"id": "fpx_mb2u", "name": "Maybank2u"},
-#                     {"id": "fpx_cimbclicks", "name": "CIMB Clicks"},
-#                     {"id": "fpx_bimb", "name": "Bank Islam"},
-#                     {"id": "fpx_pbb", "name": "Public Bank"},
-#                     {"id": "fpx_abb", "name": "Affin Bank"},
-#                     {"id": "fpx_agrobank", "name": "Agrobank"},
-#                     {"id": "fpx_abmb", "name": "Alliance Bank"},
-#                     {"id": "fpx_amb", "name": "Am Online"},
-#                     {"id": "fpx_bmmb", "name": "Bank Muamalat"},
-#                     {"id": "fpx_bkrm", "name": "Bank Rakyat"},
-#                     {"id": "fpx_bsn", "name": "Bank Simpanan Nasional"},
-#                     {"id": "fpx_hlb", "name": "Hong Leong Connect"},
-#                     {"id": "fpx_hsbc", "name": "HSBC"},
-#                     {"id": "fpx_kfh", "name": "Kuwait Finance House"},
-#                     {"id": "fpx_ocbc", "name": "OCBC Bank"},
-#                     {"id": "fpx_rhb", "name": "RHB Now"},
-#                     {"id": "fpx_scb", "name": "Standard Chartered Bank"},
-#                     {"id": "fpx_uob", "name": "UOB Bank"},
-#                 ],
-#                 "name": "Malaysia E-Banking",
-#                 "type": "molpay_ebanking_fpx_MY",
-#             }
-#         ]
-#     },
-#     "status_code": 200,
-#     "psp": "WVSHFLD3NQRXGN82",
-#     "raw_request": {
-#         "merchantAccount": "UnigoLtd_IIUMGO_TEST",
-#         "countryCode": "MY",
-#         "shopperLocale": "en-US",
-#         "amount": {"value": 1000, "currency": "MYR"},
-#         "channel": "Web",
-#     },
-#     "raw_response": '{"paymentMethods":[{"issuers":[{"id":"fpx_mb2u","name":"Maybank2u"},{"id":"fpx_cimbclicks","name":"CIMB Clicks"},{"id":"fpx_bimb","name":"Bank Islam"},{"id":"fpx_pbb","name":"Public Bank"},{"id":"fpx_abb","name":"Affin Bank"},{"id":"fpx_agrobank","name":"Agrobank"},{"id":"fpx_abmb","name":"Alliance Bank"},{"id":"fpx_amb","name":"Am Online"},{"id":"fpx_bmmb","name":"Bank Muamalat"},{"id":"fpx_bkrm","name":"Bank Rakyat"},{"id":"fpx_bsn","name":"Bank Simpanan Nasional"},{"id":"fpx_hlb","name":"Hong Leong Connect"},{"id":"fpx_hsbc","name":"HSBC"},{"id":"fpx_kfh","name":"Kuwait Finance House"},{"id":"fpx_ocbc","name":"OCBC Bank"},{"id":"fpx_rhb","name":"RHB Now"},{"id":"fpx_scb","name":"Standard Chartered Bank"},{"id":"fpx_uob","name":"UOB Bank"}],"name":"Malaysia E-Banking","type":"molpay_ebanking_fpx_MY"}]}',
-#     "details": {},
-# }
+    amount_in_cents = int(amount * 100)
+    request = {
+        "userSecretKey": os.environ.get("userSecretKey"),
+        "categoryCode": "55j6xxn1",
+        "billName": billName,
+        "billDescription": billDescription,
+        "billPriceSetting": 1,
+        "billPayorInfo": 0,
+        "billAmount": {amount_in_cents},
+        "billCallbackUrl": return_url,
+        "billExternalReferenceNo": ref_number,
+        "billTo": user.fullname,
+        "billEmail": user.email,
+        "billPhone": user.phone_number,
+    }
+
+    response = requests.post("https://dev.toyyibpay.com/index.php/api/createBill", data=request)
+    result = response.text
+    obj = json.loads(result)
+    print(obj)
+
+    return obj

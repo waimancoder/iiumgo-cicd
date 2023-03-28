@@ -1,10 +1,16 @@
+import hashlib
+import json
 import os
+from uuid import uuid4
 from django.shortcuts import render
 from django.urls import reverse
 from rest_framework import status
 from rest_framework import exceptions
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from payment.serializers import CreateBillSerializer
+
+from user_account.models import User
 from .payment import get_adyen_client, get_payment_methods, get_fpx_banks, get_issuer_id, make_fpx_payment
 from django.http import HttpRequest
 from django.http import JsonResponse
@@ -66,27 +72,67 @@ class MakePayment(APIView):
 
 
 def payment_return(request):
-    redirect_result = request.GET.get("redirectResult", "")
+    return JsonResponse({"status": "success", "message": "Payment processed successfully"})
 
-    if not redirect_result:
-        return JsonResponse({"status": "error", "message": "Missing redirectResult parameter"})
 
-    headers = {
-        "x-API-key": os.environ.get("ADYEN_API_KEY"),
-        "content-type": "application/json",
-    }
-    data = {
-        "details": {
-            "redirectResult": redirect_result,
-        }
-    }
-    response = requests.post("https://checkout-test.adyen.com/v68/payments/details", headers=headers, json=data)
+class CreateBillAPIView(APIView):
+    serializer_class = CreateBillSerializer
 
-    if response.status_code == 200:
-        payment_details = response.json()
-        # Handle the payment details, e.g. save the payment result to the database
-        return JsonResponse(
-            {"status": "success", "message": "Payment processed successfully", "paymentDetails": payment_details}
-        )
-    else:
-        return JsonResponse({"status": "error", "message": "Error processing payment", "response": response.json()})
+    def post(self, request):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            validated_data = serializer.validated_data
+            user_id = validated_data["user_id"]
+            amount = validated_data["amount"]
+            return_url = request.build_absolute_uri(reverse("payment_return"))
+
+            ref_number = uuid4()
+            user = User.objects.get(id=user_id)
+            billName = f"DE-{user.username}"
+            billName = f"DE-{user.username}"
+            if len(billName) > 30:
+                billName = billName[:30]
+            billName = billName.rstrip()
+            billDescriptionHash = f"DE-{user.id}{ref_number}{amount}"
+            billDescription = hashlib.sha256(billDescriptionHash.encode("utf-8")).hexdigest()
+
+            amount_in_cents = int(amount * 100)
+            request = {
+                "userSecretKey": os.environ.get("userSecretKey"),
+                "categoryCode": "55j6xxn1",
+                "billName": billName,
+                "billDescription": billDescription,
+                "billPriceSetting": 1,
+                "billPayorInfo": 0,
+                "billAmount": {amount_in_cents},
+                "billCallbackUrl": return_url,
+                "billExternalReferenceNo": ref_number,
+                "billTo": user.fullname,
+                "billEmail": user.email,
+                "billPhone": user.phone_no,
+            }
+
+            response = requests.post("https://dev.toyyibpay.com/index.php/api/createBill", data=request)
+            response_data = response.json()
+            print(response_data)
+            bill_code = response_data[0]["BillCode"]
+            payment_url = f"https://dev.toyyibpay.com/{bill_code}"
+            data = {
+                "payment_url": payment_url,
+            }
+
+            return Response(
+                {"success": True, "statusCode": status.HTTP_200_OK, "data": data}, status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "error": "Internal Server Error",
+                    "message": "Please Contact Server Admin",
+                    "traceback": str(e),
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
