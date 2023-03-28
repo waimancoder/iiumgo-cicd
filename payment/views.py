@@ -94,8 +94,7 @@ class CreateBillAPIView(APIView):
             if len(billName) > 30:
                 billName = billName[:30]
             billName = billName.rstrip()
-            billDescriptionHash = f"DE-{user.id}{ref_number}{amount}"
-            billDescription = hashlib.sha256(billDescriptionHash.encode("utf-8")).hexdigest()
+            billDescription = f"DE-{user.id}{ref_number}{amount}"
 
             amount_in_cents = int(amount * 100)
             request = {
