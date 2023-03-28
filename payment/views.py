@@ -163,6 +163,7 @@ class ToyyibPayCallbackAPIView(APIView):
 
         # Implement your callback handling logic here, such as updating the payment status of an order in the database or sending a confirmation email
         # ...
+        print("callback request is made")
         payment = Payment.objects.get(billCode=billcode)
         if status == "1":
             payment.payment_status = "success"
@@ -175,6 +176,13 @@ class ToyyibPayCallbackAPIView(APIView):
         payment.order_id = order_id
 
         payment.save()
+
+        response = {
+            "status": "success",
+            "message": "Payment processed successfully",
+            "billcode": billcode,
+        }
+        print(response)
 
         return Response(status=status.HTTP_200_OK)
 
