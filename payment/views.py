@@ -87,6 +87,8 @@ class CreateBillAPIView(APIView):
             amount = validated_data["amount"]
             return_url = request.build_absolute_uri(reverse("payment_return"))
 
+            print(return_url)
+
             ref_number = uuid4()
             user = User.objects.get(id=user_id)
             billName = f"DE-{user.username}"
@@ -105,6 +107,7 @@ class CreateBillAPIView(APIView):
                 "billPriceSetting": 1,
                 "billPayorInfo": 0,
                 "billAmount": {amount_in_cents},
+                "billReturnUrl": return_url,
                 "billCallbackUrl": return_url,
                 "billExternalReferenceNo": ref_number,
                 "billTo": user.fullname,
