@@ -265,7 +265,6 @@ class ToyyibPayReturnAPIView(APIView):
             "order_id": order_id,
             "payment_status": payment.payment_status,
             "amount": payment.amount,
-            "reason": payment.reason,
         }
 
         return Response({"success": True, "statusCode": status.HTTP_200_OK, "data": data}, status=status.HTTP_200_OK)
