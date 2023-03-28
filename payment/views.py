@@ -205,6 +205,7 @@ class ToyyibPayReturnAPIView(APIView):
         elif status_id == "3":
             payment.payment_status = "failed"
 
+        payment.order_id = order_id
         payment.save()
 
         data = {
