@@ -1,23 +1,45 @@
+from pyexpat import model
 from django.db import models
 
 
 # Create your models here.
-class Bank(models.Model):
-    name = models.CharField(max_length=255)
-    issuer_id = models.CharField(max_length=50)
-
-    def __str__(self):
-        return self.name
+class DriverEwallet(models.Model):
+    driver_id = models.OneToOneField(
+        "user_account.User", on_delete=models.CASCADE, primary_key=True, related_name="ewallet"
+    )
+    balance = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=3, default="MYR")
 
 
 class Payment(models.Model):
-    order_number = models.CharField(max_length=50)
+    user = models.ForeignKey("user_account.User", on_delete=models.CASCADE)
+    billCode = models.CharField(max_length=50)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    currency = models.CharField(max_length=3)
-    issuer = models.CharField(max_length=50)
-    payment_method = models.CharField(max_length=50)
+    currency = models.CharField(max_length=3, default="MYR")
+    payment_method = models.CharField(max_length=50, default="fpx")
     payment_status = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
+    reason = models.CharField(max_length=255, blank=True, null=True)
+    refno = models.CharField(max_length=255, blank=True, null=True)
+    order_id = models.CharField(max_length=255, blank=True, null=True)
 
-    def __str__(self):
-        return self.order_number
+
+class Bill(models.Model):
+    user = models.ForeignKey("user_account.User", on_delete=models.CASCADE)
+    billName = models.CharField(max_length=255, blank=True, null=True)
+    billDescription = models.CharField(max_length=255, blank=True, null=True)
+    billTo = models.CharField(max_length=255, blank=True, null=True)
+    billEmail = models.EmailField(blank=True, null=True)
+    billPhone = models.CharField(max_length=255, blank=True, null=True)
+    billStatus = models.CharField(max_length=255, blank=True, null=True)
+    billpaymentStatus = models.CharField(max_length=255, blank=True, null=True)
+    billpaymentChannel = models.CharField(max_length=255, blank=True, null=True)
+    billpaymentAmount = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    billpaymentInvoiceNo = models.CharField(max_length=255, blank=True, null=True)
+    billSplitPayment = models.CharField(max_length=255, blank=True, null=True)
+    billSplitPaymentArgs = models.TextField(blank=True, null=True)
+    billpaymentSettlement = models.CharField(max_length=255, blank=True, null=True)
+    billpaymentSettlementDate = models.DateTimeField(blank=True, null=True)
+    SettlementReferenceNo = models.CharField(max_length=255, blank=True, null=True)
+    billPaymentDate = models.DateTimeField(blank=True, null=True)
+    billExternalReferenceNo = models.CharField(max_length=255, blank=True, null=True)

@@ -1,3 +1,4 @@
+from pkg_resources import register_loader_type
 from rest_framework import serializers
 
 
