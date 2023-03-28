@@ -1,0 +1,116 @@
+{% load mjml %} {% mjml %}
+<mjml>
+  <mj-head>
+    <mj-attributes>
+      <mj-text padding="1%" />
+      <mj-class name="blue" color="blue" />
+      <mj-all font-family="helvetica" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body>
+    <mj-wrapper background-color="#000013">
+      <mj-section padding-bottom="0%" padding-top="0%">
+      <mj-column>
+        <mj-image width="100px" src="/assets/img/logo-small.png"></mj-image>
+      </mj-column>
+    </mj-section>
+     <mj-section>
+        <mj-column width="100%">
+        <mj-divider border-color="#16A34A">
+        </mj-divider>
+          <mj-text font-size="23px" font-weight="bold" align="center" color="white">Thank you {{ billTo }}, for top-up of RM {{ billpaymentAmount }} to your iiumGo Driver E-Wallet 
+    </mj-text>
+    <mj-text font-size="15px" font-weight="medium" align="center" color="white">We're thrilled to have you on board and look forward to providing you with an unparalleled experience! Here's the details.</mj-text>
+        <mj-divider border-color="#16A34A"></mj-divider>
+        </mj-column>
+      </mj-section>
+    <mj-section>
+        <mj-column background-color="#16A34A">
+        <mj-text font-size="20px" font-weight="bold" align="center" color="white">Payment Receipt</mj-text>
+        <mj-table font-size="17px" font-weight="bold" color="white" padding="20px 0" padding-left="15px">
+      <tr>
+        <td style="font-weight:bold;">To:</td>
+        <td>{{ billTo }}</td>
+      </tr>
+      <tr>
+        <td style="font-weight:bold;">Email:</td>
+        <td>{{ billEmail }}</td>
+      </tr>
+      <tr>
+        <td style="font-weight:bold;">Phone:</td>
+        <td>{{ billPhone }}</td>
+      </tr>
+      <tr>
+        <td style="font-weight:bold;">Payment Status:</td>
+        <td>{{ billpaymentStatus }}</td>
+      </tr>
+      <tr>
+        <td style="font-weight:bold;">Payment Channel:</td>
+        <td>{{ billpaymentChannel }}</td>
+      </tr>
+      <tr>
+        <td style="font-weight:bold;">Payment Amount:</td>
+        <td>{{ billpaymentAmount }}</td>
+      </tr>
+      <tr>
+        <td style="font-weight:bold;">Invoice Number:</td>
+        <td>{{ billpaymentInvoiceNo }}</td>
+      </tr>
+      <tr>
+        <td style="font-weight:bold;">Payment Date:</td>
+        <td>{{ billPaymentDate }}</td>
+      </tr>
+      <tr>
+        <td style="font-weight:bold;">Reference Number:</td>
+        <td>{{ billExternalReferenceNo }}</td>
+      </tr>
+          <tr>
+        <td style="font-weight:bold;">Driver E-Wallet Balance:</td>
+        <td>{{ Balance }}</td>
+      </tr>
+    </mj-table>
+      </mj-column>
+      </mj-section>
+      <mj-section padding-bottom="0px" >
+        <mj-column background-color="#16A34A">
+        <mj-divider border-color="#16A34A" padding="0px"></mj-divider>
+        <mj-text align="center" color="white" font-size="12px" padding="10px 0">Your payment has been processed securely and conveniently through ToyyibPay payment gateway.</mj-text>
+      </mj-column>
+      </mj-section>
+      
+      <mj-section padding-top="0px">
+        <mj-column background-color="#16A34A">
+         <mj-table width="100%" font-size="12px" font-family="helvetica" color="#ffffff" padding-left="40px" padding-top="0px" padding-bottom="0px">
+    <tr>
+      <td align="left" style="padding-right:30px;"><small style="padding: 0 0 0 0;"><small>Unigo Sdn. Bhd.</small><br><small>Block PG, Mahallah Siddiq, </small><br> <small>Universiti Islam Antarabangsa Malaysia (UIAM),</small> <br> <small>53100, Jalan Gombak, </small><br><small>Kuala Lumpur</small></br></small>
+      <td style="text-align: right; item-">
+      <table style="text-align:right;">
+        <tr>
+          <td style="padding-left:20px; padding-right:20px;"><a href=""><img src="data:image/svg+xml,%3C%3Fxml version='1.0'%3F%3E%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='96px' height='96px'%3E%3Cpath d='M 8 3 C 5.239 3 3 5.239 3 8 L 3 16 C 3 18.761 5.239 21 8 21 L 16 21 C 18.761 21 21 18.761 21 16 L 21 8 C 21 5.239 18.761 3 16 3 L 8 3 z M 18 5 C 18.552 5 19 5.448 19 6 C 19 6.552 18.552 7 18 7 C 17.448 7 17 6.552 17 6 C 17 5.448 17.448 5 18 5 z M 12 7 C 14.761 7 17 9.239 17 12 C 17 14.761 14.761 17 12 17 C 9.239 17 7 14.761 7 12 C 7 9.239 9.239 7 12 7 z M 12 9 A 3 3 0 0 0 9 12 A 3 3 0 0 0 12 15 A 3 3 0 0 0 15 12 A 3 3 0 0 0 12 9 z'/%3E%3C/svg%3E" alt="Image" width="50px"></img></a></td>
+           <td>
+          <a href=""><img src="data:image/svg+xml,%3C%3Fxml version='1.0'%3F%3E%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24px' height='24px'%3E%3Cpath d='M12,2C6.477,2,2,6.477,2,12c0,5.013,3.693,9.153,8.505,9.876V14.65H8.031v-2.629h2.474v-1.749 c0-2.896,1.411-4.167,3.818-4.167c1.153,0,1.762,0.085,2.051,0.124v2.294h-1.642c-1.022,0-1.379,0.969-1.379,2.061v1.437h2.995 l-0.406,2.629h-2.588v7.247C18.235,21.236,22,17.062,22,12C22,6.477,17.523,2,12,2z'/%3E%3C/svg%3E" alt="Image" width="50px"></img></a></td>
+        
+        </tr>
+        </table>
+      </td>
+      
+    </tr>
+  </mj-table>
+        </mj-column>
+        
+      </mj-section>
+      <mj-section padding-top="0%" padding-bottom="0%">
+              <mj-column padding-top="0px" padding-bottom="0px">
+                <mj-text align="center" color="white" font-size="10px" >(This notice is automatically generated by computer)</mj-text>
+                <mj-text align="center" color="white" font-size="10px">© 2023 Unigo Sdn Bhd. All rights reserved.</mj-text>
+               </mj-column>
+        
+             
+             </mj-section>
+    </mj-wrapper>
+    
+  </mj-body>
+</mjml>
+
+{% endmjml %}
+

@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth import get_user_model, authenticate, update_session_auth_hash
 from django.utils.translation import gettext_lazy as _
+from payment.models import DriverEwallet
 
 from ride_request.models import Passenger
 from .models import User, StudentID
@@ -138,6 +139,7 @@ class RegisterSerializer(serializers.ModelSerializer):
                 user=user,
                 matricNo=None,
             )
+            DriverEwallet.objects.create(driver_id=user)
         Passenger.objects.create(user=user, passenger_status=Passenger.STATUS_AVAILABLE)
 
         return user
