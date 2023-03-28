@@ -7,6 +7,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from rest_framework import status
 from rest_framework import exceptions
+from rest_framework.fields import ObjectDoesNotExist
 from rest_framework.views import APIView, csrf_exempt
 from rest_framework.response import Response
 from payment.models import Bill, Payment
@@ -110,7 +111,7 @@ class CreateBillAPIView(APIView):
                 "billName": billName,
                 "billDescription": billDescription,
                 "billPriceSetting": 1,
-                "billPayorInfo": 0,
+                "billPayorInfo": 1,
                 "billAmount": {amount_in_cents},
                 "billReturnUrl": return_url,
                 "billCallbackUrl": callback_url,
@@ -209,6 +210,45 @@ class ToyyibPayReturnAPIView(APIView):
         payment.order_id = order_id
         payment.save()
 
+        bill_details_request = {
+            "billCode": billcode,
+        }
+
+        url = "https://dev.toyyibpay.com/index.php/api/getBillTransactions"
+        response = requests.post(url, data=bill_details_request)
+
+        result = response.json()
+        print(result)
+
+        bill = Bill.objects.get(billCode=billcode)
+        try:
+            bill = Bill.objects.get(billCode=billcode)
+        except ObjectDoesNotExist:
+            print("Bill not found with the given billCode")
+
+        if result:  # Check if the result is not empty
+            bill_data = result[0]  # Get the first item in the result list
+            bill.billName = bill_data.get("billName")
+            bill.billDescription = bill_data.get("billDescription")
+            bill.billTo = bill_data.get("billTo")
+            bill.billStatus = bill_data.get("billStatus")
+            bill.billEmail = bill_data.get("billEmail")
+            bill.billPhone = bill_data.get("billPhone")
+            bill.billpaymentStatus = bill_data.get("billpaymentStatus")
+            bill.billpaymentChannel = bill_data.get("billpaymentChannel")
+            bill.billpaymentAmount = bill_data.get("billpaymentAmount")
+            bill.billpaymentInvoiceNo = bill_data.get("billpaymentInvoiceNo")
+            bill.billSplitPayment = bill_data.get("billSplitPayment")
+            bill.billSplitPaymentArgs = bill_data.get("billSplitPaymentArgs")
+            bill.billpaymentSettlement = bill_data.get("billpaymentSettlement")
+            bill.billpaymentSettlementDate = bill_data.get("billpaymentSettlementDate")
+            bill.SettlementReferenceNo = bill_data.get("SettlementReferenceNo")
+            bill.billPaymentDate = bill_data.get("billPaymentDate")
+            bill.billExternalReferenceNo = bill_data.get("billExternalReferenceNo")
+            bill.save()
+        else:
+            print("No data found in the result")
+
         data = {
             "user_id": payment.user_id,
             "status_id": status_id,
@@ -216,7 +256,6 @@ class ToyyibPayReturnAPIView(APIView):
             "order_id": order_id,
             "payment_status": payment.payment_status,
             "amount": payment.amount,
-            "refno": payment.refno,
             "reason": payment.reason,
         }
 
