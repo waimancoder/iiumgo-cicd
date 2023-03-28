@@ -24,17 +24,10 @@ class Payment(models.Model):
     reason = models.CharField(max_length=255, blank=True, null=True)
     refno = models.CharField(max_length=255, blank=True, null=True)
     order_id = models.CharField(max_length=255, blank=True, null=True)
-    bill = models.OneToOneField("Bill", on_delete=models.CASCADE, null=True, blank=True, related_name="billpertrans")
-
-    def save(self, *args, **kwargs):
-        if not self.bill:
-            self.bill = Bill.objects.create(payment=self, billCode=self.billCode)
-        super().save(*args, **kwargs)
 
 
 class Bill(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    payment = models.OneToOneField(Payment, on_delete=models.CASCADE, related_name="paymentpertrans", default="")
     billCode = models.CharField(max_length=50, blank=True, null=True)
     billName = models.CharField(max_length=255, blank=True, null=True)
     billDescription = models.CharField(max_length=255, blank=True, null=True)

@@ -9,7 +9,7 @@ from rest_framework import status
 from rest_framework import exceptions
 from rest_framework.views import APIView, csrf_exempt
 from rest_framework.response import Response
-from payment.models import Payment
+from payment.models import Bill, Payment
 from payment.serializers import CreateBillSerializer
 
 from user_account.models import User
@@ -130,6 +130,7 @@ class CreateBillAPIView(APIView):
                 payment_status="pending",
                 billCode=bill_code,
             )
+            Bill.objects.create(billCode=bill_code)
             payment_url = f"https://dev.toyyibpay.com/{bill_code}"
             data = {
                 "payment_url": payment_url,
