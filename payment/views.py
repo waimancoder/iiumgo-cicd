@@ -13,6 +13,7 @@ from rest_framework.views import APIView, csrf_exempt
 from rest_framework.response import Response
 from payment.models import Bill, DriverEwallet, Payment
 from payment.serializers import CreateBillSerializer
+from django.utils import timezone
 
 
 from user_account.models import User
@@ -253,7 +254,9 @@ class ToyyibPayReturnAPIView(APIView):
             bill.SettlementReferenceNo = bill_data.get("SettlementReferenceNo")
             bill_payment_date = bill_data.get("billPaymentDate")
             if bill_payment_date != invalid_datetime:
-                bill.billPaymentDate = datetime.datetime.strptime(bill_payment_date, "%d-%m-%Y %H:%M:%S")
+                naive_datetime = datetime.datetime.strptime(bill_payment_date, "%d-%m-%Y %H:%M:%S")
+                timezone_datetime = timezone.make_aware(naive_datetime, timezone.get_current_timezone())
+                bill.billPaymentDate = timezone_datetime
             bill.billExternalReferenceNo = bill_data.get("billExternalReferenceNo")
             bill.save()
         else:
@@ -270,6 +273,9 @@ class ToyyibPayReturnAPIView(APIView):
             "order_id": order_id,
             "payment_status": payment.payment_status,
             "amount": payment.amount,
+            "transaction_id": bill.billpaymentInvoiceNo,
+            "reference_no": bill.SettlementReferenceNo,
+            "driver_ewallet_balance": "{:.2f}".format(driver_ewallet.balance),
         }
 
         return Response({"success": True, "statusCode": status.HTTP_200_OK, "data": data}, status=status.HTTP_200_OK)
