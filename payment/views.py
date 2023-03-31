@@ -279,7 +279,7 @@ class ToyyibPayReturnAPIView(APIView):
             "admin_fee": "{:.2f}".format(Decimal("0.50")),
             "transaction_id": bill.billpaymentInvoiceNo,
             "reference_no": bill.billExternalReferenceNo,
-            "complete_time": bill.billPaymentDate,
+            "completed_time": bill.billPaymentDate,
             "driver_ewallet_balance": "{:.2f}".format(driver_ewallet.balance),
         }
 
