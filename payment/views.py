@@ -7,13 +7,14 @@ from uuid import uuid4
 from django.db import transaction
 from django.shortcuts import render
 from django.urls import reverse
-from rest_framework import generics, status
+from rest_framework import generics, permissions, status
 from rest_framework import exceptions
 from rest_framework.fields import ObjectDoesNotExist
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView, csrf_exempt
 from rest_framework.response import Response
 from payment.models import Bill, DriverEwallet, Payment
-from payment.serializers import CreateBillSerializer
+from payment.serializers import BillSerializer, CreateBillSerializer
 from django.utils import timezone
 from decimal import Decimal
 
@@ -30,6 +31,10 @@ def get_current_domain(request: HttpRequest) -> str:
     Get the domain name for the current request.
     """
     return request.META.get("HTTP_HOST", "")
+
+
+class CustomPageNumberPagination(PageNumberPagination):
+    page_size_query_param = "page_size"
 
 
 class FPXPaymentMethods(APIView):
@@ -288,6 +293,8 @@ class ToyyibPayReturnAPIView(APIView):
 
 
 class DriverEwalletView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
     def get(self, request, user_id):
         try:
             user = User.objects.get(id=user_id)
@@ -306,6 +313,40 @@ class DriverEwalletView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
         except DriverEwallet.DoesNotExist:
+            return Response(
+                {"success": False, "statusCode": status.HTTP_404_NOT_FOUND, "message": "DriverEwallet not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+
+class BillHistoryAPIView(generics.GenericAPIView):
+    serializer_class = BillSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = CustomPageNumberPagination
+
+    def get_queryset(self):
+        user = User.objects.get(id=self.kwargs["user_id"])
+        return Bill.objects.filter(billEmail=user.email).order_by("-billPaymentDate")
+
+    def get(self, request, user_id):
+        try:
+            queryset = self.get_queryset()
+            paginated_queryset = self.paginate_queryset(queryset)
+            serialized_history = self.get_serializer(paginated_queryset, many=True).data
+
+            response = {
+                "status": True,
+                "statusCode": status.HTTP_200_OK,
+                "data": {
+                    "user_id": user_id,
+                    "history": serialized_history,
+                    "next": self.paginator.get_next_link(),
+                    "previous": self.paginator.get_next_link(),
+                },
+            }
+
+            return Response(response)
+        except User.DoesNotExist:
             return Response(
                 {"success": False, "statusCode": status.HTTP_404_NOT_FOUND, "message": "DriverEwallet not found."},
                 status=status.HTTP_404_NOT_FOUND,
