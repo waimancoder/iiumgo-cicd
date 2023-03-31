@@ -282,7 +282,7 @@ class DriverEwalletView(APIView):
             driver_ewallet = DriverEwallet.objects.get(user=user)
             data = {
                 "user_id": driver_ewallet.user.id,
-                "balance": driver_ewallet.balance,
+                "balance": "{:.2f}".format(driver_ewallet.balance),
                 "currency": driver_ewallet.currency,
             }
             return Response(
