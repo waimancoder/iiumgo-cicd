@@ -272,6 +272,7 @@ class ToyyibPayReturnAPIView(APIView):
             "status_id": status_id,
             "billcode": billcode,
             "order_id": order_id,
+            "payment_method": "Online Banking",
             "payment_status": payment.payment_status,
             "amount": float("{:.2f}".format(payment.amount)),
             "admin_fee": float("{:.2f}".format(Decimal("0.50"))),
