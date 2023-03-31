@@ -4,6 +4,7 @@ import json
 import os
 import stat
 from uuid import uuid4
+from django.db import transaction
 from django.shortcuts import render
 from django.urls import reverse
 from rest_framework import generics, status
@@ -14,6 +15,7 @@ from rest_framework.response import Response
 from payment.models import Bill, DriverEwallet, Payment
 from payment.serializers import CreateBillSerializer
 from django.utils import timezone
+from decimal import Decimal
 
 
 from user_account.models import User
@@ -261,10 +263,11 @@ class ToyyibPayReturnAPIView(APIView):
             bill.save()
         else:
             print("No data found in the result")
-
-        driver_ewallet = DriverEwallet.objects.get(user_id=payment.user_id)
-        driver_ewallet.balance += payment.amount
-        driver_ewallet.save()
+        if status_id == "1":
+            with transaction.atomic():
+                driver_ewallet = DriverEwallet.objects.select_for_update().get(user_id=payment.user_id)
+                driver_ewallet.balance += payment.amount - Decimal("0.50")
+                driver_ewallet.save()
 
         data = {
             "user_id": payment.user_id,
@@ -272,9 +275,11 @@ class ToyyibPayReturnAPIView(APIView):
             "billcode": billcode,
             "order_id": order_id,
             "payment_status": payment.payment_status,
-            "amount": payment.amount,
+            "amount": "{:.2f}".format(payment.amount),
+            "admin_fee": "{:.2f}".format(Decimal("0.50")),
             "transaction_id": bill.billpaymentInvoiceNo,
             "reference_no": bill.billExternalReferenceNo,
+            "complete_time": bill.billPaymentDate,
             "driver_ewallet_balance": "{:.2f}".format(driver_ewallet.balance),
         }
 
