@@ -266,6 +266,8 @@ class ToyyibPayReturnAPIView(APIView):
                 driver_ewallet = DriverEwallet.objects.select_for_update().get(user_id=payment.user_id)
                 driver_ewallet.balance += payment.amount - Decimal("0.50")
                 driver_ewallet.save()
+        elif status_id == "2" or status_id == "3":
+            driver_ewallet = DriverEwallet.objects.get(user_id=payment.user_id)
 
         data = {
             "user_id": payment.user_id,
