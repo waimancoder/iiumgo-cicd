@@ -339,7 +339,8 @@ class BillHistoryAPIView(generics.GenericAPIView):
                 "statusCode": status.HTTP_200_OK,
                 "data": {
                     "user_id": user_id,
-                    "history": serialized_history,
+                    "top_up_history": serialized_history,
+                    "earning_history": {},
                     "next": self.paginator.get_next_link(),
                     "previous": self.paginator.get_next_link(),
                 },

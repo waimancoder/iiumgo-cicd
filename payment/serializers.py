@@ -9,6 +9,11 @@ class CreateBillSerializer(serializers.Serializer):
 
 
 class BillSerializer(serializers.ModelSerializer):
+    payment_amount = serializers.DecimalField(source="billpaymentAmount", max_digits=10, decimal_places=2)
+    payment_date = serializers.DateTimeField(source="billPaymentDate")
+    transaction_id = serializers.CharField(source="billpaymentInvoiceNo")
+    reference_no = serializers.CharField(source="billExternalReferenceNo")
+
     class Meta:
         model = Bill
-        fields = ["billpaymentAmount", "billPaymentDate", "billpaymentInvoiceNo", "billExternalReferenceNo"]
+        fields = ["payment_amount", "payment_date", "transaction_id", "reference_no"]
