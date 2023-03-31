@@ -8,4 +8,5 @@ urlpatterns = [
     path("api/payment_return", views.ToyyibPayReturnAPIView.as_view(), name="payment_return"),
     path("api/payment_callback", views.ToyyibPayCallbackAPIView.as_view(), name="payment_callback"),
     path("api/create-bill", views.CreateBillAPIView.as_view(), name="create_bill"),
+    path("api/driver_ewallet/<uuid:user_id>", views.DriverEwalletView.as_view(), name="driver_ewallet"),
 ]

@@ -39,3 +39,10 @@ class RideRequestSerializer(serializers.ModelSerializer):
 
     # def get_payment_method(self, obj):
     #     return obj.payment_method if obj.payment_method else ""
+
+
+class CoordinateSerializer(serializers.Serializer):
+    pickup_latitude = serializers.FloatField()
+    pickup_longitude = serializers.FloatField()
+    dropoff_latitude = serializers.FloatField()
+    dropoff_longitude = serializers.FloatField()

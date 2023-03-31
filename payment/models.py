@@ -5,11 +5,13 @@ import uuid
 
 # Create your models here.
 class DriverEwallet(models.Model):
-    driver_id = models.OneToOneField(
-        "user_account.User", on_delete=models.CASCADE, primary_key=True, related_name="ewallet"
-    )
+    user = models.OneToOneField("user_account.User", on_delete=models.CASCADE, primary_key=True, related_name="ewallet")
     balance = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.CharField(max_length=3, default="MYR")
+
+
+class CompanyCommissions:
+    balance = models.DecimalField(max_digits=10, decimal_places=2)
 
 
 class Payment(models.Model):

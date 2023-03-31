@@ -2,8 +2,10 @@ from django.contrib.auth.models import User
 from django.shortcuts import render
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
+
+from ride_request.pricing import get_pricing
 from .models import RideRequest
-from .serializers import RideRequestSerializer
+from .serializers import CoordinateSerializer, RideRequestSerializer
 from rest_framework.pagination import PageNumberPagination
 
 
@@ -56,3 +58,25 @@ class RideRequestHistoryView(generics.ListAPIView):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+class FareEstimationView(generics.GenericAPIView):
+    serializer_class = CoordinateSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        pickup_latitude = serializer.validated_data["pickup_latitude"]
+        pickup_longitude = serializer.validated_data["pickup_longitude"]
+        dropoff_latitude = serializer.validated_data["dropoff_latitude"]
+        dropoff_longitude = serializer.validated_data["dropoff_longitude"]
+        price = get_pricing(
+            pickup_latitude,
+            pickup_longitude,
+            dropoff_latitude,
+            dropoff_longitude,
+        )
+        data = {"price": price, "currency": "MYR"}
+
+        return Response({"success": True, "statusCode": status.HTTP_200_OK, "data": data}, status=status.HTTP_200_OK)

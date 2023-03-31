@@ -6,4 +6,5 @@ urlpatterns = [
     path(
         "api/ride_request_history/<uuid:user_id>", views.RideRequestHistoryView.as_view(), name="ride_request_history"
     ),
+    path("api/get_price", views.FareEstimationView.as_view(), name="get_price"),
 ]

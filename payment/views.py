@@ -6,13 +6,14 @@ import stat
 from uuid import uuid4
 from django.shortcuts import render
 from django.urls import reverse
-from rest_framework import status
+from rest_framework import generics, status
 from rest_framework import exceptions
 from rest_framework.fields import ObjectDoesNotExist
 from rest_framework.views import APIView, csrf_exempt
 from rest_framework.response import Response
-from payment.models import Bill, Payment
+from payment.models import Bill, DriverEwallet, Payment
 from payment.serializers import CreateBillSerializer
+
 
 from user_account.models import User
 from .payment import get_adyen_client, get_payment_methods, get_fpx_banks, get_issuer_id, make_fpx_payment
@@ -258,6 +259,10 @@ class ToyyibPayReturnAPIView(APIView):
         else:
             print("No data found in the result")
 
+        driver_ewallet = DriverEwallet.objects.get(user_id=payment.user_id)
+        driver_ewallet.balance += payment.amount
+        driver_ewallet.save()
+
         data = {
             "user_id": payment.user_id,
             "status_id": status_id,
@@ -268,3 +273,22 @@ class ToyyibPayReturnAPIView(APIView):
         }
 
         return Response({"success": True, "statusCode": status.HTTP_200_OK, "data": data}, status=status.HTTP_200_OK)
+
+
+class DriverEwalletView(APIView):
+    def get(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+            driver_ewallet = DriverEwallet.objects.get(user=user)
+            data = {
+                "user_id": driver_ewallet.user.id,
+                "balance": driver_ewallet.balance,
+                "currency": driver_ewallet.currency,
+            }
+            return Response(
+                {"success": True, "statusCode": status.HTTP_200_OK, "data": data}, status=status.HTTP_200_OK
+            )
+        except User.DoesNotExist:
+            return Response({"message": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        except DriverEwallet.DoesNotExist:
+            return Response({"message": "DriverEwallet not found."}, status=status.HTTP_404_NOT_FOUND)

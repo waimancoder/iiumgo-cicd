@@ -139,7 +139,7 @@ class RegisterSerializer(serializers.ModelSerializer):
                 user=user,
                 matricNo=None,
             )
-            DriverEwallet.objects.create(driver_id=user)
+            DriverEwallet.objects.create(user_id=user)
         Passenger.objects.create(user=user, passenger_status=Passenger.STATUS_AVAILABLE)
 
         return user
