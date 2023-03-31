@@ -289,6 +289,12 @@ class DriverEwalletView(APIView):
                 {"success": True, "statusCode": status.HTTP_200_OK, "data": data}, status=status.HTTP_200_OK
             )
         except User.DoesNotExist:
-            return Response({"message": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"success": False, "statusCode": status.HTTP_404_NOT_FOUND, "message": "User not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         except DriverEwallet.DoesNotExist:
-            return Response({"message": "DriverEwallet not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"success": False, "statusCode": status.HTTP_404_NOT_FOUND, "message": "DriverEwallet not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
