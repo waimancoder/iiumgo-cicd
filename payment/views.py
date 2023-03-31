@@ -274,7 +274,7 @@ class ToyyibPayReturnAPIView(APIView):
             "payment_status": payment.payment_status,
             "amount": payment.amount,
             "transaction_id": bill.billpaymentInvoiceNo,
-            "reference_no": bill.SettlementReferenceNo,
+            "reference_no": bill.billExternalReferenceNo,
             "driver_ewallet_balance": "{:.2f}".format(driver_ewallet.balance),
         }
 
