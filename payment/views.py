@@ -223,8 +223,6 @@ class ToyyibPayReturnAPIView(APIView):
         response = requests.post(url, data=bill_details_request)
 
         result = response.json()
-        print(result)
-
         bill = Bill.objects.get(billCode=billcode)
         try:
             bill = Bill.objects.get(billCode=billcode)
@@ -275,12 +273,12 @@ class ToyyibPayReturnAPIView(APIView):
             "billcode": billcode,
             "order_id": order_id,
             "payment_status": payment.payment_status,
-            "amount": "{:.2f}".format(payment.amount),
-            "admin_fee": "{:.2f}".format(Decimal("0.50")),
+            "amount": float("{:.2f}".format(payment.amount)),
+            "admin_fee": float("{:.2f}".format(Decimal("0.50"))),
             "transaction_id": bill.billpaymentInvoiceNo,
             "reference_no": bill.billExternalReferenceNo,
             "completed_time": bill.billPaymentDate,
-            "driver_ewallet_balance": "{:.2f}".format(driver_ewallet.balance),
+            "driver_ewallet_balance": float("{:.2f}".format(driver_ewallet.balance)),
         }
 
         return Response({"success": True, "statusCode": status.HTTP_200_OK, "data": data}, status=status.HTTP_200_OK)
