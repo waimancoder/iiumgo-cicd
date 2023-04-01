@@ -11,3 +11,4 @@ docker-compose.yml
 node_modules/
 output.css
 .DS_Store
+nginx/
