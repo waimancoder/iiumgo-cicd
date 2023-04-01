@@ -86,10 +86,10 @@ def get_pricing(
     # # (duration_minutes / 60) * 0.60
 
     if distance >= 2500:
-        fares_4seater_student = 2.50 + (distance * 0.001) * 1.30
-        fares_4seater_stuff = 3.00 + (distance * 0.001) * 1.30
+        fares_4seater_student = 2.50 + (distance * 0.001) * 1.00
+        fares_4seater_stuff = 3.00 + (distance * 0.001) * 1.00
         fares_4seater_outsider = 3.80 + (distance * 0.001) * 1.30
-        fares_6seater_student = 3.00 + (distance * 0.001) * 1.30
+        fares_6seater_student = 3.00 + (distance * 0.001) * 1.00
         fares_6seater_stuff = 3.80 + (distance * 0.001) * 1.30
         fares_6seater_outsider = 4.00 + (distance * 0.001) * 1.30
     else:
