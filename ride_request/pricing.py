@@ -63,21 +63,33 @@ def get_pricing(
         "apikey": api_key,
     }
 
+    cache_key = f"{origin_latitude},{origin_longitude},{destination_latitude},{destination_longitude}_distance"
     distance_url = "https://router.hereapi.com/v8/routes"
     response = requests.get(distance_url, params=params)
     data = response.json()
     details = data["routes"][0]["sections"][0]["summary"]
     distance = details["length"]
 
+    print(distance)
+
     if departure_time is None and arrival_time is None:
         duration_minutes = details["typicalDuration"]
+    # (duration_minutes / 60) * 0.60
 
-    fares_4seater_student = 2.50 + (duration_minutes / 60) * 0.45 + (distance * 0.001) * 0.25
-    fares_4seater_stuff = 3.00 + (duration_minutes / 60) * 0.45 + (distance * 0.001) * 0.25
-    fares_4seater_outsider = 3.80 + (duration_minutes / 60) * 0.45 + (distance * 0.001) * 0.25
-    fares_6seater_student = 3.00 + (duration_minutes / 60) * 0.45 + (distance * 0.001) * 0.25
-    fares_6seater_stuff = 3.50 + (duration_minutes / 60) * 0.45 + (distance * 0.001) * 0.25
-    fares_6seater_outsider = 4.00 + (duration_minutes / 60) * 0.45 + (distance * 0.001) * 0.25
+    if distance >= 2500:
+        fares_4seater_student = 2.50 + (distance * 0.001) * 1.30
+        fares_4seater_stuff = 3.00 + (distance * 0.001) * 1.30
+        fares_4seater_outsider = 3.80 + (distance * 0.001) * 1.30
+        fares_6seater_student = 3.00 + (distance * 0.001) * 1.30
+        fares_6seater_stuff = 3.80 + (distance * 0.001) * 1.30
+        fares_6seater_outsider = 4.00 + (distance * 0.001) * 1.30
+    else:
+        fares_4seater_student = 2.50 + (distance * 0.001) * 0.40
+        fares_4seater_stuff = 3.00 + (distance * 0.001) * 0.40
+        fares_4seater_outsider = 3.80 + (distance * 0.001) * 0.40
+        fares_6seater_student = 3.00 + (distance * 0.001) * 0.40
+        fares_6seater_stuff = 3.80 + (distance * 0.001) * 0.40
+        fares_6seater_outsider = 4.00 + (distance * 0.001) * 0.40
 
     prices = [
         fares_4seater_student,
@@ -89,20 +101,19 @@ def get_pricing(
     ]
 
     updated_price = []
-
+    print(prices)
     for price in prices:
-        if price % 1 < 0.5:
-            rounded_price = round(price + 0.15, 1)
+        rounded_price = round(price, 1)
+        if rounded_price % 1 == 0.5:
+            continue
+        elif rounded_price % 1 <= 0.4:
+            rounded_price = round(rounded_price, 0) + 0.5
         else:
-            rounded_price = round(price + 0.5, 1)
-
-        if rounded_price % 1 < 0.5:
-            rounded_price = rounded_price if rounded_price % 0.5 == 0 else round(rounded_price / 0.5) * 0.5
-        else:
-            rounded_price = round(rounded_price, 1)
+            rounded_price = round(rounded_price + 0.5, 0)
 
         updated_price.append(rounded_price)
 
+    print(updated_price)
     fares = {
         "4seater_student": updated_price[0],
         "4seater_stuff": updated_price[1],
