@@ -8,12 +8,15 @@ def get_pricing(
     origin_longitude,
     destination_latitude,
     destination_longitude,
+    role,
     vehicle_enable="entireRoute",
     transit_enable="",
     taxi_enable="",
     rented_enable="",
 ):
     api_key = ("m3bxwLAWhIOU8_fSqsx4FL2AeiuPpBtafsRXTCTJVCs",)
+
+    ## DURATION API ###
     # Check if origin and destination coordinates are already cached
     # cache_key = f"{origin_latitude},{origin_longitude},{destination_latitude},{destination_longitude}"
     # cached_response = cache.get(cache_key)
@@ -71,7 +74,7 @@ def get_pricing(
         distance_url = "https://router.hereapi.com/v8/routes"
         response = requests.get(distance_url, params=params)
         data = response.json()
-        cache.set(cache_key, data, timeout=30)
+        cache.set(cache_key, data, timeout=120)
 
     details = data["routes"][0]["sections"][0]["summary"]
     distance = details["length"]
@@ -119,12 +122,19 @@ def get_pricing(
         updated_price.append(rounded_price)
 
     print(updated_price)
-    fares = {
-        "4seater_student": updated_price[0],
-        "4seater_stuff": updated_price[1],
-        "4seater_outsider": updated_price[2],
-        "6seater_student": updated_price[3],
-        "6seater_stuff": updated_price[4],
-        "6seater_outsider": updated_price[5],
-    }
+    fares = {}
+    if role == "student":
+        fares["4seater_student"] = updated_price[0]
+    elif role == "stuff":
+        fares["4seater_stuff"] = updated_price[1]
+    elif role == "outsider":
+        fares["4seater_outsider"] = updated_price[2]
+
+    if role == "student":
+        fares["6seater_student"] = updated_price[3]
+    elif role == "stuff":
+        fares["6seater_stuff"] = updated_price[4]
+    elif role == "outsider":
+        fares["6seater_outsider"] = updated_price[5]
+
     return fares

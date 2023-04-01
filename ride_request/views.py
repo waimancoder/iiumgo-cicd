@@ -66,17 +66,12 @@ class FareEstimationView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
+        role = serializer.validated_data["role"]
         pickup_latitude = serializer.validated_data["pickup_latitude"]
         pickup_longitude = serializer.validated_data["pickup_longitude"]
         dropoff_latitude = serializer.validated_data["dropoff_latitude"]
         dropoff_longitude = serializer.validated_data["dropoff_longitude"]
-        price = get_pricing(
-            pickup_latitude,
-            pickup_longitude,
-            dropoff_latitude,
-            dropoff_longitude,
-        )
+        price = get_pricing(pickup_latitude, pickup_longitude, dropoff_latitude, dropoff_longitude, role)
         data = {"price": price, "currency": "MYR"}
 
         return Response({"success": True, "statusCode": status.HTTP_200_OK, "data": data}, status=status.HTTP_200_OK)

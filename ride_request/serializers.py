@@ -42,6 +42,7 @@ class RideRequestSerializer(serializers.ModelSerializer):
 
 
 class CoordinateSerializer(serializers.Serializer):
+    role = serializers.CharField()
     pickup_latitude = serializers.FloatField()
     pickup_longitude = serializers.FloatField()
     dropoff_latitude = serializers.FloatField()
