@@ -13,10 +13,11 @@ from rest_framework.fields import ObjectDoesNotExist
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView, csrf_exempt
 from rest_framework.response import Response
-from payment.models import Bill, DriverEwallet, Payment
+from payment.models import Bill, CommissionHistory, DriverEwallet, Payment
 from payment.serializers import BillSerializer, CreateBillSerializer
 from django.utils import timezone
 from decimal import Decimal
+from django.db.models import F, Value, CharField
 
 
 from user_account.models import User
@@ -324,13 +325,45 @@ class BillHistoryAPIView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = CustomPageNumberPagination
 
-    def get_queryset(self):
+    def get_queryset(self, date=None):
         user = User.objects.get(id=self.kwargs["user_id"])
-        return Bill.objects.filter(billEmail=user.email).order_by("-billPaymentDate")
+        if date:
+            date_obj = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+            bill_history = (
+                Bill.objects.filter(billEmail=user.email, billPaymentDate__date=date_obj)
+                .annotate(type=Value("top-up", output_field=CharField()))
+                .order_by("-billPaymentDate")
+            )
+            commission_history = (
+                CommissionHistory.objects.filter(driver=user.id, payment_date__date=date_obj)
+                .annotate(type=Value("commission", output_field=CharField()))
+                .order_by("-payment_date")
+            )
+        else:
+            bill_history = (
+                Bill.objects.filter(billEmail=user.email)
+                .annotate(type=Value("top-up", output_field=CharField()))
+                .order_by("-billPaymentDate")
+            )
+            commission_history = (
+                CommissionHistory.objects.filter(driver=user.id)
+                .annotate(type=Value("commission", output_field=CharField()))
+                .order_by("-payment_date")
+            )
+        combined_queryset = list(bill_history) + list(commission_history)
+        sorted_queryset = sorted(
+            combined_queryset,
+            key=lambda x: x.billPaymentDate if hasattr(x, "billPaymentDate") else x.payment_date,
+            reverse=True,
+        )
+        print(sorted_queryset)
+        return sorted_queryset
 
     def get(self, request, user_id):
         try:
-            queryset = self.get_queryset()
+            date = request.query_params.get("date", None)
+            queryset = self.get_queryset(date=date)
+            print(queryset)
             paginated_queryset = self.paginate_queryset(queryset)
             serialized_history = self.get_serializer(paginated_queryset, many=True).data
 
@@ -339,10 +372,7 @@ class BillHistoryAPIView(generics.GenericAPIView):
                 "statusCode": status.HTTP_200_OK,
                 "data": {
                     "user_id": user_id,
-                    "top_up_history": serialized_history,
-                    "earning_history": {},
-                    "next": self.paginator.get_next_link(),
-                    "previous": self.paginator.get_next_link(),
+                    "history": serialized_history,
                 },
             }
 

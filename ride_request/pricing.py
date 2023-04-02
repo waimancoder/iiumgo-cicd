@@ -125,14 +125,14 @@ def get_pricing(
     fares = {}
     if role == "student":
         fares["4seater"] = updated_price[0]
-    elif role == "stuff":
+    elif role == "staff":
         fares["4seater"] = updated_price[1]
     elif role == "outsider":
         fares["4seater"] = updated_price[2]
 
     if role == "student":
         fares["6seater"] = updated_price[3]
-    elif role == "stuff":
+    elif role == "staff":
         fares["6seater"] = updated_price[4]
     elif role == "outsider":
         fares["6seater"] = updated_price[5]

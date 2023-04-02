@@ -2,16 +2,21 @@ from pyexpat import model
 from django.db import models
 import uuid
 
+from user_account.models import User
+
 
 # Create your models here.
 class DriverEwallet(models.Model):
-    user = models.OneToOneField("user_account.User", on_delete=models.CASCADE, primary_key=True, related_name="ewallet")
-    balance = models.DecimalField(max_digits=10, decimal_places=2)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name="ewallet")
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     currency = models.CharField(max_length=3, default="MYR")
 
 
-class CompanyCommissions:
-    balance = models.DecimalField(max_digits=10, decimal_places=2)
+class CommissionHistory(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    driver = models.ForeignKey(User, on_delete=models.CASCADE)
+    commission_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_date = models.DateTimeField()
 
 
 class Payment(models.Model):

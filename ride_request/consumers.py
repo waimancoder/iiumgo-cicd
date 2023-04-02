@@ -4,6 +4,7 @@ from channels.db import database_sync_to_async
 from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.messages import success
+from payment.models import CommissionHistory
 from user_account.models import User
 import json
 from channels.layers import get_channel_layer
@@ -395,6 +396,8 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         ride_request.status = RideRequest.STATUS_COMPLETED
         ride_request.dropoff_time = datetime.now()
         await database_sync_to_async(ride_request.save)()
+
+        # commission_paid = await database_sync_to_async(CommissionHistory.objects.create)(driver=self.user.driver, commission_amount=amount)
 
         driver = await database_sync_to_async(lambda: self.user.driver)()
         driver.jobDriverStatus = Driver.STATUS_AVAILABLE
