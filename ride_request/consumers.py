@@ -1,10 +1,12 @@
 from datetime import datetime
 import traceback
+from urllib import response
 from channels.db import database_sync_to_async
 from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.messages import success
-from payment.models import CommissionHistory
+from payment.models import CommissionHistory, DriverEarning, DriverEwallet
+from ride_request.pricing import get_commission_amount, get_distance
 from user_account.models import User
 import json
 from channels.layers import get_channel_layer
@@ -79,6 +81,13 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     @database_sync_to_async
     def create_ride_request(self, data):
         try:
+            distance = get_distance(
+                data["pickup_latitude"],
+                data["pickup_longitude"],
+                data["dropoff_latitude"],
+                data["dropoff_longitude"],
+            )
+            print(distance)
             ride_request = RideRequest(
                 user=self.user,
                 pickup_latitude=data["pickup_latitude"],
@@ -88,6 +97,8 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 pickup_address=data["pickup_address"],
                 dropoff_address=data["dropoff_address"],
                 route_polygon=data["route_polygon"],
+                price=data["price"],
+                distance=distance
                 ## TODO: fares, payment method
                 # You can set the other fields, such as driver and actual_fare, when the ride is accepted or completed.
             )
@@ -107,6 +118,8 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     "pickup_address": ride_request.pickup_address,
                     "dropoff_address": ride_request.dropoff_address,
                     "status": ride_request.status,
+                    "price": ride_request.price,
+                    "distance": ride_request.distance,
                 },
             }
 
@@ -180,6 +193,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     "pickup_address": ride_request.pickup_address,
                     "dropoff_address": ride_request.dropoff_address,
                     "status": ride_request.status,
+                    "price": str(ride_request.price),
                 }
                 data_list.append(data)
             response = {
@@ -213,7 +227,8 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             result = await self.start_trip(data)
             await self.send(json.dumps(result))
         elif action == "complete_trip":
-            await self.complete_trip(data)
+            result = await self.complete_trip(data)
+            await self.send(json.dumps(result))
 
     async def send_pending_ride_request(self, event):
         await self.send(
@@ -290,6 +305,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     "vehicle_model": driver.vehicle_model if driver.vehicle_model else "",
                     "vehicle_color": driver.vehicle_color if driver.vehicle_color else "",
                     "rating": "__average_rating_placeholder__",
+                    "price": str(ride_request.price),
                 },
             }
 
@@ -380,7 +396,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         data = {
             "success": True,
             "message": "Ride Request is completed successfully",
-            "type": "driver_passenger_completed_ride_request",
+            "type": "driver_passenger_notification",
             "data": {"id": str(ride_request.id)},
         }
         await self.channel_layer.group_send(group_name, {"type": "driver_accepts_ride_request", "data": data})
@@ -391,21 +407,55 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         cache.delete(f"chatgroup_{ride_request.user_id}")
 
     async def complete_trip(self, data):
-        ride_request_id = data["ride_request_id"]
-        ride_request = await database_sync_to_async(RideRequest.objects.get)(id=ride_request_id)
-        ride_request.status = RideRequest.STATUS_COMPLETED
-        ride_request.dropoff_time = datetime.now()
-        await database_sync_to_async(ride_request.save)()
+        try:
+            ride_request_id = data["ride_request_id"]
+            ride_request = await database_sync_to_async(RideRequest.objects.get)(id=ride_request_id)
+            ride_request.status = RideRequest.STATUS_COMPLETED
+            ride_request.dropoff_time = datetime.now()
+            await database_sync_to_async(ride_request.save)()
 
-        # commission_paid = await database_sync_to_async(CommissionHistory.objects.create)(driver=self.user.driver, commission_amount=amount)
+            commission_paid = await database_sync_to_async(CommissionHistory.objects.create)(
+                driver=self.user,
+                commission_amount=get_commission_amount(price=ride_request.price, role=self.user.role),
+            )
+            await database_sync_to_async(commission_paid.save)()
+            commission_amount = commission_paid.commission_amount
+            driver_ewallet = await database_sync_to_async(DriverEwallet.objects.get)(user=self.user)
 
-        driver = await database_sync_to_async(lambda: self.user.driver)()
-        driver.jobDriverStatus = Driver.STATUS_AVAILABLE
-        await database_sync_to_async(driver.save)()
+            driver_ewallet.balance -= commission_amount
+            await database_sync_to_async(driver_ewallet.save)()
 
-        passenger_channel_name = cache.get(f"passengerconsumer_{ride_request.user_id}")
-        if passenger_channel_name:
-            await self.remove_consumers_to_group(self.group_name, self.channel_name, passenger_channel_name, data)
+            await database_sync_to_async(DriverEarning.objects.create)(
+                driver=self.user,
+                earning_amount=ride_request.price - commission_amount,
+                ride_request_id=ride_request,
+            )
+
+            driver = await database_sync_to_async(lambda: self.user.driver)()
+            driver.jobDriverStatus = Driver.STATUS_AVAILABLE
+            await database_sync_to_async(driver.save)()
+
+            passenger_channel_name = cache.get(f"passengerconsumer_{ride_request.user_id}")
+            if passenger_channel_name:
+                await self.remove_consumers_to_group(self.group_name, self.channel_name, passenger_channel_name, data)
+
+            response_data = {
+                "success": True,
+                "message": "Ride request completed successfully",
+                "type": "driver_completed_ride_request_notifications",
+                "data": {
+                    "id": str(ride_request.id),
+                    "status": ride_request.status,
+                    "commission_amount": str(commission_amount),
+                    "earning_amount": str(ride_request.price - commission_amount),
+                },
+            }
+
+            return response_data
+
+        except Exception as e:
+            tb = traceback.format_exc()
+            return {"success": False, "message": str(e), "traceback": tb}
 
     async def driver_accepts_ride_request(self, event):
         await self.send(json.dumps(event["data"]))

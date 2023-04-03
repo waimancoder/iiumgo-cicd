@@ -42,7 +42,7 @@ class RideRequest(models.Model):
 
     driver = models.ForeignKey(Driver, null=True, blank=True, on_delete=models.SET_NULL, related_name="driver_rides")
     estimated_fare = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    actual_fare = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     payment_method = models.CharField(max_length=20, null=True, blank=True)
     distance = models.FloatField(null=True, blank=True)
     duration = models.IntegerField(null=True, blank=True)

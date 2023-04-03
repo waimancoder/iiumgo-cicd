@@ -1,6 +1,7 @@
 from pyexpat import model
 from django.db import models
 import uuid
+from ride_request.models import RideRequest
 
 from user_account.models import User
 
@@ -16,7 +17,15 @@ class CommissionHistory(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     driver = models.ForeignKey(User, on_delete=models.CASCADE)
     commission_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_date = models.DateTimeField()
+    payment_date = models.DateTimeField(auto_now_add=True)
+
+
+class DriverEarning(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    driver = models.ForeignKey(User, on_delete=models.CASCADE)
+    earning_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    earning_date = models.DateTimeField(auto_now_add=True)
+    ride_request_id = models.ForeignKey(RideRequest, on_delete=models.CASCADE)
 
 
 class Payment(models.Model):

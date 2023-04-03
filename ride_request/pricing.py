@@ -1,6 +1,7 @@
 import requests
 from django.core.cache import cache
 from datetime import datetime
+from decimal import Decimal
 
 
 def get_pricing(
@@ -138,3 +139,40 @@ def get_pricing(
         fares["6seater"] = updated_price[5]
 
     return fares
+
+
+def get_distance(origin_latitude, origin_longitude, destination_latitude, destination_longitude):
+    # Get distance between pickup and dropoff coordinates
+    api_key = ("m3bxwLAWhIOU8_fSqsx4FL2AeiuPpBtafsRXTCTJVCs",)
+    cache_key = f"{origin_latitude},{origin_longitude},{destination_latitude},{destination_longitude}_distance"
+    cached_response = cache.get(cache_key)
+    params = {
+        "origin": f"{origin_latitude},{origin_longitude}",
+        "destination": f"{destination_latitude},{destination_longitude}",
+        "return": "summary,typicalDuration",
+        "transportMode": "car",
+        "apikey": api_key,
+    }
+    if cached_response:
+        data = cached_response
+    else:
+        distance_url = "https://router.hereapi.com/v8/routes"
+        response = requests.get(distance_url, params=params)
+        data = response.json()
+        cache.set(cache_key, data, timeout=120)
+
+    details = data["routes"][0]["sections"][0]["summary"]
+    distance = details["length"] * 0.001
+    return distance
+
+
+def get_commission_amount(price, role):
+    price = Decimal(price)
+    if role == "student":
+        commission = price * Decimal(0.10)
+    elif role == "staff":
+        commission = price * Decimal(0.15)
+    elif role == "outsider":
+        commission = price * Decimal(0.20)
+
+    return commission
