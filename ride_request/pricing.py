@@ -166,13 +166,22 @@ def get_distance(origin_latitude, origin_longitude, destination_latitude, destin
     return distance
 
 
-def get_commission_amount(price, role):
-    price = Decimal(price)
-    if role == "student":
-        commission = price * Decimal(0.10)
-    elif role == "staff":
-        commission = price * Decimal(0.15)
-    elif role == "outsider":
-        commission = price * Decimal(0.20)
+def get_commission_amount(price, role, distance):
+    commission = 0
 
-    return commission
+    if role == "student":
+        base_commission = 0.50
+        extra_km_commission = 0.10
+    elif role == "staff":
+        base_commission = 0.60
+        extra_km_commission = 0.20
+    else:
+        raise ValueError("Invalid role")
+
+    if distance <= 3:
+        commission = base_commission
+    else:
+        extra_distance = distance - 3
+        commission = base_commission + (extra_distance * extra_km_commission)
+
+    return Decimal(commission)

@@ -38,7 +38,7 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             passenger.passenger_status == Passenger.STATUS_ACCEPTED
             or passenger.passenger_status == Passenger.STATUS_IN_PROGRESS
         ):
-            cache_key = f"chatgroup_{self.user_id}"
+            cache_key = f"cg_{self.user_id}"
             print(cache_key)
             group_name = cache.get(cache_key)
             print(group_name)
@@ -63,7 +63,7 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     async def send_chat_message(self, data):
         message = data["message"]
         user_id = self.user_id
-        group_name = cache.get(f"chatgroup_{self.user_id}")
+        group_name = cache.get(f"cg_{self.user_id}")
         await self.channel_layer.group_send(
             group_name,
             {
@@ -176,7 +176,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
 
         if driver_status == "enroute_pickup" or driver_status == "in_transit":
             ride_request_id = driver.ride_request
-            cache_key = f"chatgroup_{ride_request_id}"
+            cache_key = f"cg_{ride_request_id}"
 
             self.group_name = cache.get(cache_key)
             await self.channel_layer.group_add(self.group_name, self.channel_name)
@@ -193,7 +193,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     "pickup_address": ride_request.pickup_address,
                     "dropoff_address": ride_request.dropoff_address,
                     "status": ride_request.status,
-                    "price": str(ride_request.price),
+                    "price": float(round(ride_request.price, 2)),
                 }
                 data_list.append(data)
             response = {
@@ -270,6 +270,14 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             if ride_request.status != RideRequest.STATUS_PENDING:
                 return {"success": False, "message": "Ride request is not pending"}
 
+            driver_ewallet = await database_sync_to_async(DriverEwallet.objects.get)(user=self.user)
+
+            commission_amount = get_commission_amount(
+                price=ride_request.price, role=self.user.role, distance=ride_request.distance
+            )
+            if commission_amount > driver_ewallet.balance:
+                return {"success": False, "message": "Insufficient balance"}
+
             driver = await database_sync_to_async(lambda: self.user.driver)()
             ride_request.status = RideRequest.STATUS_ACCEPTED
             ride_request.driver = driver
@@ -286,8 +294,8 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             await self.channel_layer.group_discard("drivers", self.channel_name)
             # Add both consumers to the group
             self.group_name = f"{ride_request.id}{driver.user_id}"
-            cache.set(f"chatgroup_{ride_request.user_id}", self.group_name, None)
-            print(f"chatgroup_{ride_request.user_id}")
+            cache.set(f"cg_{ride_request.user_id}", self.group_name, None)
+            print(f"cg_{ride_request.user_id}")
 
             response_data_to_passenger = {
                 "success": True,
@@ -305,7 +313,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     "vehicle_model": driver.vehicle_model if driver.vehicle_model else "",
                     "vehicle_color": driver.vehicle_color if driver.vehicle_color else "",
                     "rating": "__average_rating_placeholder__",
-                    "price": str(ride_request.price),
+                    "price": float(round(ride_request.price, 2)),
                 },
             }
 
@@ -366,9 +374,13 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             driver.jobDriverStatus = Driver.STATUS_IN_TRANSIT
             await database_sync_to_async(driver.save)()
 
+            passenger = await database_sync_to_async(Passenger.objects.get)(user_id=ride_request.user_id)
+            passenger.passenger_status = Passenger.STATUS_IN_PROGRESS
+            await database_sync_to_async(passenger.save)()
+
             response_data = {
                 "success": True,
-                "type": "driver_start_trip",
+                "type": "driver_passenger_notification",
                 "message": "Ride request starts successfully",
                 "data": {
                     "id": str(ride_request.id),
@@ -376,7 +388,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 },
             }
 
-            cache_key = f"chatgroup_{ride_request.user_id}"
+            cache_key = f"cg_{ride_request.user_id}"
 
             self.group_name = cache.get(cache_key)
             print(self.group_name)
@@ -404,7 +416,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         await self.channel_layer.group_discard(group_name, passenger_channel_name)
         await self.channel_layer.group_add("drivers", self.channel_name)
 
-        cache.delete(f"chatgroup_{ride_request.user_id}")
+        cache.delete(f"cg_{ride_request.user_id}")
 
     async def complete_trip(self, data):
         try:
@@ -416,15 +428,16 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
 
             commission_paid = await database_sync_to_async(CommissionHistory.objects.create)(
                 driver=self.user,
-                commission_amount=get_commission_amount(price=ride_request.price, role=self.user.role),
+                commission_amount=get_commission_amount(
+                    price=ride_request.price, role=self.user.role, distance=ride_request.distance
+                ),
             )
             await database_sync_to_async(commission_paid.save)()
             commission_amount = commission_paid.commission_amount
             driver_ewallet = await database_sync_to_async(DriverEwallet.objects.get)(user=self.user)
 
-            driver_ewallet.balance -= commission_amount
+            driver_ewallet.balance -= round(commission_amount, 2)
             await database_sync_to_async(driver_ewallet.save)()
-
             await database_sync_to_async(DriverEarning.objects.create)(
                 driver=self.user,
                 earning_amount=ride_request.price - commission_amount,
@@ -434,6 +447,10 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             driver = await database_sync_to_async(lambda: self.user.driver)()
             driver.jobDriverStatus = Driver.STATUS_AVAILABLE
             await database_sync_to_async(driver.save)()
+
+            passenger = await database_sync_to_async(Passenger.objects.get)(user_id=ride_request.user_id)
+            passenger.passenger_status = Passenger.STATUS_AVAILABLE
+            await database_sync_to_async(passenger.save)()
 
             passenger_channel_name = cache.get(f"passengerconsumer_{ride_request.user_id}")
             if passenger_channel_name:
@@ -446,8 +463,8 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 "data": {
                     "id": str(ride_request.id),
                     "status": ride_request.status,
-                    "commission_amount": str(commission_amount),
-                    "earning_amount": str(ride_request.price - commission_amount),
+                    "commission_amount": float(round(commission_amount, 2)),
+                    "earning_amount": float(round((ride_request.price - commission_amount), 2)),
                 },
             }
 
