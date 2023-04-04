@@ -485,12 +485,15 @@ class UserSubmissionForm(viewsets.ModelViewSet):
                 "vehicle_registration_number": driver.vehicle_registration_number
                 if driver.vehicle_registration_number
                 else "",
+                "vehicle_type": driver.vehicle_type if driver.vehicle_type else "",
                 "roadtax": str(roadtax) if roadtax else "",
                 "isFilled": True
                 if driver.vehicle_manufacturer
                 and driver.vehicle_model
                 and driver.vehicle_color
                 and driver.vehicle_ownership
+                and driver.vehicle_registration_number
+                and driver.vehicle_type
                 and roadtax
                 else False,
             }
@@ -543,6 +546,7 @@ class DriverVehicleInfoViewSet(viewsets.ModelViewSet):
                     "vehicle_registration_number": driver.vehicle_registration_number
                     if driver.vehicle_registration_number
                     else "",
+                    "vehicle_type": driver.vehicle_type if driver.vehicle_type else "",
                     "roadtax": driver.roadtax if driver.roadtax else "",
                 }
                 drivers.append(driver_data)
@@ -578,6 +582,7 @@ class DriverVehicleInfoViewSet(viewsets.ModelViewSet):
                 "vehicle_registration_number": driver.vehicle_registration_number
                 if driver.vehicle_registration_number
                 else "",
+                "vehicle_type": driver.vehicle_type if driver.vehicle_type else "",
                 "roadtax": roadtax if roadtax else "",
             }
             return Response(response)
@@ -623,6 +628,7 @@ class DriverVehicleInfoViewSet(viewsets.ModelViewSet):
                 "vehicle_registration_number": instance.vehicle_registration_number
                 if instance.vehicle_registration_number
                 else "",
+                "vehicle_type": instance.vehicle_type if instance.vehicle_type else "",
                 "roadtax": roadtax if roadtax else "",
             }
             return Response(response_data)

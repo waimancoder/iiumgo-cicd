@@ -4,6 +4,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 
 from ride_request.pricing import get_pricing
+from rides.models import Driver
 from .models import RideRequest
 from .serializers import CoordinateSerializer, RideRequestSerializer
 from rest_framework.pagination import PageNumberPagination
@@ -72,6 +73,14 @@ class FareEstimationView(generics.GenericAPIView):
         dropoff_latitude = serializer.validated_data["dropoff_latitude"]
         dropoff_longitude = serializer.validated_data["dropoff_longitude"]
         price = get_pricing(pickup_latitude, pickup_longitude, dropoff_latitude, dropoff_longitude, role)
-        data = {"price": price, "currency": "MYR"}
+        driver_count_4seater = Driver.objects.filter(
+            jobDriverStatus=Driver.STATUS_AVAILABLE, vehicle_type=Driver.TYPE_4SEATER
+        ).count()
+        driver_count_6seater = Driver.objects.filter(
+            jobDriverStatus=Driver.STATUS_AVAILABLE, vehicle_type=Driver.TYPE_6SEATER
+        ).count()
+        driver_count = {"4seater": driver_count_4seater, "6seater": driver_count_6seater}
+        price["currency"] = "MYR"
+        data = {"price": price, "driver_count": driver_count}
 
         return Response({"success": True, "statusCode": status.HTTP_200_OK, "data": data}, status=status.HTTP_200_OK)

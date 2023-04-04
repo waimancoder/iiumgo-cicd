@@ -3,6 +3,7 @@ from datetime import datetime
 from rest_framework import serializers, status
 from django.core.files.base import ContentFile
 from rest_framework.authentication import get_user_model
+from rest_framework.fields import ChoiceField
 from .models import Driver, DriverLocation, Location, Block
 import base64
 from user_account.models import User
@@ -196,6 +197,7 @@ class DriverVehicleInfo(serializers.ModelSerializer):
     vehicle_color = serializers.CharField(required=False, allow_blank=True)
     vehicle_ownership = serializers.CharField(required=False, allow_blank=True)
     vehicle_registration_number = serializers.CharField(required=False, allow_blank=True)
+    vehicle_type = serializers.ChoiceField(choices=[("4pax", "4pax"), ("6pax", "6pax"), ("", "")], required=False)
     roadtax = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
@@ -206,6 +208,7 @@ class DriverVehicleInfo(serializers.ModelSerializer):
             "vehicle_color",
             "vehicle_ownership",
             "vehicle_registration_number",
+            "vehicle_type",
             "roadtax",
         )
 
@@ -226,6 +229,7 @@ class DriverVehicleInfo(serializers.ModelSerializer):
         instance.vehicle_manufacturer = validated_data.get("vehicle_manufacturer", None) or None
         instance.vehicle_model = validated_data.get("vehicle_model", None) or None
         instance.vehicle_registration_number = validated_data.get("vehicle_registration_number", None) or None
+        instance.vehicle_type = validated_data.get("vehicle_type", None) or None
 
         instance.save()
 

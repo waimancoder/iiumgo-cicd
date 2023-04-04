@@ -181,6 +181,8 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             self.group_name = cache.get(cache_key)
             await self.channel_layer.group_add(self.group_name, self.channel_name)
         else:
+            driver.jobDriverStatus = Driver.STATUS_AVAILABLE
+            await sync_to_async(driver.save)()
             ride_requests = await self.get_pending_ride_requests()
             data_list = []
             for ride_request in ride_requests:
@@ -209,6 +211,9 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             await self.send(json.dumps(response))
 
     async def disconnect(self, close_code):
+        driver = await sync_to_async(Driver.objects.get)(user=self.user)
+        driver.jobDriverStatus = Driver.STATUS_UNAVAILABLE
+        await sync_to_async(driver.save)()
         await self.channel_layer.group_discard("drivers", self.channel_name)
 
     async def receive(self, text_data):

@@ -13,6 +13,11 @@ class Driver(models.Model):
     vehicle_model = models.CharField(max_length=128, null=True, blank=True)
     vehicle_color = models.CharField(max_length=128, null=True, blank=True)
     vehicle_registration_number = models.CharField(max_length=128, null=True, blank=True)
+    TYPE_4SEATER = "4pax"
+    TYPE_6SEATER = "6pax"
+
+    typeChoices = [(TYPE_4SEATER, "4 Seater"), (TYPE_6SEATER, "6 Seater")]
+    vehicle_type = models.CharField(max_length=128, null=True, blank=True, choices=typeChoices)
     driver_license_id = models.CharField(max_length=128, null=True, blank=True)
     driver_license_expiry_date = models.DateField(null=True, blank=True)
     driver_license_img_front = models.ImageField(
