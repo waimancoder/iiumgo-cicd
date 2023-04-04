@@ -16,6 +16,7 @@ class RideRequestMixin:
                 "dropoff_longitude": ride_request.dropoff_longitude,
                 "pickup_address": ride_request.pickup_address,
                 "dropoff_address": ride_request.dropoff_address,
+                "polyline": ride_request.route_polygon,
                 "status": ride_request.status,
             }
             data_list.append(data)
