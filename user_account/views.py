@@ -127,11 +127,14 @@ class RegisterAPI(generics.GenericAPIView):
             "phone_no": user_data.get("phone_no"),
             "role": user_data.get("role"),
             "isVerified": user_data.get("isVerified"),
-            "matricNo": user_data.get("matricNo") if user_data.get("matricNo") else "",
             "birthdate": user_data.get("birthdate") if user_data.get("birthdate") else "",
             "gender": user_data.get("gender") if user_data.get("gender") else "",
             "nationality": user_data.get("nationality") if user_data.get("nationality") else "",
         }
+
+        if user_data.get("role") == "student":
+            userinfo["matricNo"] = user_data.get("matricNo")
+            userinfo["student_pic"] = user_data.get("student_pic")
 
         return Response({"user": userinfo, "token": AuthToken.objects.create(user)[1]})
 

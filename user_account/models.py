@@ -33,10 +33,10 @@ class User(AbstractUser):
     GENDER_CHOICES = [("male", "Male"), ("female", "Female")]
     gender = models.CharField(blank=True, max_length=10, choices=[("male", "Male"), ("female", "Female")])
 
-    CHOICES = [("student", "Student"), ("staff", "Staff"), ("outsider", "Outsider")]
+    CHOICES = [("student", "Student"), ("staff", "Staff"), ("alumni", "Alumni"), ("outsider", "Outsider")]
     role = models.CharField(
         max_length=10,
-        choices=[("student", "Student"), ("staff", "Staff"), ("outsider", "Outsider")],
+        choices=[("student", "Student"), ("staff", "Staff"), ("alumni", "Alumni"), ("outsider", "Outsider")],
     )
 
     class Meta:
@@ -55,3 +55,6 @@ class User(AbstractUser):
 class StudentID(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     matricNo = models.CharField(max_length=20, null=True, blank=True, unique=True)
+    student_pic = models.ImageField(
+        upload_to="student-pic/", null=True, blank=True, validators=[FileExtensionValidator(["jpg", "jpeg", "png"])]
+    )

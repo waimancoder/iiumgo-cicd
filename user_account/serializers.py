@@ -37,6 +37,7 @@ class DateField(serializers.DateTimeField):
 class UserSerializer(serializers.ModelSerializer):
     matricNo = serializers.SerializerMethodField()
     birthdate = DateField()
+    student_pic = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -48,10 +49,11 @@ class UserSerializer(serializers.ModelSerializer):
             "phone_no",
             "role",
             "isVerified",
-            "matricNo",
             "birthdate",
             "gender",
             "nationality",
+            "matricNo",
+            "student_pic",
         ]
         read_only_fields = ["isVerified", "role"]
 
@@ -59,13 +61,23 @@ class UserSerializer(serializers.ModelSerializer):
         try:
             student_id = StudentID.objects.get(user=instance)
             matric_no = student_id.matricNo
+            return matric_no
         except StudentID.DoesNotExist:
             matric_no = None
+
+    def get_student_pic(self, instance):
+        try:
+            student_id = StudentID.objects.get(user=instance)
+            student_pic = student_id.student_pic.url
+            return student_pic
+        except StudentID.DoesNotExist:
+            student_pic = None
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if data["role"] != "student":
             data.pop("matricNo")
+            data.pop("student_pic")
         return data
 
     def update(self, instance, validated_data):
@@ -87,10 +99,24 @@ class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True, validators=[UniqueValidator(queryset=get_user_model().objects.all())])
     fullname = serializers.CharField(max_length=100)
     phone_no = serializers.CharField(max_length=12)
+    matricNo = serializers.CharField(max_length=12, required=False)
+    student_pic = serializers.CharField(required=False)
+    gender = serializers.CharField(max_length=10, required=False)
 
     class Meta:
         model = User
-        fields = ("id", "email", "fullname", "password", "phone_no", "dialCode", "role")
+        fields = (
+            "id",
+            "email",
+            "fullname",
+            "password",
+            "phone_no",
+            "dialCode",
+            "role",
+            "matricNo",
+            "student_pic",
+            "gender",
+        )
         extra_kwargs = {"password": {"write_only": True}}
 
     def create_unique_username(self, local_part):
@@ -111,8 +137,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.phone_no = validated_data["phone_no"]
         user.dialCode = validated_data["dialCode"]
         user.role = validated_data["role"]
+        user.gender = validated_data["gender"]
 
         user.save()
+        print(validated_data["matricNo"])
 
         if user.role == "student":
             Driver.objects.create(
@@ -135,11 +163,18 @@ class RegisterSerializer(serializers.ModelSerializer):
                 latitude=None,
                 longitude=None,
             )
+            student_pic = validated_data["student_pic"]
+            format, imgstr = student_pic.split(";base64,")
+            ext = format.split("/")[-1]
+            data = ContentFile(base64.b64decode(imgstr), name=f"{user.username}_student_pic.{ext}")
+            matricNo = validated_data["matricNo"]
             StudentID.objects.create(
                 user=user,
-                matricNo=None,
+                matricNo=matricNo,
+                student_pic=data,
             )
-            DriverEwallet.objects.create(user=user)
+
+        DriverEwallet.objects.create(user=user)
         Passenger.objects.create(user=user, passenger_status=Passenger.STATUS_AVAILABLE)
 
         return user
