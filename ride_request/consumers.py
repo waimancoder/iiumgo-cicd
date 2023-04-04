@@ -195,6 +195,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     "pickup_address": ride_request.pickup_address,
                     "dropoff_address": ride_request.dropoff_address,
                     "status": ride_request.status,
+                    "polyline": ride_request.route_polygon,
                     "price": float(round(ride_request.price, 2)),
                 }
                 data_list.append(data)
@@ -212,8 +213,13 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         driver = await sync_to_async(Driver.objects.get)(user=self.user)
-        driver.jobDriverStatus = Driver.STATUS_UNAVAILABLE
-        await sync_to_async(driver.save)()
+
+        if driver.jobDriverStatus == Driver.STATUS_ENROUTE_PICKUP or driver.jobDriverStatus == Driver.STATUS_IN_TRANSIT:
+            pass
+        else:
+            driver.jobDriverStatus = Driver.STATUS_UNAVAILABLE
+            await sync_to_async(driver.save)()
+
         await self.channel_layer.group_discard("drivers", self.channel_name)
 
     async def receive(self, text_data):
