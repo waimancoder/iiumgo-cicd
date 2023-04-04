@@ -314,6 +314,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             passenger = await database_sync_to_async(Passenger.objects.get)(user_id=ride_request.user_id)
             passenger.passenger_status = Passenger.STATUS_ACCEPTED
             await database_sync_to_async(passenger.save)()
+            passenger_user = await database_sync_to_async(User.objects.get)(id=passenger.user_id)
 
             await self.channel_layer.group_discard("drivers", self.channel_name)
             # Add both consumers to the group
@@ -321,29 +322,48 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             cache.set(f"cg_{ride_request.user_id}", self.group_name, None)
             print(f"cg_{ride_request.user_id}")
 
+            driverinfo = {
+                "driver_id": str(driver.user_id),
+                "driver_name": driver.user.fullname,
+                "vehicle_registration_number": driver.vehicle_registration_number
+                if driver.vehicle_registration_number
+                else "",
+                "vehicle_manufacturer": driver.vehicle_manufacturer if driver.vehicle_manufacturer else "",
+                "vehicle_model": driver.vehicle_model if driver.vehicle_model else "",
+                "vehicle_color": driver.vehicle_color if driver.vehicle_color else "",
+                "vehicle_type": driver.vehicle_type if driver.vehicle_type else "",
+            }
+            rideRequestinfo = {
+                "pickup_latitude": ride_request.pickup_latitude,
+                "pickup_longitude": ride_request.pickup_longitude,
+                "dropoff_latitude": ride_request.dropoff_latitude,
+                "dropoff_longitude": ride_request.dropoff_longitude,
+                "pickup_address": ride_request.pickup_address,
+                "dropoff_address": ride_request.dropoff_address,
+                "status": ride_request.status,
+                "polyline": ride_request.route_polygon,
+                "price": float(round(ride_request.price, 2)),
+                "distance": ride_request.distance,
+                "vehicle_type": ride_request.vehicle_type if ride_request.vehicle_type else "",
+                "created_at": ride_request.created_at.isoformat() if ride_request.created_at else "",
+            }
+            passenger_info = {
+                "passenger_id": str(passenger.user_id),
+                "passenger_name": passenger_user.fullname,
+                "passenger_phone_number": passenger_user.phone_no,
+                "passenger_gender": passenger_user.gender,
+            }
+
             response_data_to_passenger = {
                 "success": True,
                 "message": "Ride request accepted successfully",
                 "type": "driver_passenger_ride_request_accepted",
                 "data": {
-                    "id": str(ride_request.id),
-                    "status": ride_request.status,
-                    "driver_id": str(driver.user_id),
-                    "driver_name": driver.user.fullname,
-                    "vehicle_registration_number": driver.vehicle_registration_number
-                    if driver.vehicle_registration_number
-                    else "",
-                    "vehicle_manufacturer": driver.vehicle_manufacturer if driver.vehicle_manufacturer else "",
-                    "vehicle_model": driver.vehicle_model if driver.vehicle_model else "",
-                    "vehicle_color": driver.vehicle_color if driver.vehicle_color else "",
-                    "vehicle_type": driver.vehicle_type if driver.vehicle_type else "",
-                    "rating": "__average_rating_placeholder__",
-                    "price": float(round(ride_request.price, 2)),
+                    "driver": driverinfo,
+                    "ride_request": rideRequestinfo,
+                    "passenger": passenger_info,
                 },
             }
-
-            average_rating = await sync_to_async(getattr)(driver, "average_rating")
-            response_data_to_passenger["data"]["rating"] = average_rating if average_rating else ""
 
             passenger_channel_name = cache.get(f"passengerconsumer_{ride_request.user_id}")
             if passenger_channel_name:
