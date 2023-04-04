@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 import traceback
 from urllib import response
 from channels.db import database_sync_to_async
@@ -18,6 +18,13 @@ from rides.models import Driver, DriverLocation
 
 
 channel_layer = get_channel_layer()
+
+
+class DateTimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        return super(DateTimeEncoder, self).default(obj)
 
 
 class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
@@ -98,7 +105,8 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 dropoff_address=data["dropoff_address"],
                 route_polygon=data["polyline"],
                 price=data["price"],
-                distance=distance
+                distance=distance,
+                vehicle_type=data["vehicle_type"]
                 ## TODO: fares, payment method
                 # You can set the other fields, such as driver and actual_fare, when the ride is accepted or completed.
             )
@@ -120,6 +128,8 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     "status": ride_request.status,
                     "price": ride_request.price,
                     "distance": ride_request.distance,
+                    "vehicle_type": ride_request.vehicle_type,
+                    "created_at": ride_request.created_at.isoformat() if ride_request.created_at else "",
                 },
             }
 
@@ -183,7 +193,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         else:
             driver.jobDriverStatus = Driver.STATUS_AVAILABLE
             await sync_to_async(driver.save)()
-            ride_requests = await self.get_pending_ride_requests()
+            ride_requests = await self.get_pending_ride_requests(type=driver.vehicle_type)
             data_list = []
             for ride_request in ride_requests:
                 data = {
@@ -197,6 +207,8 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     "status": ride_request.status,
                     "polyline": ride_request.route_polygon,
                     "price": float(round(ride_request.price, 2)),
+                    "vehicle_type": ride_request.vehicle_type if ride_request.vehicle_type else "",
+                    "created_at": ride_request.created_at.isoformat() if ride_request.created_at else "",
                 }
                 data_list.append(data)
             response = {
@@ -323,6 +335,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     "vehicle_manufacturer": driver.vehicle_manufacturer if driver.vehicle_manufacturer else "",
                     "vehicle_model": driver.vehicle_model if driver.vehicle_model else "",
                     "vehicle_color": driver.vehicle_color if driver.vehicle_color else "",
+                    "vehicle_type": driver.vehicle_type if driver.vehicle_type else "",
                     "rating": "__average_rating_placeholder__",
                     "price": float(round(ride_request.price, 2)),
                 },

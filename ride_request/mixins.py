@@ -24,5 +24,5 @@ class RideRequestMixin:
         await self.channel_layer.group_send("drivers", {"type": "send_pending_ride_request", "data": data_list})
 
     @sync_to_async
-    def get_pending_ride_requests(self):
-        return list(RideRequest.objects.filter(status="pending"))
+    def get_pending_ride_requests(self, type):
+        return list(RideRequest.objects.filter(status="pending", vehicle_type=type))

@@ -48,6 +48,7 @@ class RideRequest(models.Model):
     duration = models.IntegerField(null=True, blank=True)
     special_requests = models.TextField(null=True, blank=True)
     rating = models.FloatField(null=True, blank=True)
+    vehicle_type = models.CharField(max_length=255, null=True, blank=True, choices=Driver.typeChoices)
 
 
 class Passenger(models.Model):
