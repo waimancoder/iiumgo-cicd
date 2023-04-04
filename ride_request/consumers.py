@@ -207,6 +207,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     "status": ride_request.status,
                     "polyline": ride_request.route_polygon,
                     "price": float(round(ride_request.price, 2)),
+                    "distance": ride_request.distance,
                     "vehicle_type": ride_request.vehicle_type if ride_request.vehicle_type else "",
                     "created_at": ride_request.created_at.isoformat() if ride_request.created_at else "",
                 }
