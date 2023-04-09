@@ -4,7 +4,7 @@ from rest_framework import serializers, status
 from django.core.files.base import ContentFile
 from rest_framework.authentication import get_user_model
 from rest_framework.fields import ChoiceField
-from .models import Driver, DriverLocation, Location, Block
+from .models import Driver, DriverLocation, Location
 import base64
 from user_account.models import User
 from django.core.files.uploadedfile import UploadedFile
@@ -244,48 +244,17 @@ class DriverLocationSerializer(serializers.ModelSerializer):
         fields = ["user_id", "latitude", "longitude"]
 
 
-class BlockSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Block
-        fields = ("name", "lat", "lng")
-
-
 class LocationSerializer(serializers.ModelSerializer):
-    blocks = BlockSerializer(many=True)
-
     class Meta:
         model = Location
-        fields = ("name", "polygon", "lat", "lng", "blocks")
-
-    def create(self, validated_data):
-        blocks_data = validated_data.pop("blocks")
-        location = Location.objects.create(**validated_data)
-        for block_data in blocks_data:
-            Block.objects.create(location=location, **block_data)
-        return location
+        fields = ("name", "polygon", "lat", "lng")
 
     def update(self, instance, validated_data):
-        blocks_data = validated_data.pop("blocks")
-        blocks = list(instance.blocks.all())
-
         instance.name = validated_data.get("name", instance.name)
         instance.polygon = validated_data.get("polygon", instance.polygon)
         instance.lat = validated_data.get("lat", instance.lat)
         instance.lng = validated_data.get("lng", instance.lng)
         instance.save()
-
-        for block_data in blocks_data:
-            if blocks:
-                block = blocks.pop(0)
-                block.name = block_data.get("name", block.name)
-                block.lat = block_data.get("lat", block.lat)
-                block.lng = block_data.get("lng", block.lng)
-                block.save()
-            else:
-                Block.objects.create(location=instance, **block_data)
-
-        for block in blocks:
-            block.delete()
 
         return instance
 

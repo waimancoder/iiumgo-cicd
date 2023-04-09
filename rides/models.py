@@ -137,18 +137,9 @@ class Ride(models.Model):
 class Location(models.Model):
     name = models.CharField(unique=True, max_length=255)
     polygon = models.TextField()
-    lat = models.CharField(max_length=255)
-    lng = models.CharField(max_length=255)
-
-    def __str__(self):
-        return self.name
-
-
-class Block(models.Model):
-    name = models.CharField(max_length=255)
-    lat = models.CharField(max_length=255)
-    lng = models.CharField(max_length=255)
-    location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name="blocks")
+    lat = models.CharField(max_length=255, null=True, blank=True)
+    lng = models.CharField(max_length=255, null=True, blank=True)
+    keywords = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return self.name

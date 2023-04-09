@@ -100,9 +100,6 @@ class PopularLocationView(generics.ListAPIView):
         try:
             queryset = self.get_queryset()
             paginated_queryset = self.paginate_queryset(queryset)
-
-            print(paginated_queryset)
-
             serializer = self.get_serializer(paginated_queryset, many=True)
             locations = serializer.data
 
