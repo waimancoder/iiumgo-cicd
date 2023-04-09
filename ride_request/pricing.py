@@ -10,6 +10,8 @@ def get_pricing(
     destination_latitude,
     destination_longitude,
     role,
+    distance,
+    duration=None,
     vehicle_enable="entireRoute",
     transit_enable="",
     taxi_enable="",
@@ -59,26 +61,26 @@ def get_pricing(
     #     duration_seconds = (arrival_datetime - departure_datetime).total_seconds()
     #     duration_minutes = duration_seconds // 60
 
-    params = {
-        "origin": f"{origin_latitude},{origin_longitude}",
-        "destination": f"{destination_latitude},{destination_longitude}",
-        "return": "summary,typicalDuration",
-        "transportMode": "car",
-        "apikey": api_key,
-    }
+    # params = {
+    #     "origin": f"{origin_latitude},{origin_longitude}",
+    #     "destination": f"{destination_latitude},{destination_longitude}",
+    #     "return": "summary,typicalDuration",
+    #     "transportMode": "car",
+    #     "apikey": api_key,
+    # }
 
-    cache_key = f"{origin_latitude},{origin_longitude},{destination_latitude},{destination_longitude}_distance"
-    cached_response = cache.get(cache_key)
-    if cached_response:
-        data = cached_response
-    else:
-        distance_url = "https://router.hereapi.com/v8/routes"
-        response = requests.get(distance_url, params=params)
-        data = response.json()
-        cache.set(cache_key, data, timeout=120)
+    # cache_key = f"{origin_latitude},{origin_longitude},{destination_latitude},{destination_longitude}_distance"
+    # cached_response = cache.get(cache_key)
+    # if cached_response:
+    #     data = cached_response
+    # else:
+    #     distance_url = "https://router.hereapi.com/v8/routes"
+    #     response = requests.get(distance_url, params=params)
+    #     data = response.json()
+    #     cache.set(cache_key, data, timeout=120)
 
-    details = data["routes"][0]["sections"][0]["summary"]
-    distance = details["length"]
+    # details = data["routes"][0]["sections"][0]["summary"]
+    # distance = details["length"]
 
     print(distance)
 

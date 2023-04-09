@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import RideRequest
+from .models import PopularLocation, RideRequest
 
 
 class RideRequestSerializer(serializers.ModelSerializer):
@@ -43,7 +43,19 @@ class RideRequestSerializer(serializers.ModelSerializer):
 
 class CoordinateSerializer(serializers.Serializer):
     role = serializers.CharField()
+    distance = serializers.FloatField()
     pickup_latitude = serializers.FloatField()
     pickup_longitude = serializers.FloatField()
     dropoff_latitude = serializers.FloatField()
     dropoff_longitude = serializers.FloatField()
+
+
+class PopularLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PopularLocation
+        fields = (
+            "name",
+            "latitude",
+            "longitude",
+            "address",
+        )
