@@ -86,9 +86,6 @@ class Driver(models.Model):
             return total_ratings / self.ratings.count()
         return None
 
-    def __str__(self):
-        return f"{self.user.username} ({self.vehicle_manufacturer} {self.vehicle_model})"
-
 
 class DriverRating(models.Model):
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE, related_name="ratings")
@@ -100,9 +97,6 @@ class DriverRating(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
-
-    def __str__(self):
-        return f"Rating: {self.rating} for {self.driver}"
 
 
 class DriverLocation(models.Model):
@@ -136,10 +130,15 @@ class Ride(models.Model):
 
 class Location(models.Model):
     name = models.CharField(unique=True, max_length=255)
-    polygon = models.TextField()
     lat = models.CharField(max_length=255, null=True, blank=True)
     lng = models.CharField(max_length=255, null=True, blank=True)
     keywords = models.CharField(max_length=255, null=True, blank=True)
+    subLocality = models.CharField(max_length=255, blank=True, null=True)
+    locality = models.CharField(max_length=255, blank=True, null=True)
 
-    def __str__(self):
-        return self.name
+
+class Block(models.Model):
+    name = models.CharField(max_length=255)
+    lat = models.CharField(max_length=255)
+    lng = models.CharField(max_length=255)
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name="blocks")

@@ -123,9 +123,7 @@ class PopularLocationView(generics.GenericAPIView):
             response = {
                 "status": True,
                 "statusCode": status.HTTP_200_OK,
-                "data": {
-                    "popular_locations": locations,
-                },
+                "data": locations,
             }
             return Response(response, status=status.HTTP_200_OK)
 
@@ -149,6 +147,8 @@ class PopularLocationView(generics.GenericAPIView):
         address = serializer.validated_data["address"]
         latitude = serializer.validated_data["latitude"]
         longitude = serializer.validated_data["longitude"]
+        subLocality = serializer.validated_data["subLocality"]
+        locality = serializer.validated_data["locality"]
         image = serializer.validated_data["image"]
 
         image_file = None
@@ -160,7 +160,13 @@ class PopularLocationView(generics.GenericAPIView):
             image_file = ContentFile(base64.b64decode(imgstr), name=f"popular_location_{random_number}.{ext}")
 
         popular_location = PopularLocation.objects.create(
-            name=name, address=address, latitude=latitude, longitude=longitude, image=image_file
+            name=name,
+            address=address,
+            latitude=latitude,
+            longitude=longitude,
+            image=image_file,
+            subLocality=subLocality,
+            locality=locality,
         )
         return Response(
             {
@@ -172,6 +178,66 @@ class PopularLocationView(generics.GenericAPIView):
                     "address": popular_location.address,
                     "latitude": popular_location.latitude,
                     "longitude": popular_location.longitude,
+                    "subLocality": popular_location.subLocality,
+                    "locality": popular_location.locality,
+                    "image": popular_location.image.url if popular_location.image else "",
+                },
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    # put method
+    def put(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        location_name = request.data.get("name", None)
+        if not location_name:
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_400_BAD_REQUEST,
+                    "message": "Location name is required for updating",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            popular_location = PopularLocation.objects.get(name=location_name)
+        except PopularLocation.DoesNotExist:
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_404_NOT_FOUND,
+                    "message": "Location not found",
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        for field in serializer.validated_data:
+            if field == "image" and serializer.validated_data[field]:
+                # Decode the base64 string into binary image data
+                random_number = random.randint(0, 10)
+                format, imgstr = serializer.validated_data[field].split(";base64,")
+                ext = format.split("/")[-1]
+                image_file = ContentFile(base64.b64decode(imgstr), name=f"popular_location_{random_number}.{ext}")
+                popular_location.image = image_file
+            else:
+                setattr(popular_location, field, serializer.validated_data[field])
+
+        popular_location.save()
+
+        return Response(
+            {
+                "success": True,
+                "statusCode": status.HTTP_200_OK,
+                "data": {
+                    "id": popular_location.id,
+                    "name": popular_location.name,
+                    "address": popular_location.address,
+                    "latitude": popular_location.latitude,
+                    "longitude": popular_location.longitude,
+                    "subLocality": popular_location.subLocality,
+                    "locality": popular_location.locality,
                     "image": popular_location.image.url if popular_location.image else "",
                 },
             },

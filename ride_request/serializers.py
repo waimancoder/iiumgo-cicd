@@ -58,7 +58,9 @@ class PopularLocationSerializer(serializers.ModelSerializer):
     longitude = serializers.FloatField(required=False)
     address = serializers.CharField(required=False)
     image = serializers.CharField(required=False)
+    subLocality = serializers.CharField(required=False)
+    locality = serializers.CharField(required=False)
 
     class Meta:
         model = PopularLocation
-        fields = ("name", "latitude", "longitude", "address", "image")
+        fields = ("name", "latitude", "longitude", "address", "image", "subLocality", "locality")

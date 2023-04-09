@@ -58,6 +58,8 @@ class PopularLocation(models.Model):
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)
+    subLocality = models.CharField(max_length=255, blank=True, null=True)
+    locality = models.CharField(max_length=255, blank=True, null=True)
     image = models.ImageField(
         upload_to="popular-location/",
         null=True,
