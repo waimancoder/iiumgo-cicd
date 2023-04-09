@@ -104,6 +104,7 @@ class PopularLocationView(generics.GenericAPIView):
             queryset = self.get_queryset()
             paginated_queryset = self.paginate_queryset(queryset)
             serializer = self.get_serializer(paginated_queryset, many=True)
+            instances = list(paginated_queryset)
             locations = serializer.data
 
             # Replace any 'null' values with empty strings
@@ -111,6 +112,13 @@ class PopularLocationView(generics.GenericAPIView):
                 for key, value in location.items():
                     if value is None:
                         location[key] = ""
+
+            for i, location in enumerate(locations):
+                image = instances[i].image
+                if image:
+                    location["image"] = image.url
+                else:
+                    location["image"] = ""
 
             response = {
                 "status": True,
