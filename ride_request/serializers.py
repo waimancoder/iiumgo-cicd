@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import PopularLocation, RideRequest
+import base64
+from django.core.files.base import ContentFile
 
 
 class RideRequestSerializer(serializers.ModelSerializer):
@@ -51,11 +53,12 @@ class CoordinateSerializer(serializers.Serializer):
 
 
 class PopularLocationSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(required=False)
+    latitude = serializers.FloatField(required=False)
+    longitude = serializers.FloatField(required=False)
+    address = serializers.CharField(required=False)
+    image = serializers.CharField(required=False)
+
     class Meta:
         model = PopularLocation
-        fields = (
-            "name",
-            "latitude",
-            "longitude",
-            "address",
-        )
+        fields = ("name", "latitude", "longitude", "address", "image")

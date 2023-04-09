@@ -1,3 +1,4 @@
+from django.core.validators import FileExtensionValidator
 from django.db import models
 import uuid
 from user_account.models import User
@@ -57,6 +58,12 @@ class PopularLocation(models.Model):
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)
+    image = models.ImageField(
+        upload_to="popular-location/",
+        null=True,
+        blank=True,
+        validators=[FileExtensionValidator(["jpg", "jpeg", "png"])],
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

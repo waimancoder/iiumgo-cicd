@@ -1,4 +1,7 @@
+import base64
+import random
 from django.contrib.auth.models import User
+from django.core.files.base import ContentFile
 from django.shortcuts import render
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
@@ -87,16 +90,16 @@ class FareEstimationView(generics.GenericAPIView):
         return Response({"success": True, "statusCode": status.HTTP_200_OK, "data": data}, status=status.HTTP_200_OK)
 
 
-class PopularLocationView(generics.ListAPIView):
+class PopularLocationView(generics.GenericAPIView):
     serializer_class = PopularLocationSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = CustomPageNumberPagination
 
     def get_queryset(self):
-        queryset = PopularLocation.objects.all()
+        queryset = PopularLocation.objects.all().order_by("id")
         return queryset
 
-    def list(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         try:
             queryset = self.get_queryset()
             paginated_queryset = self.paginate_queryset(queryset)
@@ -130,3 +133,39 @@ class PopularLocationView(generics.ListAPIView):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        name = serializer.validated_data["name"]
+        address = serializer.validated_data["address"]
+        latitude = serializer.validated_data["latitude"]
+        longitude = serializer.validated_data["longitude"]
+        image = serializer.validated_data["image"]
+
+        image_file = None
+        if image:
+            # Decode the base64 string into binary image data
+            random_number = random.randint(0, 10)
+            format, imgstr = image.split(";base64,")
+            ext = format.split("/")[-1]
+            image_file = ContentFile(base64.b64decode(imgstr), name=f"popular_location_{random_number}.{ext}")
+
+        popular_location = PopularLocation.objects.create(
+            name=name, address=address, latitude=latitude, longitude=longitude, image=image_file
+        )
+        return Response(
+            {
+                "success": True,
+                "statusCode": status.HTTP_200_OK,
+                "data": {
+                    "id": popular_location.id,
+                    "name": popular_location.name,
+                    "address": popular_location.address,
+                    "latitude": popular_location.latitude,
+                    "longitude": popular_location.longitude,
+                    "image": popular_location.image.url if popular_location.image else "",
+                },
+            },
+            status=status.HTTP_200_OK,
+        )
