@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "user_account",
     "rides",
     "payment",
+    "administrationApp",
     "chat",
     "ride_request",
     "mjml",
