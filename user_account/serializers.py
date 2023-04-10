@@ -163,16 +163,17 @@ class RegisterSerializer(serializers.ModelSerializer):
                 latitude=None,
                 longitude=None,
             )
-            student_pic = validated_data["student_pic"]
-            format, imgstr = student_pic.split(";base64,")
-            ext = format.split("/")[-1]
-            data = ContentFile(base64.b64decode(imgstr), name=f"{user.username}_student_pic.{ext}")
-            matricNo = validated_data["matricNo"]
-            StudentID.objects.create(
-                user=user,
-                matricNo=matricNo,
-                student_pic=data,
-            )
+            if validated_data["matricNo"] and validated_data["student_pic"]:
+                student_pic = validated_data["student_pic"]
+                format, imgstr = student_pic.split(";base64,")
+                ext = format.split("/")[-1]
+                data = ContentFile(base64.b64decode(imgstr), name=f"{user.username}_student_pic.{ext}")
+                matricNo = validated_data["matricNo"]
+                StudentID.objects.create(
+                    user=user,
+                    matricNo=matricNo,
+                    student_pic=data,
+                )
 
         DriverEwallet.objects.create(user=user)
         Passenger.objects.create(user=user, passenger_status=Passenger.STATUS_AVAILABLE)
