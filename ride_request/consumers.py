@@ -122,17 +122,14 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         group_name = cache.get(f"cg_{user_id}")
         await self.channel_layer.group_send(
             group_name,
-            {
-                "type": "chat_message",
-                "user_id": user_id,
-                "message": message,
-            },
+            {"type": "chat_message", "user_id": user_id, "message": message, "time": datetime.now().isoformat()},
         )
 
     async def chat_message(self, event):
         message = event["message"]
         user_id = event["user_id"]
-        await self.send(json.dumps({"action": "chat_message", "user_id": user_id, "message": message}))
+        time = event["time"]
+        await self.send(json.dumps({"action": "chat_message", "user_id": user_id, "message": message, "time": time}))
 
     @database_sync_to_async
     def create_ride_request(self, data):
@@ -471,7 +468,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 "distance": ride_request.distance,
                 "vehicle_type": ride_request.vehicle_type if ride_request.vehicle_type else "",
                 "created_at": ride_request.created_at.isoformat() if ride_request.created_at else "",
-                "details": ride_request.details if ride_request.details else "",
+                "details": ride_request.special_requests if ride_request.special_requests else "",
             }
             passenger_info = {
                 "passenger_id": str(passenger.user_id),
