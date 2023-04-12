@@ -135,50 +135,50 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     def create_ride_request(self, data):
         try:
             passenger = Passenger.objects.get(user_id=self.user_id)
-            if (
-                passenger.passenger_status == Passenger.STATUS_ACCEPTED
-                or passenger.passenger_status == Passenger.STATUS_IN_PROGRESS
-            ):
-                return {"success": False, "message": "You have an ongoing ride request"}
-            else:
-                ride_request = RideRequest(
-                    user=self.user,
-                    pickup_latitude=data["pickup_latitude"],
-                    pickup_longitude=data["pickup_longitude"],
-                    dropoff_latitude=data["dropoff_latitude"],
-                    dropoff_longitude=data["dropoff_longitude"],
-                    pickup_address=data["pickup_address"],
-                    dropoff_address=data["dropoff_address"],
-                    route_polygon=data["polyline"],
-                    price=data["price"],
-                    distance=data["distance"],
-                    vehicle_type=data["vehicle_type"],
-                    special_requests=data["details"]
-                    # You can set the other fields, such as driver and actual_fare, when the ride is accepted or completed.
-                )
+            # if (
+            #     passenger.passenger_status == Passenger.STATUS_ACCEPTED
+            #     or passenger.passenger_status == Passenger.STATUS_IN_PROGRESS
+            # ):
+            #     return {"success": False, "message": "You have an ongoing ride request"}
+            # else:
+            ride_request = RideRequest(
+                user=self.user,
+                pickup_latitude=data["pickup_latitude"],
+                pickup_longitude=data["pickup_longitude"],
+                dropoff_latitude=data["dropoff_latitude"],
+                dropoff_longitude=data["dropoff_longitude"],
+                pickup_address=data["pickup_address"],
+                dropoff_address=data["dropoff_address"],
+                route_polygon=data["polyline"],
+                price=data["price"],
+                distance=data["distance"],
+                vehicle_type=data["vehicle_type"],
+                special_requests=data["details"]
+                # You can set the other fields, such as driver and actual_fare, when the ride is accepted or completed.
+            )
 
-                ride_request.save()
-                response_data = {
-                    "success": True,
-                    "message": "Ride request created successfully",
-                    "type": "passenger_created_ride_request",
-                    "data": {
-                        "id": str(ride_request.id),
-                        "pickup_latitude": ride_request.pickup_latitude,
-                        "pickup_longitude": ride_request.pickup_longitude,
-                        "polyline": ride_request.route_polygon,
-                        "dropoff_latitude": ride_request.dropoff_latitude,
-                        "dropoff_longitude": ride_request.dropoff_longitude,
-                        "pickup_address": ride_request.pickup_address,
-                        "dropoff_address": ride_request.dropoff_address,
-                        "status": ride_request.status,
-                        "price": ride_request.price,
-                        "distance": ride_request.distance,
-                        "vehicle_type": ride_request.vehicle_type,
-                        "created_at": ride_request.created_at.isoformat() if ride_request.created_at else "",
-                        "details": ride_request.special_requests,
-                    },
-                }
+            ride_request.save()
+            response_data = {
+                "success": True,
+                "message": "Ride request created successfully",
+                "type": "passenger_created_ride_request",
+                "data": {
+                    "id": str(ride_request.id),
+                    "pickup_latitude": ride_request.pickup_latitude,
+                    "pickup_longitude": ride_request.pickup_longitude,
+                    "polyline": ride_request.route_polygon,
+                    "dropoff_latitude": ride_request.dropoff_latitude,
+                    "dropoff_longitude": ride_request.dropoff_longitude,
+                    "pickup_address": ride_request.pickup_address,
+                    "dropoff_address": ride_request.dropoff_address,
+                    "status": ride_request.status,
+                    "price": ride_request.price,
+                    "distance": ride_request.distance,
+                    "vehicle_type": ride_request.vehicle_type,
+                    "created_at": ride_request.created_at.isoformat() if ride_request.created_at else "",
+                    "details": ride_request.special_requests,
+                },
+            }
 
             return response_data
         except Exception as e:
