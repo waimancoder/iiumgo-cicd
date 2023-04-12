@@ -150,7 +150,6 @@ class PopularLocationView(generics.GenericAPIView):
         subLocality = serializer.validated_data["subLocality"]
         locality = serializer.validated_data["locality"]
         image = serializer.validated_data["image"]
-
         image_file = None
         if image:
             # Decode the base64 string into binary image data
