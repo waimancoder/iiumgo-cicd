@@ -66,11 +66,15 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 await self.send_new_ride_request_to_drivers(result)
         elif action == "send_chat_message":
             await self.send_chat_message(data)
+        elif action == "cancel_ride_request":
+            result = await self.cancel_ride_request(data)
+            await self.send(json.dumps(result))
 
     async def send_chat_message(self, data):
         message = data["message"]
         user_id = self.user_id
-        group_name = cache.get(f"cg_{self.user_id}")
+        print(f"cg_{user_id}")
+        group_name = cache.get(f"cg_{user_id}")
         await self.channel_layer.group_send(
             group_name,
             {
@@ -137,6 +141,75 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         except Exception as e:
             return {"success": False, "message": str(e)}
 
+    async def cancel_ride_request(self, data):
+        try:
+            ride_request_id = data["ride_request_id"]
+
+            ride_request = await database_sync_to_async(RideRequest.objects.get)(id=ride_request_id)
+            print(ride_request.status)
+            if ride_request.status == RideRequest.STATUS_ACCEPTED:
+                # TODO hantar response ke driver yang accept
+                group_name = cache.get(f"cg_{self.user_id}")
+                response = {
+                    "success": True,
+                    "message": "Ride request cancelled successfully",
+                    "type": "passenger_cancelled_ride_request",
+                    "data": {
+                        "id": str(ride_request.id),
+                    },
+                }
+                await self.channel_layer.group_send(
+                    group_name,
+                    {"type": "driver_accepts_ride_request", "data": response},
+                )
+                # Driver
+                driver_id = ride_request.driver_id
+                driver = await database_sync_to_async(Driver.objects.get)(id=driver_id)
+                driver_user_id = driver.user_id
+                driver_channel_name = cache.get(f"driverconsumer_{driver_user_id}")
+                driver.status = Driver.STATUS_AVAILABLE
+                await database_sync_to_async(driver.save)()
+
+                # Passenger
+                passenger = await database_sync_to_async(Passenger.objects.get)(user_id=self.user_id)
+                passenger.status = Passenger.STATUS_AVAILABLE
+                await database_sync_to_async(passenger.save)()
+
+                # Discard Passenger and Driver from group
+
+                await self.channel_layer.group_discard(group_name, driver_channel_name)
+                await self.channel_layer.group_discard(group_name, self.channel_name)
+                await self.channel_layer.group_add("drivers", driver_channel_name)
+
+            ride_request.status = RideRequest.STATUS_CANCELED
+            await database_sync_to_async(ride_request.save)()
+
+            response_data = {
+                "success": True,
+                "message": "Ride request cancelled successfully",
+                "type": "passenger_cancelled_ride_request",
+                "data": {
+                    "id": str(ride_request.id),
+                    "pickup_latitude": ride_request.pickup_latitude,
+                    "pickup_longitude": ride_request.pickup_longitude,
+                    "polyline": ride_request.route_polygon,
+                    "dropoff_latitude": ride_request.dropoff_latitude,
+                    "dropoff_longitude": ride_request.dropoff_longitude,
+                    "pickup_address": ride_request.pickup_address,
+                    "dropoff_address": ride_request.dropoff_address,
+                    "status": ride_request.status,
+                    "price": float(ride_request.price),
+                    "distance": float(ride_request.distance),
+                    "vehicle_type": ride_request.vehicle_type,
+                    "created_at": ride_request.created_at.isoformat() if ride_request.created_at else "",
+                },
+            }
+        except Exception as e:
+            response_data = {"success": False, "message": str(e)}
+            return response_data
+
+        return response_data
+
     async def send_new_ride_request_to_drivers(self, data):
         await self.channel_layer.group_send("drivers", {"type": "send_new_ride_request", "data": data})
 
@@ -183,6 +256,8 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         driver = await sync_to_async(Driver.objects.get)(user=self.user)
         driver_status = driver.jobDriverStatus
         response = None
+
+        cache.set(f"driverconsumer_{self.user_id}", self.channel_name, 86400)
 
         if driver_status == "enroute_pickup" or driver_status == "in_transit":
             ride_request_id = driver.ride_request
@@ -279,7 +354,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     async def chat_message(self, event):
         message = event["message"]
         user_id = event["user_id"]
-        await self.send(json.dumps({"action": "chat_message", "user_id": user_id, "message": message}))
+        await self.send(json.dumps({"type": "chat_message", "user_id": user_id, "message": message}))
 
     async def add_consumers_to_group(self, group_name, channel_name, passenger_channel_name, data):
         await self.channel_layer.group_add(group_name, channel_name)
@@ -320,6 +395,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             # Add both consumers to the group
             self.group_name = f"{ride_request.id}{driver.user_id}"
             cache.set(f"cg_{ride_request.user_id}", self.group_name, None)
+            print(f"{ride_request.user_id}")
             print(f"cg_{ride_request.user_id}")
 
             driverinfo = {
@@ -380,9 +456,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     "status": ride_request.status,
                 },
             }
-            await self.channel_layer.group_send(
-                "drivers", {"type": "driver_accepts_ride_request", "data": response_data}
-            )
+            await self.channel_layer.group_send("drivers", {"type": "driver_accepts_ride_request", "data": data})
 
             return response_data
         except RideRequest.DoesNotExist:

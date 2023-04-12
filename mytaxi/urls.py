@@ -28,5 +28,6 @@ urlpatterns = [
     path("", include("ride_request.urls")),
     path("", include("payment.urls")),
     path("", include("website.urls")),
+    path("", include("advertisement.urls")),
     path("__reload__/", include("django_browser_reload.urls")),
 ]
