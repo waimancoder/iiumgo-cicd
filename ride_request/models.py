@@ -47,7 +47,7 @@ class RideRequest(models.Model):
     payment_method = models.CharField(max_length=20, null=True, blank=True)
     distance = models.FloatField(null=True, blank=True)
     duration = models.IntegerField(null=True, blank=True)
-    special_requests = models.TextField(null=True, blank=True)
+    special_requests = models.CharField(max_length=1000, null=True, blank=True)
     rating = models.FloatField(null=True, blank=True)
     vehicle_type = models.CharField(max_length=255, null=True, blank=True, choices=Driver.typeChoices)
 
@@ -75,9 +75,17 @@ class Passenger(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     STATUS_AVAILABLE = "available"
+    STATUS_PENDING = "pending"
     STATUS_ACCEPTED = "accepted"
+    STATUS_WAITING = "waiting"
     STATUS_IN_PROGRESS = "in_progress"
 
-    STATUS_CHOICES = ((STATUS_AVAILABLE, "Pending"), (STATUS_ACCEPTED, "Accepted"), (STATUS_IN_PROGRESS, "In Progress"))
+    STATUS_CHOICES = (
+        (STATUS_AVAILABLE, "Available"),
+        (STATUS_ACCEPTED, "Accepted"),
+        (STATUS_IN_PROGRESS, "In Progress"),
+        (STATUS_WAITING, "Waiting"),
+        (STATUS_PENDING, "Pending"),
+    )
 
     passenger_status = models.CharField(max_length=255, null=True, blank=True, choices=STATUS_CHOICES)
