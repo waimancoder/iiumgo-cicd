@@ -1,6 +1,8 @@
 import base64
 import random
+import uuid
 from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.shortcuts import render
 
 from rest_framework import generics, permissions, status
@@ -31,6 +33,7 @@ class AdvertisementView(generics.GenericAPIView):
             serializer = self.get_serializer(queryset, many=True)
             instances = list(paginated_queryset)
             data = serializer.data
+            print(data)
 
             # Replace any 'null' values with empty strings
             for datum in data:
@@ -38,12 +41,9 @@ class AdvertisementView(generics.GenericAPIView):
                     if value is None:
                         datum[key] = ""
 
-                for i, datum in enumerate(data):
-                    image = instances[i].image
-                    if image:
-                        datum["image"] = image.url
-                    else:
-                        datum["image"] = ""
+            for i, instance in enumerate(instances):
+                data[i]["image"] = instance.image.url if instance.image else ""
+
             response = {
                 "status": True,
                 "statusCode": status.HTTP_200_OK,
@@ -67,35 +67,7 @@ class AdvertisementView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        title = serializer.validated_data["title"]
-        details = serializer.validated_data["details"]
-        image = serializer.validated_data["image"]
-        return_url = serializer.validated_data["return_url"]
-        advertiser = serializer.validated_data["advertiser"]
-        phone_no = serializer.validated_data["phone_no"]
-        rental_time_from = serializer.validated_data["rental_time_from"]
-        rental_time_to = serializer.validated_data["rental_time_to"]
-        is_valid = serializer.validated_data["is_valid"]
-
-        image_file = None
-        if image:
-            # Decode the base64 string into binary image data
-            random_number = random.randint(0, 100)
-            format, imgstr = image.split(";base64,")
-            ext = format.split("/")[-1]
-            image_file = ContentFile(base64.b64decode(imgstr), name=f"advertisement_{random_number}.{ext}")
-
-        advertisement = Advertisement.objects.create(
-            title=title,
-            details=details,
-            image=image_file,
-            return_url=return_url,
-            advertiser=advertiser,
-            phone_no=phone_no,
-            rental_time_from=rental_time_from,
-            rental_time_to=rental_time_to,
-            is_valid=is_valid,
-        )
+        advertisement = serializer.save()
 
         return Response(
             {

@@ -1,4 +1,5 @@
 import uuid
+from django.core.validators import FileExtensionValidator
 from django.db import models
 
 
@@ -10,7 +11,12 @@ class Advertisement(models.Model):
     return_url = models.TextField(blank=True, null=True)
     advertiser = models.CharField(max_length=255, blank=True, null=True)
     phone_no = models.CharField(max_length=255, blank=True, null=True)
-    image = models.ImageField(upload_to="advertisement_images", blank=True, null=True)
+    image = models.ImageField(
+        upload_to="advertisement_images",
+        blank=True,
+        null=True,
+        validators=[FileExtensionValidator(["jpg", "jpeg", "png"])],
+    )
     rental_time_from = models.DateTimeField(blank=True, null=True)
     rental_time_to = models.DateTimeField(blank=True, null=True)
     is_valid = models.BooleanField(default=False)
