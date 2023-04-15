@@ -61,7 +61,6 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
 
             event_key = f"cg_{self.user_id}"
             messages = redis_client.hgetall(event_key)
-            archived_messages = []
             for value in messages.values():
                 decoded_value = json.loads(value.decode("utf-8"))
                 archived_messages.append(decoded_value)
@@ -420,19 +419,37 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         await self.accept()
 
         driverStatus = driver.jobDriverStatus
+        archived_messages = []
 
         if response is not None:
             await self.send(json.dumps(response))
 
         if driverStatus == Driver.STATUS_ENROUTE_PICKUP:
+            archived_messages = await self.get_archived_messages(driver, archived_messages)
             response = await self.get_driver_status(driver, status=Driver.STATUS_ENROUTE_PICKUP)
             await self.send(json.dumps(response))
+            await self.senf(json.dumps({"type": "archived_messages", "data": archived_messages}))
         elif driverStatus == Driver.STATUS_IN_TRANSIT:
+            archived_messages = await self.get_archived_messages(driver, archived_messages)
             response = await self.get_driver_status(driver, status=Driver.STATUS_IN_TRANSIT)
             await self.send(json.dumps(response))
+            await self.senf(json.dumps({"type": "archived_messages", "data": archived_messages}))
         elif driverStatus == Driver.STATUS_AVAILABLE:
             response = await self.get_driver_status(driver, status=Driver.STATUS_AVAILABLE)
             await self.send(json.dumps(response))
+
+    async def get_archived_messages(self, driver, archived_messages):
+        ride_request = await database_sync_to_async(RideRequest.objects.filter(driver=driver).latest)("created_at")
+        event_key = f"cg_{ride_request.user_id}"
+        messages = redis_client.hgetall(event_key)
+        for value in messages.values():
+            decoded_value = json.loads(value.decode("utf-8"))
+            archived_messages.append(decoded_value)
+
+        sorted_messages = sorted(archived_messages, key=lambda msg: datetime.fromisoformat(msg["time"]), reverse=True)
+        archived_messages = sorted_messages
+
+        return archived_messages
 
     async def get_driver_status(self, driver, status):
         ride_request = await database_sync_to_async(RideRequest.objects.filter(driver=driver).latest)("created_at")
