@@ -26,7 +26,6 @@ host = "redis-14428.c294.ap-northeast-1-2.ec2.cloud.redislabs.com"
 password = "uiZXMLeR9T8p5taa23JQqAJJxPI6TEm7"
 port = 14428
 redis_client = redis.Redis(host=host, port=port, password=password)
-print("hello")
 
 
 class DateTimeEncoder(json.JSONEncoder):
