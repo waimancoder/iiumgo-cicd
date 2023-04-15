@@ -89,6 +89,7 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             )()
             driver = await sync_to_async(Driver.objects.get)(id=ride_request.driver_id)
             driver_details = await sync_to_async(User.objects.get)(id=driver.user_id)
+
             await self.send(
                 json.dumps(self.passenger_statusDetails(ride_request, driver, driver_details, status="accepted"))
             )
@@ -102,7 +103,14 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             driver = await sync_to_async(Driver.objects.get)(id=ride_request.driver_id)
             driver_details = await sync_to_async(User.objects.get)(id=driver.user_id)
             await self.send(
-                json.dumps(self.passenger_statusDetails(ride_request, driver, driver_details, status="in_progress"))
+                json.dumps(
+                    self.passenger_statusDetails(
+                        ride_request,
+                        driver,
+                        driver_details,
+                        status="in_progress",
+                    )
+                )
             )
         elif passenger.passenger_status == Passenger.STATUS_PENDING:
             ride_request = await sync_to_async(
@@ -129,23 +137,74 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                                 "vehicle_type": ride_request.vehicle_type,
                                 "price": float(ride_request.price),
                                 "distance": float(ride_request.distance),
-                                "special_requests": ride_request.special_requests,
+                                "details": ride_request.special_requests,
                                 "status": ride_request.status,
                                 "created_at": ride_request.created_at.isoformat(),
                             },
                             "passenger_info": {
-                                "id": str(self.user_id),
+                                "passenger_id": str(self.user.id),
                                 "passenger_name": self.user.fullname,
                                 "passenger_phone_number": self.user.phone_no,
+                                "passenger_gender": self.user.gender,
                             },
-                            "driver_info": {},
+                            "driver_info": {
+                                "driver_id": "",
+                                "driver_name": "",
+                                "vehicle_registration_number": "",
+                                "vehicle_manufacturer": "",
+                                "vehicle_model": "",
+                                "vehicle_color": "",
+                                "vehicle_type": "",
+                            },
                         },
                     }
                 )
             )
 
         if passenger.passenger_status == Passenger.STATUS_AVAILABLE:
-            await self.send(json.dumps({"type": "passenger_status", "passenger_status": "available"}))
+            await self.send(
+                json.dumps(
+                    {
+                        "type": "passenger_status",
+                        "passenger_status": "available",
+                        "data": {
+                            {
+                                "ride_request_info": {
+                                    "id": "",
+                                    "pickup_latitude": "",
+                                    "pickup_longitude": "",
+                                    "polyline": "",
+                                    "pickup_address": "",
+                                    "dropoff_address": "",
+                                    "dropoff_latitude": "",
+                                    "dropoff_longitude": "",
+                                    "vehicle_type": "",
+                                    "price": "",
+                                    "distance": "",
+                                    "details": "",
+                                    "status": "",
+                                    "created_at": "",
+                                },
+                                "passenger_info": {
+                                    "passenger_id": str(self.user.id),
+                                    "passenger_name": self.user.fullname,
+                                    "passenger_phone_number": self.user.phone_no,
+                                    "passenger_gender": self.user.gender,
+                                },
+                                "driver_info": {
+                                    "driver_id": "",
+                                    "driver_name": "",
+                                    "vehicle_registration_number": "",
+                                    "vehicle_manufacturer": "",
+                                    "vehicle_model": "",
+                                    "vehicle_color": "",
+                                    "vehicle_type": "",
+                                },
+                            },
+                        },
+                    }
+                )
+            )
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -335,6 +394,7 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         await self.send(json.dumps(response))
 
     def passenger_statusDetails(self, ride_request, driver, driver_details, status):
+        driver_user = database_sync_to_async(User.objects.get)(id=driver.user_id)
         return {
             "type": "passenger_status",
             "passenger_status": status,
@@ -356,14 +416,21 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     "created_at": ride_request.created_at.isoformat(),
                 },
                 "driver_info": {
-                    "id": str(driver.id),
+                    "driver_id": str(driver.user_id),
                     "driver_name": driver_details.fullname,
-                    "driver_phone_number": driver_details.phone_no,
+                    "vehicle_registration_number": driver.vehicle_registration_number
+                    if driver.vehicle_registration_number
+                    else "",
+                    "vehicle_manufacturer": driver.vehicle_manufacturer if driver.vehicle_manufacturer else "",
+                    "vehicle_model": driver.vehicle_model if driver.vehicle_model else "",
+                    "vehicle_color": driver.vehicle_color if driver.vehicle_color else "",
+                    "vehicle_type": driver.vehicle_type if driver.vehicle_type else "",
                 },
                 "passenger_info": {
-                    "id": str(self.user_id),
+                    "passenger_id": str(self.user.id),
                     "passenger_name": self.user.fullname,
                     "passenger_phone_number": self.user.phone_no,
+                    "passenger_gender": self.user.gender,
                 },
             },
         }
@@ -491,14 +558,64 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                         "created_at": ride_request.created_at.isoformat(),
                     },
                     "passenger_info": {
-                        "id": str(passenger.id),
+                        "passenger_id": str(passenger.id),
                         "passenger_name": passenger.fullname,
                         "passenger_phone_number": passenger.phone_no,
+                        "passenger_gender": passenger.gender,
+                    },
+                    "driver_info": {
+                        "driver_id": str(driver.user_id),
+                        "driver_name": self.user.fullname,
+                        "vehicle_registration_number": driver.vehicle_registration_number
+                        if driver.vehicle_registration_number
+                        else "",
+                        "vehicle_manufacturer": driver.vehicle_manufacturer if driver.vehicle_manufacturer else "",
+                        "vehicle_model": driver.vehicle_model if driver.vehicle_model else "",
+                        "vehicle_color": driver.vehicle_color if driver.vehicle_color else "",
+                        "vehicle_type": driver.vehicle_type if driver.vehicle_type else "",
                     },
                 },
             }
         else:
-            response = {"type": "driver_status", "data": {"driver_status": status}}
+            response = {
+                "type": "driver_status",
+                "driver_status": status,
+                "data": {
+                    "ride_request_info": {
+                        "id": "",
+                        "pickup_latitude": "",
+                        "pickup_longitude": "",
+                        "polyline": "",
+                        "pickup_address": "",
+                        "dropoff_address": "",
+                        "dropoff_latitude": "",
+                        "dropoff_longitude": "",
+                        "vehicle_type": "",
+                        "price": "",
+                        "distance": "",
+                        "details": "",
+                        "status": "",
+                        "created_at": "",
+                    },
+                    "passenger_info": {
+                        "passenger_id": "",
+                        "passenger_name": "",
+                        "passenger_phone_number": "",
+                        "passenger_gender": "",
+                    },
+                    "driver_info": {
+                        "driver_id": str(driver.user_id),
+                        "driver_name": self.user.fullname,
+                        "vehicle_registration_number": driver.vehicle_registration_number
+                        if driver.vehicle_registration_number
+                        else "",
+                        "vehicle_manufacturer": driver.vehicle_manufacturer if driver.vehicle_manufacturer else "",
+                        "vehicle_model": driver.vehicle_model if driver.vehicle_model else "",
+                        "vehicle_color": driver.vehicle_color if driver.vehicle_color else "",
+                        "vehicle_type": driver.vehicle_type if driver.vehicle_type else "",
+                    },
+                },
+            }
 
         return response
 
@@ -728,7 +845,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
 
             response_data = {
                 "success": True,
-                "type": "driver_passenger_notification",
+                "type": "driver_started_trip",
                 "message": "Ride request starts successfully",
                 "data": {
                     "id": str(ride_request.id),
@@ -755,7 +872,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         data = {
             "success": True,
             "message": "Ride Request is completed successfully",
-            "type": "driver_passenger_notification",
+            "type": "driver_passenger_completed_ride_request",
             "data": {"id": str(ride_request.id)},
         }
         await self.channel_layer.group_send(group_name, {"type": "driver_accepts_ride_request", "data": data})
