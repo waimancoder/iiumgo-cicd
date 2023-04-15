@@ -115,8 +115,8 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 json.dumps(
                     {
                         "type": "passenger_status",
+                        "passenger_status": "pending",
                         "data": {
-                            "passenger_status": "accepted",
                             "ride_request_info": {
                                 "id": str(ride_request.id),
                                 "pickup_latitude": ride_request.pickup_latitude,
@@ -133,13 +133,19 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                                 "status": ride_request.status,
                                 "created_at": ride_request.created_at.isoformat(),
                             },
+                            "passenger_info": {
+                                "id": str(self.user_id),
+                                "passenger_name": self.user.fullname,
+                                "passenger_phone_number": self.user.phone_no,
+                            },
+                            "driver_info": {},
                         },
                     }
                 )
             )
 
         if passenger.passenger_status == Passenger.STATUS_AVAILABLE:
-            await self.send(json.dumps({"type": "passenger_status", "data": {"passenger_status": "available"}}))
+            await self.send(json.dumps({"type": "passenger_status", "passenger_status": "available"}))
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -188,29 +194,30 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     def create_ride_request(self, data):
         try:
             passenger = Passenger.objects.get(user_id=self.user_id)
-            # if (
-            #     passenger.passenger_status == Passenger.STATUS_ACCEPTED
-            #     or passenger.passenger_status == Passenger.STATUS_IN_PROGRESS
-            # ):
-            #     return {"success": False, "message": "You have an ongoing ride request"}
-            # else:
-            ride_request = RideRequest(
-                user=self.user,
-                pickup_latitude=data["pickup_latitude"],
-                pickup_longitude=data["pickup_longitude"],
-                dropoff_latitude=data["dropoff_latitude"],
-                dropoff_longitude=data["dropoff_longitude"],
-                pickup_address=data["pickup_address"],
-                dropoff_address=data["dropoff_address"],
-                route_polygon=data["polyline"],
-                price=data["price"],
-                distance=data["distance"],
-                vehicle_type=data["vehicle_type"],
-                special_requests=data["details"]
-                # You can set the other fields, such as driver and actual_fare, when the ride is accepted or completed.
-            )
-
-            ride_request.save()
+            if (
+                passenger.passenger_status == Passenger.STATUS_ACCEPTED
+                or passenger.passenger_status == Passenger.STATUS_IN_PROGRESS
+            ):
+                return {"success": False, "message": "You have an ongoing ride request"}
+            else:
+                ride_request = RideRequest(
+                    user=self.user,
+                    pickup_latitude=data["pickup_latitude"],
+                    pickup_longitude=data["pickup_longitude"],
+                    dropoff_latitude=data["dropoff_latitude"],
+                    dropoff_longitude=data["dropoff_longitude"],
+                    pickup_address=data["pickup_address"],
+                    dropoff_address=data["dropoff_address"],
+                    route_polygon=data["polyline"],
+                    price=data["price"],
+                    distance=data["distance"],
+                    vehicle_type=data["vehicle_type"],
+                    special_requests=data["details"]
+                    # You can set the other fields, such as driver and actual_fare, when the ride is accepted or completed.
+                )
+                passenger.passenger_status = Passenger.STATUS_PENDING
+                passenger.save()
+                ride_request.save()
             response_data = {
                 "success": True,
                 "message": "Ride request created successfully",
@@ -330,8 +337,8 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     def passenger_statusDetails(self, ride_request, driver, driver_details, status):
         return {
             "type": "passenger_status",
+            "passenger_status": status,
             "data": {
-                "passenger_status": status,
                 "ride_request_info": {
                     "id": str(ride_request.id),
                     "pickup_latitude": ride_request.pickup_latitude,
@@ -352,6 +359,11 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     "id": str(driver.id),
                     "driver_name": driver_details.fullname,
                     "driver_phone_number": driver_details.phone_no,
+                },
+                "passenger_info": {
+                    "id": str(self.user_id),
+                    "passenger_name": self.user.fullname,
+                    "passenger_phone_number": self.user.phone_no,
                 },
             },
         }
