@@ -1,5 +1,6 @@
 from rest_framework import exceptions
 from rest_framework.metadata import SimpleMetadata
+from ride_request.models import Passenger
 from user_account.models import User
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
@@ -10,6 +11,7 @@ from .serializers import (
     DriverStatusSerializer,
     DriverVehicleInfo,
     LocationSerializer,
+    PassengerStatusSerializer,
     UserDriverDetailsSerializer,
     DriverJobStatusSerializer,
 )
@@ -787,6 +789,46 @@ class DriverJobStatusViewset(viewsets.ModelViewSet):
                     "statusCode": status.HTTP_404_NOT_FOUND,
                     "error": "Not Found",
                     "message": "Driver not found",
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+
+class PassengerStatusView(viewsets.ModelViewSet):
+    queryset = Passenger.objects.all()
+    serializer_class = PassengerStatusSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ["get"]
+
+    lookup_field = "user_id"
+
+    metadata_class = CustomMetadata
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            passenger = self.get_object()
+            user = passenger.user
+
+            response_data = {
+                "user_id": user.id,
+                "passenger_status": passenger.passenger_status if passenger.passenger_status else "",
+            }
+            return Response(
+                {
+                    "success": True,
+                    "statusCode": status.HTTP_200_OK,
+                    "message": "Passenger Status",
+                    "data": response_data,
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Http404:
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_404_NOT_FOUND,
+                    "error": "Not Found",
+                    "message": "Passenger not found",
                 },
                 status=status.HTTP_404_NOT_FOUND,
             )

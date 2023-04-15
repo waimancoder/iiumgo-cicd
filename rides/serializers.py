@@ -4,6 +4,8 @@ from rest_framework import serializers, status
 from django.core.files.base import ContentFile
 from rest_framework.authentication import get_user_model
 from rest_framework.fields import ChoiceField
+
+from ride_request.models import Passenger
 from .models import Block, Driver, DriverLocation, Location
 import base64
 from user_account.models import User
@@ -302,3 +304,9 @@ class DriverJobStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Driver
         fields = "statusJob"
+
+
+class PassengerStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Passenger
+        fields = "passenger_status"

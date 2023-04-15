@@ -6,6 +6,7 @@ from rides.views import (
     DriverVehicleInfoViewSet,
     LocationDetailView,
     DriverLicenseViewSet,
+    PassengerStatusView,
     UserDriverDetailsViewSet,
     UserSubmissionForm,
     DriverStatusViewset,
@@ -21,6 +22,7 @@ router.register(r"api/driver/driver-vehicle-detail", DriverVehicleInfoViewSet)
 router.register(r"api/driver/driver-submission", UserSubmissionForm)
 router.register(r"api/driver/driver-status", DriverStatusViewset)
 router.register(r"api/driver/driver-job-status", DriverJobStatusViewset)
+router.register(r"api/passenger/passenger-status", PassengerStatusView)
 
 
 urlpatterns = [
