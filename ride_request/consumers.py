@@ -606,7 +606,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
 
             response_data = {
                 "success": True,
-                "type": "driver_passenger_notification",
+                "type": "driver_passenger_completed_trip",
                 "message": "Ride request starts successfully",
                 "data": {
                     "id": str(ride_request.id),
@@ -633,7 +633,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         data = {
             "success": True,
             "message": "Ride Request is completed successfully",
-            "type": "driver_passenger_notification",
+            "type": "driver_passenger_completed_trip",
             "data": {"id": str(ride_request.id)},
         }
         await self.channel_layer.group_send(group_name, {"type": "driver_accepts_ride_request", "data": data})
