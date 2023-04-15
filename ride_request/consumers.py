@@ -753,7 +753,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 "vehicle_type": driver.vehicle_type if driver.vehicle_type else "",
             }
             rideRequestinfo = {
-                "id": ride_request.id,
+                "id": str(ride_request.id),
                 "pickup_latitude": ride_request.pickup_latitude,
                 "pickup_longitude": ride_request.pickup_longitude,
                 "dropoff_latitude": ride_request.dropoff_latitude,
