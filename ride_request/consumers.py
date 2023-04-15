@@ -95,7 +95,7 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             )
         elif passenger.passenger_status == Passenger.STATUS_IN_PROGRESS:
             ride_request = await sync_to_async(
-                RideRequest.objects.filter(status=RideRequest.STATUS_ACCEPTED)
+                RideRequest.objects.filter(status=RideRequest.STATUS_IN_PROGRESS)
                 .filter(user_id=self.user_id)
                 .order_by("-created_at")
                 .first
@@ -161,48 +161,48 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 )
             )
 
-            # if passenger.passenger_status == Passenger.STATUS_AVAILABLE:
-            await self.send(
-                json.dumps(
-                    {
-                        "type": "passenger_status",
-                        "passenger_status": "available",
-                        "data": {
-                            "ride_request_info": {
-                                "id": "",
-                                "pickup_latitude": "",
-                                "pickup_longitude": "",
-                                "polyline": "",
-                                "pickup_address": "",
-                                "dropoff_address": "",
-                                "dropoff_latitude": "",
-                                "dropoff_longitude": "",
-                                "vehicle_type": "",
-                                "price": "",
-                                "distance": "",
-                                "details": "",
-                                "status": "",
-                                "created_at": "",
-                            },
-                            "passenger_info": {
-                                "passenger_id": str(self.user.id),
-                                "passenger_name": self.user.fullname,
-                                "passenger_phone_number": self.user.phone_no,
-                                "passenger_gender": self.user.gender,
-                            },
-                            "driver_info": {
-                                "driver_id": "",
-                                "driver_name": "",
-                                "vehicle_registration_number": "",
-                                "vehicle_manufacturer": "",
-                                "vehicle_model": "",
-                                "vehicle_color": "",
-                                "vehicle_type": "",
-                            },
-                        },
-                    }
-                )
-            )
+            # # if passenger.passenger_status == Passenger.STATUS_AVAILABLE:
+            # await self.send(
+            #     json.dumps(
+            #         {
+            #             "type": "passenger_status",
+            #             "passenger_status": "available",
+            #             "data": {
+            #                 "ride_request_info": {
+            #                     "id": "",
+            #                     "pickup_latitude": "",
+            #                     "pickup_longitude": "",
+            #                     "polyline": "",
+            #                     "pickup_address": "",
+            #                     "dropoff_address": "",
+            #                     "dropoff_latitude": "",
+            #                     "dropoff_longitude": "",
+            #                     "vehicle_type": "",
+            #                     "price": "",
+            #                     "distance": "",
+            #                     "details": "",
+            #                     "status": "",
+            #                     "created_at": "",
+            #                 },
+            #                 "passenger_info": {
+            #                     "passenger_id": str(self.user.id),
+            #                     "passenger_name": self.user.fullname,
+            #                     "passenger_phone_number": self.user.phone_no,
+            #                     "passenger_gender": self.user.gender,
+            #                 },
+            #                 "driver_info": {
+            #                     "driver_id": "",
+            #                     "driver_name": "",
+            #                     "vehicle_registration_number": "",
+            #                     "vehicle_manufacturer": "",
+            #                     "vehicle_model": "",
+            #                     "vehicle_color": "",
+            #                     "vehicle_type": "",
+            #                 },
+            #             },
+            #         }
+            #     )
+            # )
 
     async def receive(self, text_data):
         data = json.loads(text_data)
