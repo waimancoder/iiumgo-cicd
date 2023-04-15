@@ -138,8 +138,8 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 )
             )
 
-        if passenger.passenger_status == Passenger.STATUS_PENDING:
-            await self.send(json.dumps({"type": "passenger_status", "data": {"passenger_status": "accepted"}}))
+        if passenger.passenger_status == Passenger.STATUS_AVAILABLE:
+            await self.send(json.dumps({"type": "passenger_status", "data": {"passenger_status": "available"}}))
 
     async def receive(self, text_data):
         data = json.loads(text_data)
