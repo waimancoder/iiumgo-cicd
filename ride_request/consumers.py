@@ -428,12 +428,12 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             archived_messages = await self.get_archived_messages(driver, archived_messages)
             response = await self.get_driver_status(driver, status=Driver.STATUS_ENROUTE_PICKUP)
             await self.send(json.dumps(response))
-            await self.senf(json.dumps({"type": "archived_messages", "data": archived_messages}))
+            await self.send(json.dumps({"type": "archived_messages", "data": archived_messages}))
         elif driverStatus == Driver.STATUS_IN_TRANSIT:
             archived_messages = await self.get_archived_messages(driver, archived_messages)
             response = await self.get_driver_status(driver, status=Driver.STATUS_IN_TRANSIT)
             await self.send(json.dumps(response))
-            await self.senf(json.dumps({"type": "archived_messages", "data": archived_messages}))
+            await self.send(json.dumps({"type": "archived_messages", "data": archived_messages}))
         elif driverStatus == Driver.STATUS_AVAILABLE:
             response = await self.get_driver_status(driver, status=Driver.STATUS_AVAILABLE)
             await self.send(json.dumps(response))
