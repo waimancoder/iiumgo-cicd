@@ -826,7 +826,6 @@ class LocationConsumer(AsyncWebsocketConsumer):
                     "driver_id": driver_id,
                     "latitude": latitude,
                     "longitude": longitude,
-                    "polyline": polygon,
                 },
             )
 
@@ -838,7 +837,6 @@ class LocationConsumer(AsyncWebsocketConsumer):
                 "driver_id": event["driver_id"],
                 "latitude": event["latitude"],
                 "longitude": event["longitude"],
-                "polyline": event["polyline"],
             },
         }
         await self.send(json.dumps(response))

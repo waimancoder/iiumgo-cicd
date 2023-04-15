@@ -104,7 +104,7 @@ class DriverLocation(models.Model):
     user = models.OneToOneField(to=User, on_delete=models.CASCADE)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    polygon = models.CharField(max_length=256, blank=True, null=True)
+    polygon = models.TextField(blank=True, null=True)
 
 
 class Trip(models.Model):
