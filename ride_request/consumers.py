@@ -772,7 +772,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 await self.remove_consumers_to_group(self.group_name, self.channel_name, passenger_channel_name, data)
 
             event_key = f"cg_{ride_request.user_id}"
-            message = redis_client.hdel(name=event_key)
+            message = redis_client.delete(event_key)
 
             response_data = {
                 "success": True,
