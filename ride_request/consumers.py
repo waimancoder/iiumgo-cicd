@@ -1,4 +1,3 @@
-from ast import Pass
 from datetime import date, datetime
 import os
 import traceback
@@ -67,6 +66,11 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 decoded_value = json.loads(value.decode("utf-8"))
                 archived_messages.append(decoded_value)
 
+            sorted_messages = sorted(
+                archived_messages, key=lambda msg: datetime.fromisoformat(msg["time"]), reverse=True
+            )
+            archived_messages = sorted_messages
+
             await self.channel_layer.group_add(group_name, self.channel_name)
 
         cache.set(f"passengerconsumer_{self.user_id}", self.channel_name, 86400)  # 86400 seconds = 1 day
@@ -77,63 +81,63 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             await self.send(json.dumps({"type": "archived_messages", "data": archived_messages}))
 
         # TODO - Notify frontend passenger state
-        # if passenger.passenger_status == Passenger.STATUS_ACCEPTED:
-        #     ride_request = await sync_to_async(
-        #         RideRequest.objects.filter(status=RideRequest.STATUS_ACCEPTED)
-        #         .filter(user_id=self.user_id)
-        #         .order_by("-created_at")
-        #         .first
-        #     )()
-        #     driver = await sync_to_async(Driver.objects.get)(id=ride_request.driver_id)
-        #     driver_details = await sync_to_async(User.objects.get)(id=driver.user_id)
-        #     await self.send(
-        #         json.dumps(self.passenger_statusDetails(ride_request, driver, driver_details, status="accepted"))
-        #     )
-        # elif passenger.passenger_status == Passenger.STATUS_IN_PROGRESS:
-        #     ride_request = await sync_to_async(
-        #         RideRequest.objects.filter(status=RideRequest.STATUS_ACCEPTED)
-        #         .filter(user_id=self.user_id)
-        #         .order_by("-created_at")
-        #         .first
-        #     )()
-        #     driver = await sync_to_async(Driver.objects.get)(id=ride_request.driver_id)
-        #     driver_details = await sync_to_async(User.objects.get)(id=driver.user_id)
-        #     await self.send(
-        #         json.dumps(self.passenger_statusDetails(ride_request, driver, driver_details, status="in_progress"))
-        #     )
-        # elif passenger.passenger_status == Passenger.STATUS_PENDING:
-        #     ride_request = await sync_to_async(
-        #         RideRequest.objects.filter(status=RideRequest.STATUS_PENDING)
-        #         .filter(user_id=self.user_id)
-        #         .order_by("-created_at")
-        #         .first
-        #     )()
-        #     await self.send(
-        #         json.dumps(
-        #             {
-        #                 "type": "passenger_status",
-        #                 "data": {
-        #                     "passenger_status": "accepted",
-        #                     "ride_request_info": {
-        #                         "id": str(ride_request.id),
-        #                         "pickup_latitude": ride_request.pickup_latitude,
-        #                         "pickup_longitude": ride_request.pickup_longitude,
-        #                         "polyline": ride_request.route_polygon,
-        #                         "pickup_address": ride_request.pickup_address,
-        #                         "dropoff_address": ride_request.dropoff_address,
-        #                         "dropoff_latitude": ride_request.dropoff_latitude,
-        #                         "dropoff_longitude": ride_request.dropoff_longitude,
-        #                         "vehicle_type": ride_request.vehicle_type,
-        #                         "price": float(ride_request.price),
-        #                         "distance": float(ride_request.distance),
-        #                         "special_requests": ride_request.special_requests,
-        #                         "status": ride_request.status,
-        #                         "created_at": ride_request.created_at.isoformat(),
-        #                     },
-        #                 },
-        #             }
-        #         )
-        #     )
+        if passenger.passenger_status == Passenger.STATUS_ACCEPTED:
+            ride_request = await sync_to_async(
+                RideRequest.objects.filter(status=RideRequest.STATUS_ACCEPTED)
+                .filter(user_id=self.user_id)
+                .order_by("-created_at")
+                .first
+            )()
+            driver = await sync_to_async(Driver.objects.get)(id=ride_request.driver_id)
+            driver_details = await sync_to_async(User.objects.get)(id=driver.user_id)
+            await self.send(
+                json.dumps(self.passenger_statusDetails(ride_request, driver, driver_details, status="accepted"))
+            )
+        elif passenger.passenger_status == Passenger.STATUS_IN_PROGRESS:
+            ride_request = await sync_to_async(
+                RideRequest.objects.filter(status=RideRequest.STATUS_ACCEPTED)
+                .filter(user_id=self.user_id)
+                .order_by("-created_at")
+                .first
+            )()
+            driver = await sync_to_async(Driver.objects.get)(id=ride_request.driver_id)
+            driver_details = await sync_to_async(User.objects.get)(id=driver.user_id)
+            await self.send(
+                json.dumps(self.passenger_statusDetails(ride_request, driver, driver_details, status="in_progress"))
+            )
+        elif passenger.passenger_status == Passenger.STATUS_PENDING:
+            ride_request = await sync_to_async(
+                RideRequest.objects.filter(status=RideRequest.STATUS_PENDING)
+                .filter(user_id=self.user_id)
+                .order_by("-created_at")
+                .first
+            )()
+            await self.send(
+                json.dumps(
+                    {
+                        "type": "passenger_status",
+                        "data": {
+                            "passenger_status": "accepted",
+                            "ride_request_info": {
+                                "id": str(ride_request.id),
+                                "pickup_latitude": ride_request.pickup_latitude,
+                                "pickup_longitude": ride_request.pickup_longitude,
+                                "polyline": ride_request.route_polygon,
+                                "pickup_address": ride_request.pickup_address,
+                                "dropoff_address": ride_request.dropoff_address,
+                                "dropoff_latitude": ride_request.dropoff_latitude,
+                                "dropoff_longitude": ride_request.dropoff_longitude,
+                                "vehicle_type": ride_request.vehicle_type,
+                                "price": float(ride_request.price),
+                                "distance": float(ride_request.distance),
+                                "special_requests": ride_request.special_requests,
+                                "status": ride_request.status,
+                                "created_at": ride_request.created_at.isoformat(),
+                            },
+                        },
+                    }
+                )
+            )
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -154,6 +158,14 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         message = data["message"]
         user_id = self.user_id
         group_name = cache.get(f"cg_{user_id}")
+        event_key = f"cg_{user_id}"
+        event_dict = {
+            "type": "chat_message",
+            "user_id": user_id,
+            "message": message,
+            "time": datetime.now().isoformat(),
+        }
+        redis_client.hset(name=event_key, key=datetime.now().timestamp(), value=json.dumps(event_dict))
         await self.channel_layer.group_send(
             group_name,
             {"type": "chat_message", "user_id": user_id, "message": message, "time": datetime.now().isoformat()},
@@ -161,24 +173,13 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
 
     async def chat_message(self, event):
         message = event["message"]
-        user_id = self.user_id
+        user_id = event["user_id"]
         event_dict = {
             "type": "chat_message",
             "user_id": user_id,
             "message": message,
             "time": datetime.now().isoformat(),
         }
-        event_key = f"cg_{user_id}"
-        redis_client.hset(name=event_key, key=datetime.now().timestamp(), value=json.dumps(event_dict))
-
-        # TODO letak dalam def connect bila status passenger: accepted, in_progress
-        # messages = redis_client.hgetall(name=event_key)
-        # archived_messages = []
-        # for value in messages.values():
-        #     decoded_value = json.loads(value.decode("utf-8"))
-        #     archived_messages.append(decoded_value)
-
-        # print(archived_messages)
         await self.send(json.dumps(event_dict))
 
     @database_sync_to_async
@@ -418,8 +419,56 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
 
         await self.accept()
 
+        driverStatus = driver.jobDriverStatus
+
         if response is not None:
             await self.send(json.dumps(response))
+
+        if driverStatus == Driver.STATUS_ENROUTE_PICKUP:
+            response = await self.get_driver_status(driver, status=Driver.STATUS_ENROUTE_PICKUP)
+            await self.send(json.dumps(response))
+        elif driverStatus == Driver.STATUS_IN_TRANSIT:
+            response = await self.get_driver_status(driver, status=Driver.STATUS_IN_TRANSIT)
+            await self.send(json.dumps(response))
+        elif driverStatus == Driver.STATUS_AVAILABLE:
+            response = await self.get_driver_status(driver, status=Driver.STATUS_AVAILABLE)
+            await self.send(json.dumps(response))
+
+    async def get_driver_status(self, driver, status):
+        ride_request = await database_sync_to_async(RideRequest.objects.filter(driver=driver).latest)("created_at")
+        passenger = await database_sync_to_async(User.objects.get)(id=ride_request.user_id)
+        if status == Driver.STATUS_ENROUTE_PICKUP or status == Driver.STATUS_IN_TRANSIT:
+            response = {
+                "type": "driver_status",
+                "data": {
+                    "driver_status": status,
+                    "ride_request_info": {
+                        "id": str(ride_request.id),
+                        "pickup_latitude": ride_request.pickup_latitude,
+                        "pickup_longitude": ride_request.pickup_longitude,
+                        "polyline": ride_request.route_polygon,
+                        "pickup_address": ride_request.pickup_address,
+                        "dropoff_address": ride_request.dropoff_address,
+                        "dropoff_latitude": ride_request.dropoff_latitude,
+                        "dropoff_longitude": ride_request.dropoff_longitude,
+                        "vehicle_type": ride_request.vehicle_type,
+                        "price": float(ride_request.price),
+                        "distance": float(ride_request.distance),
+                        "special_requests": ride_request.special_requests,
+                        "status": ride_request.status,
+                        "created_at": ride_request.created_at.isoformat(),
+                    },
+                    "passenger_info": {
+                        "id": str(passenger.id),
+                        "passenger_name": passenger.fullname,
+                        "passenger_phone_number": passenger.phone_no,
+                    },
+                },
+            }
+        else:
+            response = {"type": "driver_status", "data": {"driver_status": status}}
+
+        return response
 
     async def disconnect(self, close_code):
         driver = await sync_to_async(Driver.objects.get)(user=self.user)
@@ -467,6 +516,23 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     async def send_chat_message(self, event):
         message = event["message"]
         user_id = self.user_id
+        driver = await sync_to_async(Driver.objects.get)(user=self.user_id)
+        ride_request = await database_sync_to_async(RideRequest.objects.filter(driver=driver).latest)("created_at")
+        event_key = f"cg_{ride_request.user_id}"
+        print(event_key)
+        event_dict = {
+            "type": "chat_message",
+            "message": event["message"],
+            "user_id": user_id,
+            "time": datetime.now().isoformat(),
+        }
+        redis_client.hset(name=event_key, key=datetime.now().timestamp(), value=json.dumps(event_dict))
+        # TODO letak ni dalam def connect
+        # messages = redis_client.hgetall(event_key)
+        # archived_messages = []
+        # for value in messages.values():
+        #     decoded_value = json.loads(value.decode("utf-8"))
+        #     archived_messages.append(decoded_value)
         await self.channel_layer.group_send(
             self.group_name,
             {
@@ -478,23 +544,12 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         )
 
     async def chat_message(self, event):
-        driver = await sync_to_async(Driver.objects.get)(user=self.user_id)
-        ride_request = await database_sync_to_async(RideRequest.objects.filter(driver=driver).latest)("created_at")
-        event_key = f"cg_{ride_request.user_id}"
         event_dict = {
             "type": "chat_message",
             "message": event["message"],
             "user_id": event["user_id"],
             "time": event["time"],
         }
-        redis_client.hset(name=event_key, key=datetime.now().timestamp(), value=json.dumps(event_dict))
-
-        # TODO letak ni dalam def connect
-        # messages = redis_client.hgetall(event_key)
-        # archived_messages = []
-        # for value in messages.values():
-        #     decoded_value = json.loads(value.decode("utf-8"))
-        #     archived_messages.append(decoded_value)
 
         await self.send(json.dumps(event_dict))
 
@@ -715,6 +770,9 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             passenger_channel_name = cache.get(f"passengerconsumer_{ride_request.user_id}")
             if passenger_channel_name:
                 await self.remove_consumers_to_group(self.group_name, self.channel_name, passenger_channel_name, data)
+
+            event_key = f"cg_{ride_request.user_id}"
+            message = redis_client.hdel(name=event_key)
 
             response_data = {
                 "success": True,
