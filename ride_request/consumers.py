@@ -813,7 +813,7 @@ class LocationConsumer(AsyncWebsocketConsumer):
             driver_id = data.get("driver_id", "")
             latitude = data.get("latitude", 0)
             longitude = data.get("longitude", 0)
-            polygon = data.get("polygon", "")
+            polygon = data.get("polyline", "")
 
             # Save driver location in the database
             driver_location = await self.update_driver_location(driver_id, latitude, longitude, polygon)
@@ -826,7 +826,7 @@ class LocationConsumer(AsyncWebsocketConsumer):
                     "driver_id": driver_id,
                     "latitude": latitude,
                     "longitude": longitude,
-                    "polygon": polygon,
+                    "polyline": polygon,
                 },
             )
 
@@ -838,7 +838,7 @@ class LocationConsumer(AsyncWebsocketConsumer):
                 "driver_id": event["driver_id"],
                 "latitude": event["latitude"],
                 "longitude": event["longitude"],
-                "polygon": event["polygon"],
+                "polyline": event["polyline"],
             },
         }
         await self.send(json.dumps(response))
