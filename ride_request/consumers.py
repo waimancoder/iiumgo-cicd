@@ -808,7 +808,7 @@ class LocationConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)
-        action = data.get("type", "")
+        action = data.get("action", "")
         if action == "location_update":
             driver_id = data.get("driver_id", "")
             latitude = data.get("latitude", 0)
