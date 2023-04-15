@@ -26,6 +26,7 @@ host = "redis-14428.c294.ap-northeast-1-2.ec2.cloud.redislabs.com"
 password = "uiZXMLeR9T8p5taa23JQqAJJxPI6TEm7"
 port = 14428
 redis_client = redis.Redis(host=host, port=port, password=password)
+print("hello")
 
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -606,7 +607,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
 
             response_data = {
                 "success": True,
-                "type": "driver_passenger_completed_trip",
+                "type": "driver_passenger_notification",
                 "message": "Ride request starts successfully",
                 "data": {
                     "id": str(ride_request.id),
@@ -633,7 +634,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         data = {
             "success": True,
             "message": "Ride Request is completed successfully",
-            "type": "driver_passenger_completed_trip",
+            "type": "driver_passenger_notification",
             "data": {"id": str(ride_request.id)},
         }
         await self.channel_layer.group_send(group_name, {"type": "driver_accepts_ride_request", "data": data})
@@ -808,12 +809,12 @@ class LocationConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)
-        action = data.get("action", "")
-        if action == "location_update":
+        type = data.get("type", "")
+        if type == "location_update":
             driver_id = data.get("driver_id", "")
             latitude = data.get("latitude", 0)
             longitude = data.get("longitude", 0)
-            polygon = data.get("polyline", "")
+            polygon = data.get("polygon", "")
 
             # Save driver location in the database
             driver_location = await self.update_driver_location(driver_id, latitude, longitude, polygon)
@@ -826,6 +827,7 @@ class LocationConsumer(AsyncWebsocketConsumer):
                     "driver_id": driver_id,
                     "latitude": latitude,
                     "longitude": longitude,
+                    "polygon": polygon,
                 },
             )
 
@@ -837,6 +839,7 @@ class LocationConsumer(AsyncWebsocketConsumer):
                 "driver_id": event["driver_id"],
                 "latitude": event["latitude"],
                 "longitude": event["longitude"],
+                "polygon": event["polygon"],
             },
         }
         await self.send(json.dumps(response))
