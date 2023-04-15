@@ -1,3 +1,4 @@
+from ast import Pass
 from datetime import date, datetime
 import os
 import traceback
@@ -8,6 +9,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.messages import success
 from django.core.checks.security.base import check_secret_key
 from payment.models import CommissionHistory, DriverEarning, DriverEwallet
+import ride_request
 from ride_request.pricing import get_commission_amount, get_distance
 from user_account.models import User
 import json
@@ -22,9 +24,9 @@ import redis
 
 channel_layer = get_channel_layer()
 
-host = "redis-14428.c294.ap-northeast-1-2.ec2.cloud.redislabs.com"
-password = "uiZXMLeR9T8p5taa23JQqAJJxPI6TEm7"
-port = 14428
+host = "103.252.116.3"
+password = "86ncqa23QHrC9x"
+port = 6379
 redis_client = redis.Redis(host=host, port=port, password=password)
 
 
@@ -154,12 +156,18 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             "message": message,
             "time": datetime.now().isoformat(),
         }
-        event_key = f"event:{user_id}"
-        redis_client.hset(name=event_key, key=event_key, value=json.dumps(event_dict))
-        await self.channel_layer.group_send(
-            self.group_name,
-            event_dict,
-        )
+        event_key = f"cg_{user_id}"
+        redis_client.hset(name=event_key, key=datetime.now().timestamp(), value=json.dumps(event_dict))
+
+        # TODO letak dalam def connect bila status passenger: accepted, in_progress
+        # messages = redis_client.hgetall(name=event_key)
+        # archived_messages = []
+        # for value in messages.values():
+        #     decoded_value = json.loads(value.decode("utf-8"))
+        #     archived_messages.append(decoded_value)
+
+        # print(archived_messages)
+        await self.send(json.dumps(event_dict))
 
     @database_sync_to_async
     def create_ride_request(self, data):
@@ -447,7 +455,6 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     async def send_chat_message(self, event):
         message = event["message"]
         user_id = self.user_id
-        redis_client
         await self.channel_layer.group_send(
             self.group_name,
             {
@@ -459,10 +466,25 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         )
 
     async def chat_message(self, event):
-        message = event["message"]
-        user_id = event["user_id"]
-        time = event["time"]
-        await self.send(json.dumps({"type": "chat_message", "user_id": user_id, "message": message, "time": time}))
+        driver = await sync_to_async(Driver.objects.get)(user=self.user_id)
+        ride_request = await database_sync_to_async(RideRequest.objects.filter(driver=driver).latest)("created_at")
+        event_key = f"cg_{ride_request.user_id}"
+        event_dict = {
+            "type": "chat_message",
+            "message": event["message"],
+            "user_id": event["user_id"],
+            "time": event["time"],
+        }
+        redis_client.hset(name=event_key, key=datetime.now().timestamp(), value=json.dumps(event_dict))
+
+        # TODO letak ni dalam def connect
+        # messages = redis_client.hgetall(event_key)
+        # archived_messages = []
+        # for value in messages.values():
+        #     decoded_value = json.loads(value.decode("utf-8"))
+        #     archived_messages.append(decoded_value)
+
+        await self.send(json.dumps(event_dict))
 
     async def add_consumers_to_group(self, group_name, channel_name, passenger_channel_name, data):
         await self.channel_layer.group_add(group_name, channel_name)
@@ -503,6 +525,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             # Add both consumers to the group
             self.group_name = f"{ride_request.id}{driver.user_id}"
             cache.set(f"cg_{ride_request.user_id}", self.group_name, None)
+            print(f"cg_{ride_request.user_id}")
 
             driverinfo = {
                 "driver_id": str(driver.user_id),
