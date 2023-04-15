@@ -168,38 +168,36 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                         "type": "passenger_status",
                         "passenger_status": "available",
                         "data": {
-                            {
-                                "ride_request_info": {
-                                    "id": "",
-                                    "pickup_latitude": "",
-                                    "pickup_longitude": "",
-                                    "polyline": "",
-                                    "pickup_address": "",
-                                    "dropoff_address": "",
-                                    "dropoff_latitude": "",
-                                    "dropoff_longitude": "",
-                                    "vehicle_type": "",
-                                    "price": "",
-                                    "distance": "",
-                                    "details": "",
-                                    "status": "",
-                                    "created_at": "",
-                                },
-                                "passenger_info": {
-                                    "passenger_id": str(self.user.id),
-                                    "passenger_name": self.user.fullname,
-                                    "passenger_phone_number": self.user.phone_no,
-                                    "passenger_gender": self.user.gender,
-                                },
-                                "driver_info": {
-                                    "driver_id": "",
-                                    "driver_name": "",
-                                    "vehicle_registration_number": "",
-                                    "vehicle_manufacturer": "",
-                                    "vehicle_model": "",
-                                    "vehicle_color": "",
-                                    "vehicle_type": "",
-                                },
+                            "ride_request_info": {
+                                "id": "",
+                                "pickup_latitude": "",
+                                "pickup_longitude": "",
+                                "polyline": "",
+                                "pickup_address": "",
+                                "dropoff_address": "",
+                                "dropoff_latitude": "",
+                                "dropoff_longitude": "",
+                                "vehicle_type": "",
+                                "price": "",
+                                "distance": "",
+                                "details": "",
+                                "status": "",
+                                "created_at": "",
+                            },
+                            "passenger_info": {
+                                "passenger_id": str(self.user.id),
+                                "passenger_name": self.user.fullname,
+                                "passenger_phone_number": self.user.phone_no,
+                                "passenger_gender": self.user.gender,
+                            },
+                            "driver_info": {
+                                "driver_id": "",
+                                "driver_name": "",
+                                "vehicle_registration_number": "",
+                                "vehicle_manufacturer": "",
+                                "vehicle_model": "",
+                                "vehicle_color": "",
+                                "vehicle_type": "",
                             },
                         },
                     }
@@ -539,8 +537,8 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         if status == Driver.STATUS_ENROUTE_PICKUP or status == Driver.STATUS_IN_TRANSIT:
             response = {
                 "type": "driver_status",
+                "driver_status": status,
                 "data": {
-                    "driver_status": status,
                     "ride_request_info": {
                         "id": str(ride_request.id),
                         "pickup_latitude": ride_request.pickup_latitude,
