@@ -161,7 +161,7 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 )
             )
 
-        if passenger.passenger_status == Passenger.STATUS_AVAILABLE:
+            # if passenger.passenger_status == Passenger.STATUS_AVAILABLE:
             await self.send(
                 json.dumps(
                     {
