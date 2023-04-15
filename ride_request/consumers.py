@@ -808,8 +808,8 @@ class LocationConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)
-        type = data.get("type", "")
-        if type == "location_update":
+        action = data.get("type", "")
+        if action == "location_update":
             driver_id = data.get("driver_id", "")
             latitude = data.get("latitude", 0)
             longitude = data.get("longitude", 0)
