@@ -8,6 +8,7 @@ from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.messages import success
 from django.core.checks.security.base import check_secret_key
+from django.utils.translation.trans_real import accept_language_re
 from payment.models import CommissionHistory, DriverEarning, DriverEwallet
 import ride_request
 from ride_request.pricing import get_commission_amount, get_distance
@@ -24,9 +25,9 @@ import redis
 
 channel_layer = get_channel_layer()
 
-host = "103.252.116.3"
-password = "86ncqa23QHrC9x"
-port = 6379
+host = os.environ.get("redis_client_host")
+password = os.environ.get("redis_client_password")
+port = os.environ.get("redis_client_port")
 redis_client = redis.Redis(host=host, port=port, password=password)
 
 
@@ -50,6 +51,7 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             return
 
         passenger = await sync_to_async(Passenger.objects.get)(user_id=self.user_id)
+        archived_messages = []
 
         if (
             passenger.passenger_status == Passenger.STATUS_ACCEPTED
@@ -58,11 +60,21 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             cache_key = f"cg_{self.user_id}"
             group_name = cache.get(cache_key)
 
+            event_key = f"cg_{self.user_id}"
+            messages = redis_client.hgetall(event_key)
+            archived_messages = []
+            for value in messages.values():
+                decoded_value = json.loads(value.decode("utf-8"))
+                archived_messages.append(decoded_value)
+
             await self.channel_layer.group_add(group_name, self.channel_name)
 
         cache.set(f"passengerconsumer_{self.user_id}", self.channel_name, 86400)  # 86400 seconds = 1 day
 
         await self.accept()
+
+        if archived_messages != []:
+            await self.send(json.dumps({"type": "archived_messages", "data": archived_messages}))
 
         # TODO - Notify frontend passenger state
         # if passenger.passenger_status == Passenger.STATUS_ACCEPTED:
