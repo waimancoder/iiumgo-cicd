@@ -99,8 +99,8 @@ class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True, validators=[UniqueValidator(queryset=get_user_model().objects.all())])
     fullname = serializers.CharField(max_length=100)
     phone_no = serializers.CharField(max_length=12)
-    matricNo = serializers.CharField(max_length=12, required=False)
-    student_pic = serializers.CharField(required=False)
+    # matricNo = serializers.CharField(max_length=12, required=False)
+    # student_pic = serializers.CharField(required=False)
     gender = serializers.CharField(max_length=10, required=False)
 
     class Meta:
@@ -113,8 +113,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             "phone_no",
             "dialCode",
             "role",
-            "matricNo",
-            "student_pic",
             "gender",
         )
         extra_kwargs = {"password": {"write_only": True}}
@@ -127,58 +125,61 @@ class RegisterSerializer(serializers.ModelSerializer):
                 return username
 
     def create(self, validated_data):
-        email = validated_data["email"]
-        local_part = email.split("@")[0]
+        try:
+            email = validated_data["email"]
+            local_part = email.split("@")[0]
 
-        username = self.create_unique_username(local_part)
+            username = self.create_unique_username(local_part)
 
-        user = User.objects.create_user(username, validated_data["email"], validated_data["password"])
-        user.fullname = validated_data["fullname"]
-        user.phone_no = validated_data["phone_no"]
-        user.dialCode = validated_data["dialCode"]
-        user.role = validated_data["role"]
-        user.gender = validated_data["gender"]
+            user = User.objects.create_user(username, validated_data["email"], validated_data["password"])
+            user.fullname = validated_data["fullname"]
+            user.phone_no = validated_data["phone_no"]
+            user.dialCode = validated_data["dialCode"]
+            user.role = validated_data["role"]
+            user.gender = validated_data["gender"]
 
-        user.save()
-        print(validated_data["matricNo"])
+            user.save()
 
-        if user.role == "student":
-            Driver.objects.create(
-                user=user,
-                vehicle_manufacturer="",
-                vehicle_model="",
-                vehicle_color="",
-                vehicle_ownership="",
-                vehicle_registration_number="",
-                driver_license_id="",
-                driver_license_img_front=None,
-                driver_license_img_back=None,
-                idConfirmation=None,
-                vehicle_img=None,
-                statusDriver="submitting",
-                statusMessage="submitting",
-            )
-            DriverLocation.objects.create(
-                user=user,
-                latitude=None,
-                longitude=None,
-            )
-            if validated_data["matricNo"] and validated_data["student_pic"]:
-                student_pic = validated_data["student_pic"]
-                format, imgstr = student_pic.split(";base64,")
-                ext = format.split("/")[-1]
-                data = ContentFile(base64.b64decode(imgstr), name=f"{user.username}_student_pic.{ext}")
-                matricNo = validated_data["matricNo"]
-                StudentID.objects.create(
+            if user.role == "student":
+                Driver.objects.create(
                     user=user,
-                    matricNo=matricNo,
-                    student_pic=data,
+                    vehicle_manufacturer="",
+                    vehicle_model="",
+                    vehicle_color="",
+                    vehicle_ownership="",
+                    vehicle_registration_number="",
+                    driver_license_id="",
+                    driver_license_img_front=None,
+                    driver_license_img_back=None,
+                    idConfirmation=None,
+                    vehicle_img=None,
+                    statusDriver="submitting",
+                    statusMessage="submitting",
                 )
+                DriverLocation.objects.create(
+                    user=user,
+                    latitude=None,
+                    longitude=None,
+                )
+                # if validated_data["matricNo"] and validated_data["student_pic"]:
+                #     student_pic = validated_data["student_pic"]
+                #     format, imgstr = student_pic.split(";base64,")
+                #     ext = format.split("/")[-1]
+                #     data = ContentFile(base64.b64decode(imgstr), name=f"{user.username}_student_pic.{ext}")
+                #     matricNo = validated_data["matricNo"]
+                #     StudentID.objects.create(
+                #         user=user,
+                #         matricNo=matricNo,
+                #         student_pic=data,
+                #     )
 
-        DriverEwallet.objects.create(user=user)
-        Passenger.objects.create(user=user, passenger_status=Passenger.STATUS_AVAILABLE)
+            DriverEwallet.objects.create(user=user)
+            Passenger.objects.create(user=user, passenger_status=Passenger.STATUS_AVAILABLE)
 
-        return user
+            return user
+        except Exception as e:
+            print(e)
+            raise e
 
 
 class AuthTokenSerializer(serializers.Serializer):

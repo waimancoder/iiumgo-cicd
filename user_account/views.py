@@ -73,6 +73,24 @@ class UserRetrieveAPIView(viewsets.ModelViewSet):
     http_method_names = ["get", "put", "options"]
     lookup_field = "id"
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+
+        data = serializer.data
+        for key, value in data.items():
+            if value is None:
+                data[key] = ""
+
+        return Response(
+            {
+                "success": True,
+                "statusCode": status.HTTP_200_OK,
+                "data": data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
 
 class RegisterAPI(generics.GenericAPIView):
     serializer_class = RegisterSerializer
@@ -127,14 +145,14 @@ class RegisterAPI(generics.GenericAPIView):
             "phone_no": user_data.get("phone_no"),
             "role": user_data.get("role"),
             "isVerified": user_data.get("isVerified"),
-            "birthdate": user_data.get("birthdate") if user_data.get("birthdate") else "",
+            # "birthdate": user_data.get("birthdate") if user_data.get("birthdate") else "",
             "gender": user_data.get("gender") if user_data.get("gender") else "",
-            "nationality": user_data.get("nationality") if user_data.get("nationality") else "",
+            # "nationality": user_data.get("nationality") if user_data.get("nationality") else "",
         }
 
-        if user_data.get("role") == "student":
-            userinfo["matricNo"] = user_data.get("matricNo")
-            userinfo["student_pic"] = user_data.get("student_pic")
+        # if user_data.get("role") == "student":
+        #     userinfo["matricNo"] = user_data.get("matricNo")
+        #     userinfo["student_pic"] = user_data.get("student_pic")
 
         return Response({"user": userinfo, "token": AuthToken.objects.create(user)[1]})
 
