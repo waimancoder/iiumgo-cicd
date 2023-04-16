@@ -641,10 +641,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         data = json.loads(text_data)
         action = data.get("action")
 
-        if action == "create_ride_request":
-            result = await self.create_ride_request(data)
-            await self.send(json.dumps(result))
-        elif action == "accept_ride_request":
+        if action == "accept_ride_request":
             result = await self.accept_ride_request(data)
             await self.send(json.dumps(result))
         elif action == "send_chat_message":
@@ -829,7 +826,9 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     "status": ride_request.status,
                 },
             }
-            await self.channel_layer.group_send("drivers", {"type": "driver_accepts_ride_request", "data": data})
+            await self.channel_layer.group_send(
+                "drivers", {"type": "driver_accepts_ride_request", "data": response_data}
+            )
 
             return response_data
         except RideRequest.DoesNotExist:
