@@ -140,6 +140,7 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                                 "details": ride_request.special_requests,
                                 "status": ride_request.status,
                                 "created_at": ride_request.created_at.isoformat(),
+                                "isFemaleDriver": ride_request.isFemaleDriver,
                             },
                             "passenger_info": {
                                 "passenger_id": str(self.user.id),
@@ -161,7 +162,7 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 )
             )
 
-            # # if passenger.passenger_status == Passenger.STATUS_AVAILABLE:
+            # if passenger.passenger_status == Passenger.STATUS_AVAILABLE:
             # await self.send(
             #     json.dumps(
             #         {
@@ -269,7 +270,8 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     price=data["price"],
                     distance=data["distance"],
                     vehicle_type=data["vehicle_type"],
-                    special_requests=data["details"]
+                    special_requests=data["details"],
+                    isFemaleDriver=data["isFemaleDriver"]
                     # You can set the other fields, such as driver and actual_fare, when the ride is accepted or completed.
                 )
                 passenger.passenger_status = Passenger.STATUS_PENDING
@@ -294,6 +296,7 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     "vehicle_type": ride_request.vehicle_type,
                     "created_at": ride_request.created_at.isoformat() if ride_request.created_at else "",
                     "details": ride_request.special_requests,
+                    "isFemaleDriver": ride_request.isFemaleDriver,
                 },
             }
 
@@ -412,6 +415,7 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     "special_requests": ride_request.special_requests,
                     "status": ride_request.status,
                     "created_at": ride_request.created_at.isoformat(),
+                    "isFemaleDriver": ride_request.isFemaleDriver,
                 },
                 "driver_info": {
                     "driver_id": str(driver.user_id),
@@ -469,7 +473,9 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         else:
             driver.jobDriverStatus = Driver.STATUS_AVAILABLE
             await sync_to_async(driver.save)()
-            ride_requests = await self.get_pending_ride_requests(type=driver.vehicle_type)
+            driver_gender = self.user.gender
+            print(driver_gender)
+            ride_requests = await self.get_pending_ride_requests(type=driver.vehicle_type, driver_gender=driver_gender)
             data_list = []
             for ride_request in ride_requests:
                 data = {
@@ -487,6 +493,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     "vehicle_type": ride_request.vehicle_type if ride_request.vehicle_type else "",
                     "created_at": ride_request.created_at.isoformat() if ride_request.created_at else "",
                     "details": ride_request.special_requests,
+                    "isFemaleDriver": ride_request.isFemaleDriver,
                 }
                 data_list.append(data)
             response = {
@@ -514,9 +521,9 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             response = await self.get_driver_status(driver, status=Driver.STATUS_IN_TRANSIT)
             await self.send(json.dumps(response))
             await self.send(json.dumps({"type": "archived_messages", "data": archived_messages}))
-        elif driverStatus == Driver.STATUS_AVAILABLE:
-            response = await self.get_driver_status(driver, status=Driver.STATUS_AVAILABLE)
-            await self.send(json.dumps(response))
+        # elif driverStatus == Driver.STATUS_AVAILABLE:
+        #     response = await self.get_driver_status(driver, status=Driver.STATUS_AVAILABLE)
+        #     await self.send(json.dumps(response))
 
     async def get_archived_messages(self, driver, archived_messages):
         ride_request = await database_sync_to_async(RideRequest.objects.filter(driver=driver).latest)("created_at")
@@ -554,6 +561,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                         "special_requests": ride_request.special_requests,
                         "status": ride_request.status,
                         "created_at": ride_request.created_at.isoformat(),
+                        "isFemaleDriver": ride_request.isFemaleDriver,
                     },
                     "passenger_info": {
                         "passenger_id": str(passenger.id),
@@ -594,6 +602,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                         "details": "",
                         "status": "",
                         "created_at": "",
+                        "isFemaleDriver": "",
                     },
                     "passenger_info": {
                         "passenger_id": "",
@@ -663,6 +672,11 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     async def send_chat_message(self, event):
         message = event["message"]
         user_id = self.user_id
+        try:
+            if event["specialrequestpassenger_id"]:
+                user_id = event["specialrequestpassenger_id"]
+        except:
+            pass
         driver = await sync_to_async(Driver.objects.get)(user=self.user_id)
         ride_request = await database_sync_to_async(RideRequest.objects.filter(driver=driver).latest)("created_at")
         event_key = f"cg_{ride_request.user_id}"
@@ -767,7 +781,9 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 "vehicle_type": ride_request.vehicle_type if ride_request.vehicle_type else "",
                 "created_at": ride_request.created_at.isoformat() if ride_request.created_at else "",
                 "details": ride_request.special_requests if ride_request.special_requests else "",
+                "isFemaleDriver": ride_request.isFemaleDriver,
             }
+
             passenger_info = {
                 "passenger_id": str(passenger.user_id),
                 "passenger_name": passenger_user.fullname,
@@ -791,6 +807,18 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 await self.add_consumers_to_group(
                     self.group_name, self.channel_name, passenger_channel_name, response_data_to_passenger
                 )
+
+            important_messages = {
+                "message": f"\u26A0 IMPORTANT REMINDER: Your safety is our top priority. We remind all passengers and drivers to treat each other with respect and kindness. Any form of sexual harassment or inappropriate behavior will not be tolerated. If you experience any issues during your ride, please contact our support team immediately. Thank you for helping us maintain a safe and respectful community."
+            }
+            await self.send_chat_message(important_messages)
+
+            if ride_request.special_requests is not None and ride_request.special_requests != "":
+                details = {
+                    "message": f"{ride_request.special_requests}",
+                    "specialrequestpassenger_id": str(ride_request.user_id),
+                }
+                await self.send_chat_message(details)
 
             response_data = {
                 "success": True,
@@ -1000,6 +1028,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     "vehicle_type": ride_request.vehicle_type,
                     "created_at": ride_request.created_at.isoformat() if ride_request.created_at else "",
                     "details": ride_request.special_requests,
+                    "isFemaleDriver": ride_request.isFemaleDriver,
                 },
             }
         except Exception as e:
@@ -1014,7 +1043,6 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     async def send_new_ride_request(self, event):
         original_data = event["data"]
 
-        # Create a new ordered dictionary and add the keys in the desired order
         data = OrderedDict()
         data["success"] = original_data["success"]
         data["type"] = "passenger_created_ride_request"
@@ -1022,7 +1050,16 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             if key not in ["success", "message"]:
                 data[key] = value
 
-        await self.send(json.dumps(data))
+        print(data)
+        driver_gender = self.user.gender
+        if data["data"]["isFemaleDriver"] == True and driver_gender == "female":
+            await self.send(json.dumps(data))
+        elif data["data"]["isFemaleDriver"] == True and driver_gender == "male":
+            pass
+        elif data["data"]["isFemaleDriver"] == False:
+            await self.send(json.dumps(data))
+
+        # Create a new ordered dictionary and add the keys in the desired order
 
 
 class LocationConsumer(AsyncWebsocketConsumer):

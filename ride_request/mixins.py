@@ -1,3 +1,4 @@
+from user_account.models import User
 from .models import RideRequest
 from asgiref.sync import sync_to_async
 
@@ -24,5 +25,10 @@ class RideRequestMixin:
         await self.channel_layer.group_send("drivers", {"type": "send_pending_ride_request", "data": data_list})
 
     @sync_to_async
-    def get_pending_ride_requests(self, type):
-        return list(RideRequest.objects.filter(status="pending", vehicle_type=type))
+    def get_pending_ride_requests(self, type, driver_gender):
+        nochoice_list = list(RideRequest.objects.filter(status="pending", vehicle_type=type, isFemaleDriver=False))
+        if driver_gender == "female":
+            female_list = list(RideRequest.objects.filter(status="pending", vehicle_type=type, isFemaleDriver=True))
+            nochoice_list.extend(female_list)
+
+        return nochoice_list
