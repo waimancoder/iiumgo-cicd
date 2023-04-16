@@ -961,6 +961,38 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 },
             }
 
+            # sending back available ride request lists
+            driver_gender = self.user.gender
+            ride_requests = await self.get_pending_ride_requests(type=driver.vehicle_type, driver_gender=driver_gender)
+            data_list = []
+            for ride_request in ride_requests:
+                data = {
+                    "id": str(ride_request.id),
+                    "pickup_latitude": ride_request.pickup_latitude,
+                    "pickup_longitude": ride_request.pickup_longitude,
+                    "dropoff_latitude": ride_request.dropoff_latitude,
+                    "dropoff_longitude": ride_request.dropoff_longitude,
+                    "pickup_address": ride_request.pickup_address,
+                    "dropoff_address": ride_request.dropoff_address,
+                    "status": ride_request.status,
+                    "polyline": ride_request.route_polygon,
+                    "price": float(round(ride_request.price, 2)),
+                    "distance": str(ride_request.distance),
+                    "vehicle_type": ride_request.vehicle_type if ride_request.vehicle_type else "",
+                    "created_at": ride_request.created_at.isoformat() if ride_request.created_at else "",
+                    "details": ride_request.special_requests,
+                    "isFemaleDriver": ride_request.isFemaleDriver,
+                }
+                data_list.append(data)
+
+            send_ride_request = {
+                "action": "sending_pending_ride_request",
+                "type": "send_pending_ride_request",
+                "data": data_list,
+            }
+
+            await self.send(json.dumps(send_ride_request))
+
             return response_data
 
         except Exception as e:
@@ -1030,6 +1062,37 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     "isFemaleDriver": ride_request.isFemaleDriver,
                 },
             }
+            driver_gender = self.user.gender
+            ride_requests = await self.get_pending_ride_requests(type=driver.vehicle_type, driver_gender=driver_gender)
+            data_list = []
+            for ride_request in ride_requests:
+                data = {
+                    "id": str(ride_request.id),
+                    "pickup_latitude": ride_request.pickup_latitude,
+                    "pickup_longitude": ride_request.pickup_longitude,
+                    "dropoff_latitude": ride_request.dropoff_latitude,
+                    "dropoff_longitude": ride_request.dropoff_longitude,
+                    "pickup_address": ride_request.pickup_address,
+                    "dropoff_address": ride_request.dropoff_address,
+                    "status": ride_request.status,
+                    "polyline": ride_request.route_polygon,
+                    "price": float(round(ride_request.price, 2)),
+                    "distance": str(ride_request.distance),
+                    "vehicle_type": ride_request.vehicle_type if ride_request.vehicle_type else "",
+                    "created_at": ride_request.created_at.isoformat() if ride_request.created_at else "",
+                    "details": ride_request.special_requests,
+                    "isFemaleDriver": ride_request.isFemaleDriver,
+                }
+                data_list.append(data)
+
+            send_ride_request = {
+                "action": "sending_pending_ride_request",
+                "type": "send_pending_ride_request",
+                "data": data_list,
+            }
+
+            await self.send(json.dumps(send_ride_request))
+
         except Exception as e:
             response_data = {"success": False, "message": str(e)}
             return response_data
