@@ -311,6 +311,7 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             ride_request = await database_sync_to_async(RideRequest.objects.get)(id=ride_request_id)
             if ride_request.status == RideRequest.STATUS_ACCEPTED:
                 group_name = cache.get(f"cg_{self.user_id}")
+                redis_client.delete(f"cg_{self.user_id}")
                 response = {
                     "success": True,
                     "message": "Ride request cancelled successfully",
@@ -437,6 +438,10 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             },
         }
 
+    async def driver_arrived_at_pickup(self, event):
+        data = event["data"]
+        await self.send(json.dumps(data))
+
 
 class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
@@ -474,7 +479,6 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             driver.jobDriverStatus = Driver.STATUS_AVAILABLE
             await sync_to_async(driver.save)()
             driver_gender = self.user.gender
-            print(driver_gender)
             ride_requests = await self.get_pending_ride_requests(type=driver.vehicle_type, driver_gender=driver_gender)
             data_list = []
             for ride_request in ride_requests:
@@ -655,6 +659,8 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         elif action == "cancel_ride_request":
             result = await self.cancel_ride_request(data)
             await self.send(json.dumps(result))
+        elif action == "arrive_at_pickup":
+            await self.arrive_at_pickup(data)
 
     async def send_pending_ride_request(self, event):
         await self.send(
@@ -677,7 +683,6 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         driver = await sync_to_async(Driver.objects.get)(user=self.user_id)
         ride_request = await database_sync_to_async(RideRequest.objects.filter(driver=driver).latest)("created_at")
         event_key = f"cg_{ride_request.user_id}"
-        print(event_key)
         event_dict = {
             "type": "chat_message",
             "message": event["message"],
@@ -750,7 +755,6 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             # Add both consumers to the group
             self.group_name = f"{ride_request.id}{driver.user_id}"
             cache.set(f"cg_{ride_request.user_id}", self.group_name, None)
-            print(f"cg_{ride_request.user_id}")
 
             driverinfo = {
                 "driver_id": str(driver.user_id),
@@ -1007,6 +1011,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             if ride_request.status == RideRequest.STATUS_ACCEPTED:
                 cache_key = f"cg_{ride_request.user_id}"
                 group_name = cache.get(cache_key)
+                redis_client.delete(cache_key)
                 response = {
                     "success": True,
                     "message": "Ride request cancelled successfully",
@@ -1099,6 +1104,24 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
 
         return response_data
 
+    async def arrive_at_pickup(self, data):
+        ride_request_id = data["ride_request_id"]
+        ride_request = await database_sync_to_async(RideRequest.objects.get)(id=ride_request_id)
+        cache_key = f"cg_{ride_request.user_id}"
+        group_name = cache.get(cache_key)
+        response = {
+            "success": True,
+            "type": "driver_arrived_at_pickup",
+            "message": "Driver arrived at pickup location",
+        }
+        await self.channel_layer.group_send(
+            group_name,
+            {"type": "driver_arrived_at_pickup", "data": response},
+        )
+
+    async def driver_arrived_at_pickup(self, event):
+        pass
+
     async def driver_accepts_ride_request(self, event):
         await self.send(json.dumps(event["data"]))
 
@@ -1111,8 +1134,6 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         for key, value in original_data.items():
             if key not in ["success", "message"]:
                 data[key] = value
-
-        print(data)
         driver_gender = self.user.gender
         if data["data"]["isFemaleDriver"] == True and driver_gender == "female":
             await self.send(json.dumps(data))

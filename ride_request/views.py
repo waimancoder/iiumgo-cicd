@@ -9,7 +9,12 @@ from django.db.models import Q
 from ride_request.pricing import get_pricing
 from rides.models import Driver
 from .models import PopularLocation, RideRequest
-from .serializers import CoordinateSerializer, PopularLocationSerializer, RideRequestSerializer
+from .serializers import (
+    CoordinateSerializer,
+    DriverRideRequestSerializer,
+    PopularLocationSerializer,
+    RideRequestSerializer,
+)
 from rest_framework.pagination import PageNumberPagination
 
 
@@ -25,7 +30,63 @@ class RideRequestHistoryView(generics.ListAPIView):
 
     def get_queryset(self):
         user_id = self.kwargs["user_id"]
-        return RideRequest.objects.filter(user_id=user_id, status=RideRequest.STATUS_COMPLETED).order_by("-created_at")
+        canceled_requests = RideRequest.objects.filter(
+            Q(user_id=user_id) & Q(status=RideRequest.STATUS_CANCELED)
+        ).order_by("-created_at")
+        completed_requests = RideRequest.objects.filter(
+            Q(user_id=user_id), Q(status=RideRequest.STATUS_COMPLETED)
+        ).order_by("-created_at")
+        requests = canceled_requests | completed_requests
+        return requests
+
+    def list(self, request, *args, **kwargs):
+        try:
+            user_id = self.kwargs["user_id"]
+            queryset = self.get_queryset()
+            paginated_queryset = self.paginate_queryset(queryset)
+            serializer = self.get_serializer(paginated_queryset, many=True)
+
+            response = {
+                "status": True,
+                "statusCode": status.HTTP_200_OK,
+                "data": {
+                    "user_id": user_id,
+                    "history": serializer.data,
+                },
+            }
+            return Response(response, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print(e)
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "error": "Internal Server Error",
+                    "message": "Please Contact Server Admin",
+                    "traceback": str(e),
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class DriverRideRequestHistoryView(generics.ListAPIView):
+    serializer_class = DriverRideRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = CustomPageNumberPagination
+
+    def get_queryset(self):
+        user_id = self.kwargs["user_id"]
+        driver_id = Driver.objects.get(user_id=user_id).id
+        canceled_requests = RideRequest.objects.filter(
+            Q(driver_id=driver_id) & Q(status=RideRequest.STATUS_CANCELED)
+        ).order_by("-created_at")
+        completed_requests = RideRequest.objects.filter(
+            Q(driver_id=driver_id) & Q(status=RideRequest.STATUS_COMPLETED)
+        ).order_by("-created_at")
+        requests = canceled_requests | completed_requests
+
+        return requests
 
     def list(self, request, *args, **kwargs):
         try:
@@ -43,9 +104,6 @@ class RideRequestHistoryView(generics.ListAPIView):
                 "data": {
                     "user_id": user_id,
                     "history": serializer.data,
-                    "count": queryset.count(),
-                    "next": self.paginator.get_next_link(),
-                    "previous": self.paginator.get_next_link(),
                 },
             }
             return Response(response, status=status.HTTP_200_OK)
