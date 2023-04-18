@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
 import os
@@ -243,3 +244,121 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_FROM = os.environ.get("EMAIL_HOST_USER")
 EMAIL_USE_SSL = True
 EMAIL_USE_TLS = False
+
+border_color = "\033[31m"  # ANSI escape code for red color
+reset_color = "\033[0m"  # Reset color to default
+teal_color = "\033[36m"  # ANSI escape code for teal color
+yellow_color = "\033[33m"  # ANSI escape code for yellow color
+
+# log_format = f"""
+# {border_color}----------------------------------------------------
+# {border_color}|{{levelname:^50}}|
+# {border_color}----------------------------------------------------{reset_color}
+# {teal_color}{{levelname}}{reset_color} {{asctime:s}} {{name}} {{module}} {{filename}} {{lineno:d}} {{name}} {{funcName}} {{process:d}} {{message}}
+# """
+
+log_format = """
+{border_color}+-----------------------------------------------------------------------------------------------------------+
+{border_color}|{reset_color}{levelname_color} : {yellow_color}{message:^100}{reset_color}{border_color}|{reset_color}
+{border_color}+-----------------------------------------------------------------------------------------------------------+{reset_color}
+{levelname_color} : {name} {module} {filename} {lineno} {funcName} {process} {yellow_color}{message}{reset_color}
+"""
+
+color_mapping = {
+    "DEBUG": "\033[36m",  # Teal color for DEBUG levelname
+    "INFO": "\033[32m",  # Green color for INFO levelname
+    "WARNING": "\033[33m",  # Yellow color for WARNING levelname
+    "ERROR": "\033[31m",  # Red color for ERROR levelname
+    "CRITICAL": "\033[91m",  # Bright red color for CRITICAL levelname
+}
+reset_color = "\033[0m"  # Reset color to default
+
+
+# Define a custom formatter that applies colors to levelnames
+class ColoredFormatter(logging.Formatter):
+    border_color = "\033[31m"
+    yellow_color = "\033[33m"  # ANSI escape code for red color
+
+    def format(self, record):
+        levelname_color = color_mapping.get(record.levelname, "")
+        record.levelname_color = f"{levelname_color}{record.levelname}{reset_color}"
+        record.border_color = f"{self.border_color}"
+        record.reset_color = f"{reset_color}"
+        record.yellow_color = f"{self.yellow_color}"
+        return super().format(record)
+
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": True,
+    "formatters": {
+        "verbose": {
+            "()": ColoredFormatter,
+            "format": log_format,
+            # "format": "\033[31m\n----------------------------------------------------\n|{levelname:^50}|\n----------------------------------------------------\n  {levelname}  {name} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+        "info_handler": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": f"{BASE_DIR}/logs/mytaxi_info.log",
+            "mode": "a",
+            "encoding": "utf-8",
+            "formatter": "verbose",
+            "level": "INFO",
+            "backupCount": 5,
+            "maxBytes": 1024 * 1024 * 5,  # 5 MB
+        },
+        "error_handler": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": f"{BASE_DIR}/logs/mytaxi_error.log",
+            "mode": "a",
+            "formatter": "verbose",
+            "level": "WARNING",
+            "backupCount": 5,
+            "maxBytes": 1024 * 1024 * 5,  # 5 MB
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console", "info_handler"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": True,
+        },
+        "django.template": {
+            "handlers": ["error_handler"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+        "django.server": {
+            "handlers": ["error_handler"],
+            "level": "INFO",
+            "propagate": True,
+        },
+        "daphne": {
+            "handlers": ["console", "info_handler"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+        "gunicorn": {
+            "handlers": ["console", "info_handler"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+    },
+}
