@@ -259,7 +259,7 @@ yellow_color = "\033[33m"  # ANSI escape code for yellow color
 
 log_format = """
 {border_color}+-----------------------------------------------------------------------------------------------------------+
-{border_color}|{reset_color}{levelname_color} : {yellow_color}{message:^100}{reset_color}{border_color}|{reset_color}
+{border_color}| {reset_color}{levelname_color} :{yellow_color}{message:^90}{reset_color}{border_color}|{reset_color}
 {border_color}+-----------------------------------------------------------------------------------------------------------+{reset_color}
 {levelname_color} : {name} {module} {filename} {lineno} {funcName} {process} {yellow_color}{message}{reset_color}
 """
