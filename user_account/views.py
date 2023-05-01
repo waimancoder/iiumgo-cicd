@@ -55,14 +55,17 @@ def custom_500_page_not_found(request):
 
 
 def custom_404_page_not_found(request, exception):
-    return JsonResponse(
-        {
-            "success": False,
-            "statusCode": status.HTTP_404_NOT_FOUND,
-            "error": "Page Not Found or Invalid API Endpoint",
-        },
-        status=status.HTTP_404_NOT_FOUND,
-    )
+    if request.META.get("HTTP_ACCEPT", "").startswith("text/html"):
+        return render(request, "400.html")
+    else:
+        return JsonResponse(
+            {
+                "success": False,
+                "statusCode": status.HTTP_404_NOT_FOUND,
+                "error": "Page Not Found or Invalid API Endpoint",
+            },
+            status=status.HTTP_404_NOT_FOUND,
+        )
 
 
 # Create your views here.

@@ -103,9 +103,6 @@ class CreateBillAPIView(APIView):
             return_url = request.build_absolute_uri(reverse("payment_return"))
             callback_url = request.build_absolute_uri(reverse("payment_callback"))
 
-            print(return_url)
-            print(callback_url)
-
             ref_number = uuid4()
             user = User.objects.get(id=user_id)
             billName = f"DE-{user.username}"
@@ -134,7 +131,7 @@ class CreateBillAPIView(APIView):
 
             response = requests.post("https://dev.toyyibpay.com/index.php/api/createBill", data=request)
             response_data = response.json()
-            print(response_data)
+
             bill_code = response_data[0]["BillCode"]
             Payment.objects.create(
                 user_id=user_id,
@@ -177,7 +174,6 @@ class ToyyibPayCallbackAPIView(APIView):
 
         # Implement your callback handling logic here, such as updating the payment status of an order in the database or sending a confirmation email
         # ...
-        print("callback request is made")
         payment = Payment.objects.get(billCode=billcode)
         if status == "1":
             payment.payment_status = "success"
@@ -233,6 +229,7 @@ class ToyyibPayReturnAPIView(APIView):
         try:
             bill = Bill.objects.get(billCode=billcode)
         except ObjectDoesNotExist:
+            ## TODO: ADD LOGGING
             print("Bill not found with the given billCode")
 
         if result:  # Check if the result is not empty
@@ -356,14 +353,12 @@ class BillHistoryAPIView(generics.GenericAPIView):
             key=lambda x: x.billPaymentDate if hasattr(x, "billPaymentDate") else x.payment_date,
             reverse=True,
         )
-        print(sorted_queryset)
         return sorted_queryset
 
     def get(self, request, user_id):
         try:
             date = request.query_params.get("date", None)
             queryset = self.get_queryset(date=date)
-            print(queryset)
             paginated_queryset = self.paginate_queryset(queryset)
             serialized_history = self.get_serializer(paginated_queryset, many=True).data
 

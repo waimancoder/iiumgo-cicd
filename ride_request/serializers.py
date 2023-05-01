@@ -1,3 +1,4 @@
+import logging
 from rest_framework import serializers
 
 from payment.models import DriverEarning
@@ -6,17 +7,30 @@ from .models import PopularLocation, RideRequest
 import base64
 from django.core.files.base import ContentFile
 
+logger = logging.getLogger(__name__)
+
 
 class RideRequestSerializer(serializers.ModelSerializer):
     id = serializers.SerializerMethodField()
     pickup_time = serializers.SerializerMethodField()
     dropoff_time = serializers.SerializerMethodField()
     price = serializers.SerializerMethodField()
-    # rating = serializers.SerializerMethodField()
+    rating = serializers.SerializerMethodField()
+    israted = serializers.SerializerMethodField()
     # driver = serializers.SerializerMethodField()
     distance = serializers.SerializerMethodField()
     polyline = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
+
+    ## DRIVER INFO
+    driver_name = serializers.SerializerMethodField()
+    vehicle_registration_number = serializers.SerializerMethodField()
+    vehicle_manufacturer = serializers.SerializerMethodField()
+    vehicle_model = serializers.SerializerMethodField()
+    vehicle_color = serializers.SerializerMethodField()
+    vehicle_type = serializers.SerializerMethodField()
+
     # payment_method = serializers.SerializerMethodField()
 
     class Meta:
@@ -34,9 +48,17 @@ class RideRequestSerializer(serializers.ModelSerializer):
             "dropoff_time",
             "polyline",
             "price",
-            # "driver",
             "distance",
-            # "rating",
+            "created_at",
+            # "driver",
+            "driver_name",
+            "vehicle_registration_number",
+            "vehicle_manufacturer",
+            "vehicle_model",
+            "vehicle_color",
+            "vehicle_type",
+            "rating",
+            "israted",
             # "commission_paid",
             # "payment_method",
         )
@@ -56,8 +78,11 @@ class RideRequestSerializer(serializers.ModelSerializer):
     def get_actual_fare(self, obj):
         return obj.price if obj.price else ""
 
-    # def get_rating(self, obj):
-    #     return obj.rating if obj.rating else ""
+    def get_rating(self, obj):
+        return obj.rating if obj.rating else ""
+
+    def get_israted(self, obj):
+        return obj.isRated if obj.isRated else False
 
     def get_price(self, obj):
         return obj.price if obj.price else ""
@@ -70,6 +95,45 @@ class RideRequestSerializer(serializers.ModelSerializer):
 
     def get_polyline(self, obj):
         return obj.route_polygon if obj.route_polygon else ""
+
+    def get_created_at(self, obj):
+        return obj.created_at if obj.created_at else ""
+
+    def get_driver_name(self, obj):
+        if obj.driver is not None:
+            return obj.driver.user.fullname if obj.driver.user.fullname else ""
+        else:
+            return ""
+
+    def get_vehicle_registration_number(self, obj):
+        if obj.driver is not None:
+            return obj.driver.vehicle_registration_number if obj.driver.vehicle_registration_number else ""
+        else:
+            return ""
+
+    def get_vehicle_manufacturer(self, obj):
+        if obj.driver is not None:
+            return obj.driver.vehicle_manufacturer if obj.driver.vehicle_manufacturer else ""
+        else:
+            return ""
+
+    def get_vehicle_model(self, obj):
+        if obj.driver is not None:
+            return obj.driver.vehicle_model if obj.driver.vehicle_model else ""
+        else:
+            return ""
+
+    def get_vehicle_color(self, obj):
+        if obj.driver is not None:
+            return obj.driver.vehicle_color if obj.driver.vehicle_color else ""
+        else:
+            return ""
+
+    def get_vehicle_type(self, obj):
+        if obj.driver is not None:
+            return obj.driver.vehicle_type if obj.driver.vehicle_type else ""
+        else:
+            return ""
 
     # def get_payment_method(self, obj):
     #     return obj.payment_method if obj.payment_method else ""

@@ -23,11 +23,11 @@ handler500 = custom_500_page_not_found
 
 urlpatterns = [
     path("", include("user_account.urls")),
-    path("admin/", admin.site.urls),
     path("", include("rides.urls")),
     path("", include("ride_request.urls")),
     path("", include("payment.urls")),
     path("", include("website.urls")),
     path("", include("advertisement.urls")),
+    path("", include("administrationApp.urls")),
     path("__reload__/", include("django_browser_reload.urls")),
 ]

@@ -16,6 +16,9 @@ from .serializers import (
     RideRequestSerializer,
 )
 from rest_framework.pagination import PageNumberPagination
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # Create your views here.
@@ -45,19 +48,95 @@ class RideRequestHistoryView(generics.ListAPIView):
             queryset = self.get_queryset()
             paginated_queryset = self.paginate_queryset(queryset)
             serializer = self.get_serializer(paginated_queryset, many=True)
+            data = []
+            for ride_request in serializer.data:
+                if ride_request["status"] == RideRequest.STATUS_COMPLETED:
+                    ride_request_info = {
+                        "id": ride_request["id"],
+                        "status": ride_request["status"],
+                        "pickup_latitude": ride_request["pickup_latitude"],
+                        "pickup_longitude": ride_request["pickup_longitude"],
+                        "dropoff_latitude": ride_request["dropoff_latitude"],
+                        "dropoff_longitude": ride_request["dropoff_longitude"],
+                        "pickup_address": ride_request["pickup_address"],
+                        "dropoff_address": ride_request["dropoff_address"],
+                        "pickup_time": ride_request["pickup_time"],
+                        "dropoff_time": ride_request["dropoff_time"],
+                        "polyline": ride_request["polyline"],
+                        "price": ride_request["price"],
+                        "distance": ride_request["distance"],
+                        "created_at": ride_request["created_at"],
+                        "rating": ride_request["rating"],
+                        "is_rated": ride_request["israted"],
+                    }
+                    driver_info = {
+                        "driver_name": ride_request["driver_name"],
+                        "vehicle_registration_number": ride_request["vehicle_registration_number"],
+                        "vehicle_manufacturer": ride_request["vehicle_manufacturer"],
+                        "vehicle_model": ride_request["vehicle_model"],
+                        "vehicle_color": ride_request["vehicle_color"],
+                        "vehicle_type": ride_request["vehicle_type"],
+                    }
+                    history = {
+                        "ride_request_info": ride_request_info,
+                        "driver_info": driver_info,
+                    }
+                    data.append(history)
+                else:
+                    ride_request_info = {
+                        "id": ride_request["id"],
+                        "status": ride_request["status"],
+                        "pickup_latitude": ride_request["pickup_latitude"],
+                        "pickup_longitude": ride_request["pickup_longitude"],
+                        "dropoff_latitude": ride_request["dropoff_latitude"],
+                        "dropoff_longitude": ride_request["dropoff_longitude"],
+                        "pickup_address": ride_request["pickup_address"],
+                        "dropoff_address": ride_request["dropoff_address"],
+                        "pickup_time": None,
+                        "dropoff_time": None,
+                        "polyline": ride_request["polyline"],
+                        "price": ride_request["price"],
+                        "distance": ride_request["distance"],
+                        "created_at": ride_request["created_at"],
+                        "rating": ride_request["rating"],
+                        "is_rated": ride_request["israted"],
+                    }
+                    driver_info = {
+                        "driver_name": "",
+                        "vehicle_registration_number": "",
+                        "vehicle_manufacturer": "",
+                        "vehicle_model": "",
+                        "vehicle_color": "",
+                        "vehicle_type": "",
+                    }
+                    history = {
+                        "ride_request_info": ride_request_info,
+                        "driver_info": driver_info,
+                    }
+                    data.append(history)
 
             response = {
                 "status": True,
                 "statusCode": status.HTTP_200_OK,
                 "data": {
                     "user_id": user_id,
-                    "history": serializer.data,
+                    "history": data,
                 },
             }
             return Response(response, status=status.HTTP_200_OK)
 
         except Exception as e:
             print(e)
+            if str(e) == "Invalid page.":
+                response = {
+                    "status": True,
+                    "statusCode": status.HTTP_200_OK,
+                    "data": {
+                        "user_id": user_id,
+                        "history": [],
+                    },
+                }
+                return Response(response, status=status.HTTP_200_OK)
             return Response(
                 {
                     "success": False,

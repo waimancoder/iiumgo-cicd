@@ -33,7 +33,6 @@ class AdvertisementView(generics.GenericAPIView):
             serializer = self.get_serializer(queryset, many=True)
             instances = list(paginated_queryset)
             data = serializer.data
-            print(data)
 
             # Replace any 'null' values with empty strings
             for datum in data:
@@ -52,7 +51,6 @@ class AdvertisementView(generics.GenericAPIView):
 
             return Response(response, status=status.HTTP_200_OK)
         except Exception as e:
-            print(e)
             return Response(
                 {
                     "success": False,

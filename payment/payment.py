@@ -96,6 +96,5 @@ def create_bill(user_id, amount, return_url):
     response = requests.post("https://dev.toyyibpay.com/index.php/api/createBill", data=request)
     result = response.text
     obj = json.loads(result)
-    print(obj)
 
     return obj

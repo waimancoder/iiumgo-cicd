@@ -9,7 +9,6 @@ from django.contrib.messages import success
 from django.core.checks.security.base import check_secret_key
 from django.utils.translation.trans_real import accept_language_re
 from payment.models import CommissionHistory, DriverEarning, DriverEwallet
-import ride_request
 from ride_request.pricing import get_commission_amount, get_distance
 from user_account.models import User
 import json
@@ -20,14 +19,17 @@ from .mixins import RideRequestMixin
 from collections import OrderedDict
 from rides.models import Driver, DriverLocation
 import redis
+import logging
 
-
+logger = logging.getLogger(__name__)
 channel_layer = get_channel_layer()
 
 host = os.environ.get("redis_client_host")
 password = os.environ.get("redis_client_password")
 port = os.environ.get("redis_client_port")
 redis_client = redis.Redis(host=host, port=port, password=password)
+
+# a list of all the channels that are currently connected
 
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -150,7 +152,10 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                             },
                             "driver_info": {
                                 "driver_id": "",
+                                "driver_status": "",
                                 "driver_name": "",
+                                "driver_profile_pic": "",
+                                "driver_phone_number": "",
                                 "vehicle_registration_number": "",
                                 "vehicle_manufacturer": "",
                                 "vehicle_model": "",
@@ -162,63 +167,31 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 )
             )
 
-            # if passenger.passenger_status == Passenger.STATUS_AVAILABLE:
-            # await self.send(
-            #     json.dumps(
-            #         {
-            #             "type": "passenger_status",
-            #             "passenger_status": "available",
-            #             "data": {
-            #                 "ride_request_info": {
-            #                     "id": "",
-            #                     "pickup_latitude": "",
-            #                     "pickup_longitude": "",
-            #                     "polyline": "",
-            #                     "pickup_address": "",
-            #                     "dropoff_address": "",
-            #                     "dropoff_latitude": "",
-            #                     "dropoff_longitude": "",
-            #                     "vehicle_type": "",
-            #                     "price": "",
-            #                     "distance": "",
-            #                     "details": "",
-            #                     "status": "",
-            #                     "created_at": "",
-            #                 },
-            #                 "passenger_info": {
-            #                     "passenger_id": str(self.user.id),
-            #                     "passenger_name": self.user.fullname,
-            #                     "passenger_phone_number": self.user.phone_no,
-            #                     "passenger_gender": self.user.gender,
-            #                 },
-            #                 "driver_info": {
-            #                     "driver_id": "",
-            #                     "driver_name": "",
-            #                     "vehicle_registration_number": "",
-            #                     "vehicle_manufacturer": "",
-            #                     "vehicle_model": "",
-            #                     "vehicle_color": "",
-            #                     "vehicle_type": "",
-            #                 },
-            #             },
-            #         }
-            #     )
-            # )
-
     async def receive(self, text_data):
-        data = json.loads(text_data)
-        action = data.get("action")
+        try:
+            data = json.loads(text_data)
+            action = data.get("action")
 
-        if action == "create_ride_request":
-            result = await self.create_ride_request(data)
-            await self.send(json.dumps(result))
-            if result["success"] == True:
-                await self.send_new_ride_request_to_drivers(result)
-        elif action == "send_chat_message":
-            await self.send_chat_message(data)
-        elif action == "cancel_ride_request":
-            result = await self.cancel_ride_request(data)
-            await self.send(json.dumps(result))
+            if action == "create_ride_request":
+                result = await self.create_ride_request(data)
+                await self.send(json.dumps(result))
+                if result["success"] == True:
+                    await self.send_new_ride_request_to_drivers(result)
+            elif action == "send_chat_message":
+                await self.send_chat_message(data)
+            elif action == "cancel_ride_request":
+                result = await self.cancel_ride_request(data)
+                await self.send(json.dumps(result))
+        except Exception as e:
+            logger.error(e)
+            await self.send(
+                json.dumps(
+                    {
+                        "type": "error",
+                        "message": str(e),
+                    }
+                )
+            )
 
     async def send_chat_message(self, data):
         message = data["message"]
@@ -258,6 +231,7 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             ):
                 return {"success": False, "message": "You have an ongoing ride request"}
             else:
+                distance = round(float(data["distance"]) * 0.001, 3)
                 ride_request = RideRequest(
                     user=self.user,
                     pickup_latitude=data["pickup_latitude"],
@@ -268,7 +242,7 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     dropoff_address=data["dropoff_address"],
                     route_polygon=data["polyline"],
                     price=data["price"],
-                    distance=data["distance"],
+                    distance=distance,
                     vehicle_type=data["vehicle_type"],
                     special_requests=data["details"],
                     isFemaleDriver=data["isFemaleDriver"]
@@ -302,11 +276,13 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
 
             return response_data
         except Exception as e:
-            return {"success": False, "message": str(e)}
+            logger.error(e)
+            return {"success": False, "type": "error", "message": str(e)}
 
     async def cancel_ride_request(self, data):
         try:
             ride_request_id = data["ride_request_id"]
+            pending = True
 
             ride_request = await database_sync_to_async(RideRequest.objects.get)(id=ride_request_id)
             if ride_request.status == RideRequest.STATUS_ACCEPTED:
@@ -329,19 +305,19 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 driver = await database_sync_to_async(Driver.objects.get)(id=driver_id)
                 driver_user_id = driver.user_id
                 driver_channel_name = cache.get(f"driverconsumer_{driver_user_id}")
-                driver.status = Driver.STATUS_AVAILABLE
+                driver.jobDriverStatus = Driver.STATUS_AVAILABLE
                 await database_sync_to_async(driver.save)()
-
-                # Passenger
-                passenger = await database_sync_to_async(Passenger.objects.get)(user_id=self.user_id)
-                passenger.status = Passenger.STATUS_AVAILABLE
-                await database_sync_to_async(passenger.save)()
-
+                pending = False
                 # Discard Passenger and Driver from group
 
                 await self.channel_layer.group_discard(group_name, driver_channel_name)
                 await self.channel_layer.group_discard(group_name, self.channel_name)
                 await self.channel_layer.group_add("drivers", driver_channel_name)
+
+            # Passenger
+            passenger = await database_sync_to_async(Passenger.objects.get)(user_id=self.user_id)
+            passenger.passenger_status = Passenger.STATUS_AVAILABLE
+            await database_sync_to_async(passenger.save)()
 
             ride_request.status = RideRequest.STATUS_CANCELED
             await database_sync_to_async(ride_request.save)()
@@ -367,9 +343,15 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     "details": ride_request.special_requests,
                 },
             }
+
+            if pending == True:
+                await self.channel_layer.group_send(
+                    "drivers", {"type": "driver_accepts_ride_request", "data": response_data}
+                )
+
         except Exception as e:
-            response_data = {"success": False, "message": str(e)}
-            return response_data
+            logger.error(e)
+            return {"success": False, "type": "error", "message": str(e)}
 
         return response_data
 
@@ -420,7 +402,10 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 },
                 "driver_info": {
                     "driver_id": str(driver.user_id),
+                    "driver_status": driver.jobDriverStatus,
                     "driver_name": driver_details.fullname,
+                    "driver_profile_pic": driver_details.profile_img.url if driver_details.profile_img else "",
+                    "driver_phone_number": driver_details.phone_no if driver_details.phone_no else "",
                     "vehicle_registration_number": driver.vehicle_registration_number
                     if driver.vehicle_registration_number
                     else "",
@@ -575,7 +560,10 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     },
                     "driver_info": {
                         "driver_id": str(driver.user_id),
+                        "driver_status": driver.jobDriverStatus,
                         "driver_name": self.user.fullname,
+                        "driver_profile_pic": str(self.user.profile_img.url) if self.user.profile_img else "",
+                        "driver_phone_number": self.user.phone_no if self.user.phone_no else "",
                         "vehicle_registration_number": driver.vehicle_registration_number
                         if driver.vehicle_registration_number
                         else "",
@@ -616,7 +604,10 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     },
                     "driver_info": {
                         "driver_id": str(driver.user_id),
+                        "driver_status": driver.jobDriverStatus,
                         "driver_name": self.user.fullname,
+                        "driver_profile_pic": str(self.user.profile_img.url) if self.user.profile_img else "",
+                        "driver_phone_number": self.user.phone_no if self.user.phone_no else "",
                         "vehicle_registration_number": driver.vehicle_registration_number
                         if driver.vehicle_registration_number
                         else "",
@@ -758,7 +749,10 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
 
             driverinfo = {
                 "driver_id": str(driver.user_id),
+                "driver_status": driver.jobDriverStatus,
                 "driver_name": driver.user.fullname,
+                "driver_profile_pic": str(driver.user.profile_img.url) if driver.user.profile_img else "",
+                "driver_phone_number": driver.user.phone_no if driver.user.phone_no else "",
                 "vehicle_registration_number": driver.vehicle_registration_number
                 if driver.vehicle_registration_number
                 else "",
@@ -835,11 +829,13 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             )
 
             return response_data
-        except RideRequest.DoesNotExist:
-            return {"success": False, "message": "Ride request does not exist"}
+        except RideRequest.DoesNotExist as e:
+            logger.error(e)
+            return {"success": False, "type": "error", "message": str(e)}
         except Exception as e:
+            logger.error(e)
             tb = traceback.format_exc()
-            return {"success": False, "message": str(e), "traceback": tb}
+            return {"success": False, "type": "error", "message": str(e), "traceback": tb}
 
     async def driver_start_trip(self, event):
         response = {
@@ -893,24 +889,29 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         except RideRequest.DoesNotExist:
             return {"success": False, "message": "Ride request does not exist"}
         except Exception as e:
+            logger.error(e)
             tb = traceback.format_exc()
-            return {"success": False, "message": str(e), "traceback": tb}
+            return {"success": False, "type": "error", "message": str(e), "traceback": tb}
 
     async def remove_consumers_to_group(self, group_name, channel_name, passenger_channel_name, response):
-        ride_request_id = response["ride_request_id"]
-        ride_request = await database_sync_to_async(RideRequest.objects.get)(id=ride_request_id)
-        data = {
-            "success": True,
-            "message": "Ride Request is completed successfully",
-            "type": "driver_passenger_completed_ride_request",
-            "data": {"id": str(ride_request.id)},
-        }
-        await self.channel_layer.group_send(group_name, {"type": "driver_accepts_ride_request", "data": data})
-        await self.channel_layer.group_discard(group_name, channel_name)
-        await self.channel_layer.group_discard(group_name, passenger_channel_name)
-        await self.channel_layer.group_add("drivers", self.channel_name)
+        try:
+            ride_request_id = response["ride_request_id"]
+            ride_request = await database_sync_to_async(RideRequest.objects.get)(id=ride_request_id)
+            data = {
+                "success": True,
+                "message": "Ride Request is completed successfully",
+                "type": "driver_passenger_completed_ride_request",
+                "data": {"id": str(ride_request.id)},
+            }
+            await self.channel_layer.group_send(group_name, {"type": "driver_accepts_ride_request", "data": data})
+            await self.channel_layer.group_discard(group_name, channel_name)
+            await self.channel_layer.group_discard(group_name, passenger_channel_name)
+            await self.channel_layer.group_add("drivers", self.channel_name)
 
-        cache.delete(f"cg_{ride_request.user_id}")
+            cache.delete(f"cg_{ride_request.user_id}")
+        except Exception as e:
+            logger.error(e)
+            raise e
 
     async def complete_trip(self, data):
         try:
@@ -1000,8 +1001,9 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             return response_data
 
         except Exception as e:
+            logger.error(e)
             tb = traceback.format_exc()
-            return {"success": False, "message": str(e), "traceback": tb}
+            return {"success": False, "type": "error", "message": str(e), "traceback": tb}
 
     async def cancel_ride_request(self, data):
         try:
@@ -1027,12 +1029,12 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 # Driver
                 driver_id = ride_request.driver_id
                 driver = await database_sync_to_async(Driver.objects.get)(id=driver_id)
-                driver.status = Driver.STATUS_AVAILABLE
+                driver.jobDriverStatus = Driver.STATUS_AVAILABLE
                 await database_sync_to_async(driver.save)()
 
                 # Passenger
                 passenger = await database_sync_to_async(Passenger.objects.get)(user_id=ride_request.user_id)
-                passenger.status = Passenger.STATUS_AVAILABLE
+                passenger.passenger_status = Passenger.STATUS_AVAILABLE
                 await database_sync_to_async(passenger.save)()
                 passenger_channel_name = cache.get(f"passengerconsumer_{ride_request.user_id}")
 
@@ -1099,8 +1101,9 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             await self.send(json.dumps(send_ride_request))
 
         except Exception as e:
-            response_data = {"success": False, "message": str(e)}
-            return response_data
+            logger.error(e)
+            tb = traceback.format_exc()
+            return {"success": False, "type": "error", "message": str(e), "traceback": tb}
 
         return response_data
 
@@ -1135,12 +1138,24 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             if key not in ["success", "message"]:
                 data[key] = value
         driver_gender = self.user.gender
-        if data["data"]["isFemaleDriver"] == True and driver_gender == "female":
-            await self.send(json.dumps(data))
-        elif data["data"]["isFemaleDriver"] == True and driver_gender == "male":
+        driver = await sync_to_async(lambda: self.user.driver)()
+        driver_vehicle_type = driver.vehicle_type
+        if data["data"]["vehicle_type"] == "4pax" and driver_vehicle_type == "4pax":
+            if data["data"]["isFemaleDriver"] == True and driver_gender == "female":
+                await self.send(json.dumps(data))
+            elif data["data"]["isFemaleDriver"] == True and driver_gender == "male":
+                pass
+            elif data["data"]["isFemaleDriver"] == False:
+                await self.send(json.dumps(data))
+        elif driver_vehicle_type == "6pax":
+            if data["data"]["isFemaleDriver"] == True and driver_gender == "female":
+                await self.send(json.dumps(data))
+            elif data["data"]["isFemaleDriver"] == True and driver_gender == "male":
+                pass
+            elif data["data"]["isFemaleDriver"] == False:
+                await self.send(json.dumps(data))
+        elif data["data"]["vehicle_type"] == "6pax" and driver_vehicle_type == "4pax":
             pass
-        elif data["data"]["isFemaleDriver"] == False:
-            await self.send(json.dumps(data))
 
         # Create a new ordered dictionary and add the keys in the desired order
 

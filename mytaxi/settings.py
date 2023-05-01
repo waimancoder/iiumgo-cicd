@@ -181,7 +181,8 @@ USE_TZ = True
 # AWS s3 Bucket Settings
 AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
-AWS_STORAGE_BUCKET_NAME = "mytaxi-1"
+# AWS_STORAGE_BUCKET_NAME = "mytaxi-1"
+AWS_STORAGE_BUCKET_NAME = "iiumgo"
 AWS_S3_REGION_NAME = "ap-northeast-1"
 AWS_S3_CUSTOM_DOMAIN = "%s.s3.amazonaws.com" % AWS_STORAGE_BUCKET_NAME
 AWS_S3_OBJECT_PARAMETERS = {
@@ -249,6 +250,7 @@ border_color = "\033[31m"  # ANSI escape code for red color
 reset_color = "\033[0m"  # Reset color to default
 teal_color = "\033[36m"  # ANSI escape code for teal color
 yellow_color = "\033[33m"  # ANSI escape code for yellow color
+pink_color = "\033[35m"  # ANSI escape code for pink color
 
 # log_format = f"""
 # {border_color}----------------------------------------------------
@@ -259,17 +261,18 @@ yellow_color = "\033[33m"  # ANSI escape code for yellow color
 
 log_format = """
 {border_color}+-----------------------------------------------------------------------------------------------------------+
-{border_color}| {reset_color}{levelname_color} :{yellow_color}{message:^90}{reset_color}{border_color}|{reset_color}
+{levelname_color} :{yellow_color}{message:^90}{reset_color}
 {border_color}+-----------------------------------------------------------------------------------------------------------+{reset_color}
-{levelname_color} : {name} {module} {filename} {lineno} {funcName} {process} {yellow_color}{message}{reset_color}
+{levelname_color} : {asctime:s} {name} {threadName} {thread:d} {module} {filename} {lineno:d} {name} {funcName} {process:d}
+{pink_color}MESSAGE:{reset_color} {yellow_color}{message}{reset_color}
 """
 
 color_mapping = {
-    "DEBUG": "\033[36m",  # Teal color for DEBUG levelname
+    "DEBUG": "\033[32m",  # Teal color for DEBUG levelname
     "INFO": "\033[32m",  # Green color for INFO levelname
-    "WARNING": "\033[33m",  # Yellow color for WARNING levelname
+    "WARNING": "\033[31m",  # Light Red color for WARNING levelname
     "ERROR": "\033[31m",  # Red color for ERROR levelname
-    "CRITICAL": "\033[91m",  # Bright red color for CRITICAL levelname
+    "CRITICAL": "\033[31m",  # Bright red color for CRITICAL levelname
 }
 reset_color = "\033[0m"  # Reset color to default
 
@@ -285,6 +288,7 @@ class ColoredFormatter(logging.Formatter):
         record.border_color = f"{self.border_color}"
         record.reset_color = f"{reset_color}"
         record.yellow_color = f"{self.yellow_color}"
+        record.pink_color = f"{pink_color}"
         return super().format(record)
 
 
@@ -298,10 +302,10 @@ LOGGING = {
             # "format": "\033[31m\n----------------------------------------------------\n|{levelname:^50}|\n----------------------------------------------------\n  {levelname}  {name} {asctime} {module} {process:d} {thread:d} {message}",
             "style": "{",
         },
-        "simple": {
-            "format": "{levelname} {message}",
-            "style": "{",
-        },
+        # "simple": {
+        #     "format": "{levelname} {message}",
+        #     "style": "{",
+        # },
     },
     "handlers": {
         "console": {
@@ -332,33 +336,53 @@ LOGGING = {
     "loggers": {
         "django": {
             "handlers": ["console", "info_handler"],
-            "level": "DEBUG",
+            "level": "INFO",
             "propagate": True,
         },
         "django.request": {
             "handlers": ["console"],
-            "level": "ERROR",
-            "propagate": True,
+            "level": "DEBUG",
+            "propagate": False,
         },
         "django.template": {
             "handlers": ["error_handler"],
             "level": "DEBUG",
-            "propagate": True,
+            "propagate": False,
         },
         "django.server": {
-            "handlers": ["error_handler"],
-            "level": "INFO",
-            "propagate": True,
+            "handlers": ["console", "error_handler"],
+            "level": "DEBUG",
+            "propagate": False,
         },
         "daphne": {
             "handlers": ["console", "info_handler"],
             "level": "DEBUG",
-            "propagate": True,
+            "propagate": False,
         },
-        "gunicorn": {
+        "ride_request": {
             "handlers": ["console", "info_handler"],
             "level": "DEBUG",
-            "propagate": True,
+            "propagate": False,
+        },
+        "payment": {
+            "handlers": ["console", "info_handler"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+        "rides": {
+            "handlers": ["console", "info_handler"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+        "advertisement": {
+            "handlers": ["console", "info_handler"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+        "user_account": {
+            "handlers": ["console", "info_handler"],
+            "level": "DEBUG",
+            "propagate": False,
         },
     },
 }

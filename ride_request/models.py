@@ -51,6 +51,7 @@ class RideRequest(models.Model):
     rating = models.FloatField(null=True, blank=True)
     vehicle_type = models.CharField(max_length=255, null=True, blank=True, choices=Driver.typeChoices)
     isFemaleDriver = models.BooleanField(default=False, null=True, blank=True)
+    isRated = models.BooleanField(default=False, null=True, blank=True)
 
 
 class PopularLocation(models.Model):

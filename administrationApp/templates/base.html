@@ -1,0 +1,138 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="garden">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="{% static 'vendor/full.css' %}"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
+    <script src="{% static 'vendor/htmx.js' %}"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              roboto: ["Roboto", "sans-serif"],
+            },
+            colors: {
+              clifford: "#da373d",
+            },
+          },
+        },
+      };
+    </script>
+    <style type="text/tailwindcss">
+      @layer utilities {
+        .content-auto {
+          content-visibility: auto;
+        }
+      }
+
+      @layer base {
+        html {
+          font-family: Roboto, sans-serif;
+        }
+      }
+    </style>
+
+    <title>iiumGO</title>
+  </head>
+  <body class="overflow-hidden">
+    {% comment %} Navigation Bar {% endcomment %}
+    {% comment %} <div class="navbar bg-teal-900 h-2">
+      <div class="flex-1">
+        
+        
+      </div>
+      <div class="flex-none hidden sm:block">
+        <a class="btn btn-ghost text-white normal-case " href={% url 'loginpage' %}>Login</a>
+        <a class="btn btn-ghost text-white normal-case" href={% url 'login' %}>About Us</a>
+      </div>
+    </div> {% endcomment %}
+
+  <div class="drawer relative">
+    <input id="my-drawer-3" type="checkbox" class="drawer-toggle" /> 
+    <div class="drawer-content flex flex-col">
+      <!-- Navbar -->
+      <div class="fixed w-full navbar bg-teal-900 z-10">
+        <div class="flex-1 px-2 mx-2">
+          <label for="my-drawer-3">
+            <a class="btn btn-ghost normal-case text-xl text-white font-bold">iiumGO
+            </a>
+          </label>
+        </div>
+        <div class="dropdown dropdown-end">
+          <label tabindex="0" class="btn btn-ghost btn-circle avatar">
+            <div class="w-10 rounded-full">
+              <img src="/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+            </div>
+          </label>
+          <ul tabindex="0" class="mt-3 p-2 shadow menu menu-compact dropdown-content bg-base-100 rounded-box w-52">
+            <li>
+              <a class="justify-between">
+                Profile
+              </a>
+            </li>
+            <li><a>Settings</a></li>
+            <li><a>Logout</a></li>
+          </ul>
+        </div>
+      </div>
+      <!-- Page content here -->
+    <div class="mt-16 min-h-screen z-0"> <!-- Add top margin to create space below the navbar -->
+      {% block content %} {% endblock %}
+    </div>
+      <footer class="footer p-10 bg-neutral text-neutral-content">
+    <div>
+      <span class="footer-title">Services</span>
+      <a class="link link-hover">Branding</a>
+      <a class="link link-hover">Design</a>
+      <a class="link link-hover">Marketing</a>
+      <a class="link link-hover">Advertisement</a>
+    </div>
+    <div>
+      <span class="footer-title">Company</span>
+      <a class="link link-hover">About us</a>
+      <a class="link link-hover">Contact</a>
+      <a class="link link-hover">Jobs</a>
+      <a class="link link-hover">Press kit</a>
+    </div>
+    <div>
+      <span class="footer-title">Legal</span>
+      <a class="link link-hover">Terms of use</a>
+      <a class="link link-hover">Privacy policy</a>
+      <a class="link link-hover">Cookie policy</a>
+    </div>
+  </footer>
+    </div> 
+    <div class="drawer-side">
+      <label for="my-drawer-3" class="drawer-overlay"></label> 
+      <ul class="menu p-4 w-80 bg-base-100">
+        <!-- Sidebar content here -->
+        <li><a>Dashboard</a></li>
+        <li><a>Driver Approval System</a></li>
+        <li><a>Driver Support System</a></li>
+        <li><a>Passenger Support System</a></li>
+      </ul>
+    </div>
+    
+  </div>
+
+  
+
+   
+  </body>
+
+  
+</html>

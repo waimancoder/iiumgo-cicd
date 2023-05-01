@@ -82,8 +82,6 @@ def get_pricing(
     # details = data["routes"][0]["sections"][0]["summary"]
     # distance = details["length"]
 
-    print(distance)
-
     # if departure_time is None and arrival_time is None:
     #     duration_minutes = details["typicalDuration"]
     # # (duration_minutes / 60) * 0.60
@@ -124,7 +122,6 @@ def get_pricing(
 
         updated_price.append(rounded_price)
 
-    print(updated_price)
     fares = {}
     if role == "student":
         fares["4seater"] = updated_price[0]

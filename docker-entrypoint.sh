@@ -8,6 +8,8 @@ python manage.py migrate
 
 # Start Gunicorn and Daphne
 exec gunicorn mytaxi.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 120 & \
-     daphne -b 0.0.0.0 -p 9000 mytaxi.asgi:application --websocket_timeout 86400
+     daphne -b 0.0.0.0 -p 9000 mytaxi.asgi:application --websocket_timeout 86400 
 
-# exec daphne -b 0.0.0.0 -p 9000 mytaxi.asgi:application --websocket_timeout 86400 > /var/log/daphne.log
+# # exec daphne -b 0.0.0.0 -p 9000 mytaxi.asgi:application --websocket_timeout 86400 
+
+# daphne -b 0.0.0.0 -p 9000 mytaxi.asgi:application --websocket_timeout 86400 -v 3
