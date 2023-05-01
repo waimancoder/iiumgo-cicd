@@ -1,21 +1,20 @@
 #!/bin/bash
 
-source /var/lib/jenkins/workspace/iiumgo-dev/venv/bin/activate
+source /root/iiumgo/venv/bin/activate
 
-cd /var/lib/jenkins/workspace/iiumgo-dev
+cd /root/iiumgo
 
 python3 manage.py makemigrations
 python3 manage.py migrate
 
 echo "Migrations done"
 
-cd /var/lib/jenkins/workspace/iiumgo-dev
+cd /root/iiumgo
 
 sudo cp -rf daphne_server.service /etc/systemd/system/
 
 echo "$USER"
 echo "$PWD"
-
 
 sudo systemctl daemon-reload
 sudo systemctl start daphne_server

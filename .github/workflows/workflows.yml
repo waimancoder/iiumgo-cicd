@@ -21,7 +21,7 @@ jobs:
     name: Build
     runs-on: ubuntu-20.04
     steps:
-      - name: executing remote ssh commands using password
+      - name: Setup ENV
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.HOST }}
@@ -32,3 +32,14 @@ jobs:
             cd ${{ secrets.WORK_DIR }}
             chmod +x ./envsetup.sh
             ./envsetup.sh
+      - name: Setup Daphne
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd ${{ secrets.WORK_DIR }}
+            chmod +x ./daphne.sh
+            ./daphne.sh

@@ -1184,26 +1184,15 @@ class LocationConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)
-        type = data.get("type", "")
-        if type == "location_update":
-            driver_id = data.get("driver_id", "")
+        action = data.get("action", "")
+        if action == "location_update":
             latitude = data.get("latitude", 0)
             longitude = data.get("longitude", 0)
-            polygon = data.get("polygon", "")
-
-            # Save driver location in the database
-            driver_location = await self.update_driver_location(driver_id, latitude, longitude, polygon)
 
             # Send location data to the passenger
             await self.channel_layer.group_send(
                 self.user_id,
-                {
-                    "type": "location_update",
-                    "driver_id": driver_id,
-                    "latitude": latitude,
-                    "longitude": longitude,
-                    "polygon": polygon,
-                },
+                {"type": "location_update", "latitude": latitude, "longitude": longitude},
             )
 
     async def location_update(self, event):
@@ -1211,10 +1200,8 @@ class LocationConsumer(AsyncWebsocketConsumer):
             "success": True,
             "type": event["type"],
             "data": {
-                "driver_id": event["driver_id"],
                 "latitude": event["latitude"],
                 "longitude": event["longitude"],
-                "polygon": event["polygon"],
             },
         }
         await self.send(json.dumps(response))
