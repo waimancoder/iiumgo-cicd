@@ -1,0 +1,10 @@
+[Unit]
+Description=myproject Daphne Service
+After=network.target
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=/var/lib/jenkins/workspace/iiumgo-dev
+ExecStart=/var/lib/jenkins/workspace/iiumgo-dev/venv/bin/daphne -p 9000 mytaxi.asgi:application --websocket_timeout 86400
+[Install]
+WantedBy=multi-user.target
