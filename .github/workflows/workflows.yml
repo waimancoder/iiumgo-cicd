@@ -41,7 +41,7 @@ jobs:
           port: ${{ secrets.PORT }}
           script: |
             cd ${{ secrets.WORK_DIR }}
-            cp /root/iiumgo/settings.py /root/iiumgo/venv/lib/python3.9/site-packages/knox/settings.py
+            cp /root/iiumgo/settings.py /root/iiumgo/venv/lib/python3.10/site-packages/knox/settings.py
 
       - name: Setup Daphne
         uses: appleboy/ssh-action@v0.1.10
