@@ -32,6 +32,17 @@ jobs:
             cd ${{ secrets.WORK_DIR }}
             chmod +x ./envsetup.sh
             ./envsetup.sh
+      - name: Replace Settings
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd ${{ secrets.WORK_DIR }}
+            cp /root/iiumgo/settings.py /root/iiumgo/venv/lib/python3.9/site-packages/knox/settings.py
+
       - name: Setup Daphne
         uses: appleboy/ssh-action@v0.1.10
         with:
