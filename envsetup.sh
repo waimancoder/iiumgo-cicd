@@ -23,7 +23,7 @@ fi
 # sudo docker stop mytaxi
 # sudo docker compose up -d --remove-orphans
 
-source /var/lib/jenkins/workspace/iiumgo-dev/venv/bin/activate
+source /root/iiumgo/venv/bin/activate
 
 pip3 install -r requirements.txt
 

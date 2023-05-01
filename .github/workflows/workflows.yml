@@ -30,4 +30,5 @@ jobs:
           port: ${{ secrets.PORT }}
           script: |
             cd ${{ secrets.WORK_DIR }}
-            ls -al
+            chmod +x ./envsetup.sh
+            ./envsetup.sh
