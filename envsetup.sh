@@ -7,12 +7,8 @@ else
     python3 -m venv venv
 fi
 
-if [ -d "node_modules" ] 
-then
-    echo "node module exists." 
-else
-    npm install
-fi
+npm install
+
 
 # sudo cp -rf docker-compose.service /etc/systemd/system/
 
