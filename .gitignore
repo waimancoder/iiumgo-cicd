@@ -15,7 +15,7 @@ nginx/
 .coverage
 htmlcov
 .vscode
-*.log
+logs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
