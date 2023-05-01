@@ -9,9 +9,7 @@ python3 manage.py migrate
 
 echo "Migrations done"
 
-cd /root/iiumgo
-
-sudo cp -rf daphne_server.service /etc/systemd/system/
+sudo cp -rf /root/iiumgo/daphne_server.service /etc/systemd/system/
 
 echo "$USER"
 echo "$PWD"

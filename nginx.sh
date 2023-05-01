@@ -1,7 +1,7 @@
 #!/bin/bash
 
 sudo cp -rf app.conf /etc/nginx/conf.d
-chmod 710 /var/lib/jenkins/workspace/iiumgo-dev
+chmod 710 /root/iiumgo
 
 sudo nginx -t
 
