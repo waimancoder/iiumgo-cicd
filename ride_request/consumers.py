@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import os
 import traceback
 from urllib import response
@@ -13,7 +13,7 @@ from ride_request.pricing import get_commission_amount, get_distance
 from user_account.models import User
 import json
 from channels.layers import get_channel_layer
-from .models import RideRequest, Passenger
+from .models import CancelRateDriver, RideRequest, Passenger
 from django.core.cache import cache
 from .mixins import RideRequestMixin
 from collections import OrderedDict
@@ -755,6 +755,28 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         try:
             ride_request_id = data["ride_request_id"]
             ride_request = await database_sync_to_async(RideRequest.objects.get)(id=ride_request_id)
+
+            driver = await database_sync_to_async(Driver.objects.get)(user=self.user)
+            driver_warning_rate = await database_sync_to_async(CancelRateDriver.objects.get)(driver=driver)
+            logger.info(f"driver_warning_rate: {driver_warning_rate.warning_rate}")
+
+            if driver_warning_rate.warning_rate > 0:
+                hour = driver_warning_rate.warning_rate
+                updated_at = driver_warning_rate.updated_at
+                waiting_period = hour - (datetime.now().timestamp() - updated_at.timestamp()) / 3600
+                waiting_period = round(waiting_period)
+                waiting_period = int(waiting_period)
+                logger.info(f"waiting period: {waiting_period}")
+                message = (
+                    f"You have been blocked from accepting any ride requests. Please wait for {waiting_period} hours."
+                )
+
+                if waiting_period != 0:
+                    return {
+                        "success": False,
+                        "type": "disable_driver",
+                        "message": message,
+                    }
 
             if ride_request.status != RideRequest.STATUS_PENDING:
                 return {"success": False, "message": "Ride request is not pending"}

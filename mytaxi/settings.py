@@ -70,7 +70,10 @@ CELERY_TIMEZONE = "Asia/Kuala_Lumpur"
 CELERY_BEAT_SCHEDULE = {
     "reset_warning_rates": {
         "task": "ride_request.tasks.reset_warning_rates",
-        "schedule": crontab(minute=0, hour=0, day_of_week="sunday", timezone="Asia/Kuala_Lumpur"),
+        "schedule": crontab(minute=0, hour=0, day_of_week="sunday"),
+        "options": {
+            "timezone": CELERY_TIMEZONE,
+        },
     },
 }
 
