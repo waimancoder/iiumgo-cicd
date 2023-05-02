@@ -3,6 +3,7 @@ from django.urls import path, reverse
 from knox import views as knox_views
 from . import views
 from .views import (
+    PasswordResetAPI,
     RegisterAPI,
     LoginAPI,
     UserRetrieveAPIView,
@@ -35,6 +36,7 @@ urlpatterns = [
         PasswordResetConfirmView.as_view(),
         name="password_reset_confirm",
     ),
+    path("api/password_change", PasswordResetAPI.as_view(), name="password_change"),
     path("api/userupdate/<str:email>", UserUpdateAPI.as_view(), name="userupdate"),
     path("api/userlist", UserListView.as_view(), name="userlist"),
     path("api/profile-pic", ProfilePictureView.as_view(), name="profile-pic"),
