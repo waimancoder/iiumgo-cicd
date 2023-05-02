@@ -57,6 +57,17 @@ jobs:
             cd ${{ secrets.WORK_DIR }}
             chmod +x ./daphne.sh
             ./daphne.sh
+      - name: Setup Celery
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd ${{ secrets.WORK_DIR }}
+            chmod +x ./celery.sh
+            ./celery.sh
       - name: Setup NGINX
         uses: appleboy/ssh-action@v0.1.10
         with:
