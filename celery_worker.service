@@ -7,7 +7,7 @@ Type=simple
 User=root
 WorkingDirectory=/root/iiumgo
 Environment="PATH=/root/iiumgo/venv/bin"
-ExecStart=/root/iiumgo/venv/bin/celery -A mytaxi worker -l info --logfile=/root/iiumgo/logs/mytaxi_info.log
+ExecStart=/root/iiumgo/venv/bin/celery -A mytaxi worker --concurrency 1 -l info --logfile=/root/iiumgo/logs/mytaxi_info.log
 Restart=always
 
 [Install]

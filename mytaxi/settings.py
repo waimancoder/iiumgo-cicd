@@ -4,6 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
 import os
 import redis
+from celery.schedules import crontab
 
 
 load_dotenv(find_dotenv())
@@ -63,11 +64,13 @@ INTERNAL_IPS = [
 
 CELERY_BROKER_URL = "redis://" + os.environ.get("REDIS_LOCATION")
 CELERY_RESULT_BACKEND = "redis://" + os.environ.get("REDIS_LOCATION")
+CELERY_TIMEZONE = "Asia/Kuala_Lumpur"
+
 
 CELERY_BEAT_SCHEDULE = {
     "reset_warning_rates": {
         "task": "ride_request.tasks.reset_warning_rates",
-        "schedule": timedelta(seconds=30),
+        "schedule": crontab(minute=0, hour=0, day_of_week="sunday", timezone="Asia/Kuala_Lumpur"),
     },
 }
 
