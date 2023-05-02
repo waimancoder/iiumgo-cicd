@@ -2,6 +2,7 @@ import traceback
 from django.http import Http404, JsonResponse
 import requests
 from rest_framework import generics, permissions, status, serializers, mixins, viewsets
+from rest_framework.exceptions import ErrorDetail
 from .serializers import (
     PasswordResetInAppSerializer,
     UserSerializer,
@@ -489,11 +490,11 @@ class PasswordResetAPI(generics.GenericAPIView):
                 return Response(
                     {
                         "success": False,
-                        "statusCode": status.HTTP_401_UNAUTHORIZED,
-                        "error": "Unauthorized",
+                        "statusCode": status.HTTP_400_BAD_REQUEST,
+                        "error": "Bad Request",
                         "message": "Current password is incorrect",
                     },
-                    status=status.HTTP_401_UNAUTHORIZED,
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
             logger.info("Password reset request for user: " + str(user))
@@ -507,6 +508,19 @@ class PasswordResetAPI(generics.GenericAPIView):
                     "message": "Password changed successfully",
                 },
                 status=status.HTTP_200_OK,
+            )
+        except serializers.ValidationError as e:
+            error_detail = e.detail.get("non_field_errors", [])[0]
+            error_message = error_detail.__str__()
+
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_400_BAD_REQUEST,
+                    "error": "Bad Request",
+                    "message": error_message,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         except Exception as e:

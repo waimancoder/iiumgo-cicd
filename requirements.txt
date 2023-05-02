@@ -42,3 +42,4 @@ Adyen
 Pillow
 django
 Twisted[tls,http2]
+drf-spectacular

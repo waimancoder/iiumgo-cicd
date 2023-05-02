@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "theme",
     "django_browser_reload",
     "advertisement",
+    "drf_spectacular",
 ]
 
 TAILWIND_APP_NAME = "theme"
@@ -72,6 +73,11 @@ REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "mytaxi.customexceptions.custom_exception_handler",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 10,
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "iiumGO API",
 }
 
 MIDDLEWARE = [
