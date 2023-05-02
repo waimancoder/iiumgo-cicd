@@ -253,11 +253,11 @@ class DriverLocationSerializer(serializers.ModelSerializer):
 
 
 class LocationSerializer(serializers.ModelSerializer):
-    blocks = BlockSerializer(many=True)
+    # blocks = BlockSerializer(many=True)
 
     class Meta:
         model = Location
-        fields = ("name", "polygon", "lat", "lng", "locality", "subLocality")
+        fields = ("name", "lat", "lng", "locality", "subLocality")
 
     def create(self, validated_data):
         blocks_data = validated_data.pop("blocks")

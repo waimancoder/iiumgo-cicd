@@ -219,6 +219,16 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             "message": message,
             "time": datetime.now().isoformat(),
         }
+        try:
+            if event["event"] == "automated_message":
+                event_dict = {
+                    "type": "automated_message",
+                    "message": event["message"],
+                    "user_id": event["user_id"],
+                    "time": event["time"],
+                }
+        except:
+            pass
         await self.send(json.dumps(event_dict))
 
     @database_sync_to_async
@@ -680,6 +690,30 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             "user_id": user_id,
             "time": datetime.now().isoformat(),
         }
+        action = {
+            "type": "chat_message",
+            "user_id": user_id,
+            "message": message,
+            "time": datetime.now().isoformat(),
+        }
+        try:
+            if event["event"] == "automated_message":
+                event_dict = {
+                    "type": "automated_message",
+                    "message": event["message"],
+                    "user_id": user_id,
+                    "time": datetime.now().isoformat(),
+                }
+
+                action = {
+                    "type": "chat_message",
+                    "event": "automated_message",
+                    "user_id": user_id,
+                    "message": message,
+                    "time": datetime.now().isoformat(),
+                }
+        except:
+            pass
         redis_client.hset(name=event_key, key=datetime.now().timestamp(), value=json.dumps(event_dict))
         # TODO letak ni dalam def connect
         # messages = redis_client.hgetall(event_key)
@@ -689,12 +723,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         #     archived_messages.append(decoded_value)
         await self.channel_layer.group_send(
             self.group_name,
-            {
-                "type": "chat_message",
-                "user_id": user_id,
-                "message": message,
-                "time": datetime.now().isoformat(),
-            },
+            action,
         )
 
     async def chat_message(self, event):
@@ -704,6 +733,16 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             "user_id": event["user_id"],
             "time": event["time"],
         }
+        try:
+            if event["event"] == "automated_message":
+                event_dict = {
+                    "type": "automated_message",
+                    "message": event["message"],
+                    "user_id": event["user_id"],
+                    "time": event["time"],
+                }
+        except:
+            pass
 
         await self.send(json.dumps(event_dict))
 
@@ -804,7 +843,8 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 )
 
             important_messages = {
-                "message": f"\u26A0 IMPORTANT REMINDER: Your safety is our top priority. We remind all passengers and drivers to treat each other with respect and kindness. Any form of sexual harassment or inappropriate behavior will not be tolerated. If you experience any issues during your ride, please contact our support team immediately. Thank you for helping us maintain a safe and respectful community."
+                "message": f"\u26A0 IMPORTANT REMINDER: Your safety is our top priority. We remind all passengers and drivers to treat each other with respect and kindness. Any form of sexual harassment or inappropriate behavior will not be tolerated. If you experience any issues during your ride, please contact our support team immediately. Thank you for helping us maintain a safe and respectful community.",
+                "event": "important_message",
             }
             await self.send_chat_message(important_messages)
 
