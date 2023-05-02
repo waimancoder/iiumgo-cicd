@@ -1,0 +1,14 @@
+[Unit]
+Description=MyTaxi Celery Worker
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/iiumgo
+Environment="PATH=/root/iiumgo/venv/bin"
+ExecStart=/root/iiumgo/venv/bin/celery -A mytaxi beat -l info --logfile=/root/iiumgo/logs/mytaxi_info.log
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

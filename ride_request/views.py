@@ -8,9 +8,10 @@ from rest_framework.response import Response
 from django.db.models import Q
 from ride_request.pricing import get_pricing
 from rides.models import Driver
-from .models import PopularLocation, RideRequest
+from .models import CancelRateDriver, PopularLocation, RideRequest
 from .serializers import (
     CoordinateSerializer,
+    DriverCancelRateSerializer,
     DriverRideRequestSerializer,
     PopularLocationSerializer,
     RideRequestSerializer,
@@ -379,3 +380,86 @@ class PopularLocationView(generics.GenericAPIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class DriverCancelRate(generics.GenericAPIView):
+    serializer_class = DriverCancelRateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        try:
+            user = self.request.user
+            driver = Driver.objects.get(user=user)
+            driver_cancel_rate = CancelRateDriver.objects.get(driver=driver)
+            if driver_cancel_rate:
+                serializer = self.get_serializer(driver_cancel_rate)
+                return Response(
+                    {
+                        "success": True,
+                        "statusCode": status.HTTP_200_OK,
+                        "data": serializer.data,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    {
+                        "success": False,
+                        "statusCode": status.HTTP_404_NOT_FOUND,
+                        "message": "Driver cancel rate not found",
+                    },
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+        except Exception as e:
+            print(e)
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "error": "Internal Server Error",
+                    "message": "Please Contact Server Admin",
+                    "traceback": str(e),
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def post(self, request, *args, **kwargs):
+        try:
+            user = self.request.user
+            driver = Driver.objects.get(user=user)
+            driver_cancel_rate = CancelRateDriver.objects.get(driver=driver)
+            if driver_cancel_rate:
+                driver_cancel_rate.cancel_rate += 1
+                driver_cancel_rate.update_warning_rate()
+                driver_cancel_rate.save()
+                serializer = self.get_serializer(driver_cancel_rate)
+                return Response(
+                    {
+                        "success": True,
+                        "statusCode": status.HTTP_200_OK,
+                        "data": serializer.data,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    {
+                        "success": False,
+                        "statusCode": status.HTTP_404_NOT_FOUND,
+                        "message": "Driver cancel rate not found",
+                    },
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+        except Exception as e:
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "error": "Internal Server Error",
+                    "message": "Please Contact Server Admin",
+                    "traceback": str(e),
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

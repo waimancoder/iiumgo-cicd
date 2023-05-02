@@ -91,3 +91,20 @@ class Passenger(models.Model):
     )
 
     passenger_status = models.CharField(max_length=255, null=True, blank=True, choices=STATUS_CHOICES)
+
+
+class CancelRateDriver(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    driver = models.OneToOneField(Driver, on_delete=models.CASCADE)
+    cancel_rate = models.IntegerField(default=0, null=True, blank=True)
+    warning_rate = models.IntegerField(default=0, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def update_warning_rate(self):
+        if self.cancel_rate % 3 == 0:
+            self.warning_rate += 1
+            self.save()
+
+    def reset_warning_rate(self):
+        self.warning_rate = 0
+        self.save()

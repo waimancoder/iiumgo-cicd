@@ -1,3 +1,4 @@
+from datetime import timedelta
 import logging
 from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
@@ -60,6 +61,15 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
+CELERY_BROKER_URL = "redis://" + os.environ.get("REDIS_LOCATION")
+CELERY_RESULT_BACKEND = "redis://" + os.environ.get("REDIS_LOCATION")
+
+CELERY_BEAT_SCHEDULE = {
+    "reset_warning_rates": {
+        "task": "ride_request.tasks.reset_warning_rates",
+        "schedule": timedelta(seconds=30),
+    },
+}
 
 MJML_BACKEND_MODE = "cmd"
 MJML_EXEC_CMD = "node_modules/.bin/mjml"
@@ -386,6 +396,11 @@ LOGGING = {
             "propagate": False,
         },
         "user_account": {
+            "handlers": ["console", "info_handler"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+        "celery": {
             "handlers": ["console", "info_handler"],
             "level": "DEBUG",
             "propagate": False,

@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from payment.models import DriverEarning
 import ride_request
-from .models import PopularLocation, RideRequest
+from .models import CancelRateDriver, PopularLocation, RideRequest
 import base64
 from django.core.files.base import ContentFile
 
@@ -242,3 +242,12 @@ class PopularLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = PopularLocation
         fields = ("name", "latitude", "longitude", "address", "image", "subLocality", "locality")
+
+
+class DriverCancelRateSerializer(serializers.Serializer):
+    cancel_rate = serializers.IntegerField(required=False)
+    warning_rate = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = CancelRateDriver
+        fields = ("cancel_rate", "warning_rate")
