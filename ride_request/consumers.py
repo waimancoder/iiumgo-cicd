@@ -1,19 +1,15 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 import os
 import traceback
-from urllib import response
 from channels.db import database_sync_to_async
 from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
-from django.contrib.messages import success
-from django.core.checks.security.base import check_secret_key
-from django.utils.translation.trans_real import accept_language_re
 from payment.models import CommissionHistory, DriverEarning, DriverEwallet
-from ride_request.pricing import get_commission_amount, get_distance
+from ride_request.pricing import get_commission_amount
 from user_account.models import User
 import json
 from channels.layers import get_channel_layer
-from .models import CancelRateDriver, RideRequest, Passenger
+from .models import CancelRateDriver, Rating, RideRequest, Passenger
 from django.core.cache import cache
 from .mixins import RideRequestMixin
 from collections import OrderedDict
@@ -258,6 +254,8 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     isFemaleDriver=data["isFemaleDriver"]
                     # You can set the other fields, such as driver and actual_fare, when the ride is accepted or completed.
                 )
+                rating = Rating.objects.create(ride_request=ride_request, passenger=self.user)
+                rating.save()
                 passenger.passenger_status = Passenger.STATUS_PENDING
                 passenger.save()
                 ride_request.save()
@@ -766,14 +764,13 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 waiting_period = hour - (datetime.now().timestamp() - updated_at.timestamp()) / 3600
                 waiting_period = round(waiting_period)
                 waiting_period = int(waiting_period)
-                logger.info(f"waiting period: {waiting_period}")
                 message = (
-                    f"You have been blocked from accepting any ride requests. Please wait for {waiting_period} hours."
+                    f"You have been blocked from accepting any ride requests. Please wait for {waiting_period} hour(s)."
                 )
 
                 if waiting_period != 0:
                     return {
-                        "success": False,
+                        "success": True,
                         "type": "disable_driver",
                         "message": message,
                     }
@@ -792,6 +789,10 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             driver = await database_sync_to_async(lambda: self.user.driver)()
             ride_request.status = RideRequest.STATUS_ACCEPTED
             ride_request.driver = driver
+
+            rating = await database_sync_to_async(Rating.objects.get)(ride_request=ride_request)
+            rating.driver = driver
+            await database_sync_to_async(rating.save)()
 
             driver.jobDriverStatus = Driver.STATUS_ENROUTE_PICKUP
             driver.ride_request = ride_request.user_id
@@ -1070,6 +1071,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     async def cancel_ride_request(self, data):
         try:
             ride_request_id = data["ride_request_id"]
+            cancel_reason = data["cancel_reason"]
 
             ride_request = await database_sync_to_async(RideRequest.objects.get)(id=ride_request_id)
             if ride_request.status == RideRequest.STATUS_ACCEPTED:
@@ -1089,8 +1091,16 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     {"type": "driver_accepts_ride_request", "data": response},
                 )
                 # Driver
+
                 driver_id = ride_request.driver_id
                 driver = await database_sync_to_async(Driver.objects.get)(id=driver_id)
+                if driver.jobDriverStatus == Driver.STATUS_ENROUTE_PICKUP:
+                    driver_cancel_rate = await database_sync_to_async(CancelRateDriver.objects.get)(driver=driver)
+                    if driver_cancel_rate:
+                        driver_cancel_rate.cancel_rate += 1
+                        await database_sync_to_async(driver_cancel_rate.update_warning_rate)()
+                        await database_sync_to_async(driver_cancel_rate.save)()
+
                 driver.jobDriverStatus = Driver.STATUS_AVAILABLE
                 await database_sync_to_async(driver.save)()
 
@@ -1107,6 +1117,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 await self.channel_layer.group_add("drivers", self.channel_name)
 
             ride_request.status = RideRequest.STATUS_CANCELED
+            ride_request.cancel_reason = cancel_reason
             await database_sync_to_async(ride_request.save)()
 
             response_data = {

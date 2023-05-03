@@ -1,6 +1,7 @@
 from datetime import timedelta
 import logging
 from pathlib import Path
+from django.conf.global_settings import LOGIN_REDIRECT_URL
 from dotenv import load_dotenv, find_dotenv
 import os
 import redis
@@ -56,6 +57,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
 ]
 
+
 TAILWIND_APP_NAME = "theme"
 
 INTERNAL_IPS = [
@@ -70,7 +72,7 @@ CELERY_TIMEZONE = "Asia/Kuala_Lumpur"
 CELERY_BEAT_SCHEDULE = {
     "reset_warning_rates": {
         "task": "ride_request.tasks.reset_warning_rates",
-        "schedule": crontab(minute=0, hour=0, day_of_week="sunday"),
+        "schedule": crontab(minute=0, hour=0, day_of_week=0),
         "options": {
             "timezone": CELERY_TIMEZONE,
         },
@@ -359,7 +361,7 @@ LOGGING = {
         "django": {
             "handlers": ["console", "info_handler"],
             "level": "INFO",
-            "propagate": True,
+            "propagate": False,
         },
         "django.request": {
             "handlers": ["console"],
@@ -401,6 +403,11 @@ LOGGING = {
             "level": "DEBUG",
             "propagate": False,
         },
+        "administrationApp": {
+            "handlers": ["console", "info_handler"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
         "user_account": {
             "handlers": ["console", "info_handler"],
             "level": "DEBUG",
@@ -413,3 +420,6 @@ LOGGING = {
         },
     },
 }
+
+LOGIN_REDIRECT_URL = "admin/home"
+LOGIN_URL = "/"

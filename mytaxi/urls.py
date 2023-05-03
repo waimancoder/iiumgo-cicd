@@ -21,7 +21,9 @@ from user_account.views import custom_404_page_not_found, custom_500_page_not_fo
 handler404 = custom_404_page_not_found
 handler500 = custom_500_page_not_found
 
+
 urlpatterns = [
+    path("admin", admin.site.urls),
     path("", include("user_account.urls")),
     path("", include("rides.urls")),
     path("", include("ride_request.urls")),
