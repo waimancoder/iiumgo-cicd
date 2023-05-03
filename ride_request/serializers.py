@@ -280,6 +280,4 @@ class RatingSerializer(serializers.ModelSerializer):
         rating = attrs.get("rating")
         if rating < 1 or rating > 5:
             raise serializers.ValidationError("Rating must be between 1 and 5")
-        if type(rating) is not type(int):
-            raise serializers.ValidationError("Rating must be integer")
         return attrs
