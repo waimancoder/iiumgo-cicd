@@ -768,7 +768,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     f"You have been blocked from accepting any ride requests. Please wait for {waiting_period} hour(s)."
                 )
 
-                if waiting_period != 0:
+                if waiting_period > 0:
                     return {
                         "success": True,
                         "type": "disable_driver",
