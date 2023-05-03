@@ -254,11 +254,12 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                     isFemaleDriver=data["isFemaleDriver"]
                     # You can set the other fields, such as driver and actual_fare, when the ride is accepted or completed.
                 )
-                rating = Rating.objects.create(ride_request=ride_request, passenger=self.user)
-                rating.save()
+
                 passenger.passenger_status = Passenger.STATUS_PENDING
                 passenger.save()
                 ride_request.save()
+                rating = Rating.objects.create(ride_request=ride_request, passenger=self.user)
+                rating.save()
             response_data = {
                 "success": True,
                 "message": "Ride request created successfully",
