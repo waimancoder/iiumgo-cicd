@@ -519,6 +519,11 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             response = await self.get_driver_status(driver, status=Driver.STATUS_IN_TRANSIT)
             await self.send(json.dumps(response))
             await self.send(json.dumps({"type": "archived_messages", "data": archived_messages}))
+        elif driverStatus == Driver.STATUS_WAITING_PICKUP:
+            archived_messages = await self.get_archived_messages(driver, archived_messages)
+            response = await self.get_driver_status(driver, status=Driver.STATUS_WAITING_PICKUP)
+            await self.send(json.dumps(response))
+            await self.send(json.dumps({"type": "archived_messages", "data": archived_messages}))
         # elif driverStatus == Driver.STATUS_AVAILABLE:
         #     response = await self.get_driver_status(driver, status=Driver.STATUS_AVAILABLE)
         #     await self.send(json.dumps(response))
@@ -539,7 +544,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     async def get_driver_status(self, driver, status):
         ride_request = await database_sync_to_async(RideRequest.objects.filter(driver=driver).latest)("created_at")
         passenger = await database_sync_to_async(User.objects.get)(id=ride_request.user_id)
-        if status == Driver.STATUS_ENROUTE_PICKUP or status == Driver.STATUS_IN_TRANSIT:
+        if status == Driver.STATUS_ENROUTE_PICKUP or status == Driver.STATUS_IN_TRANSIT or Driver.STATUS_WAITING_PICKUP:
             response = {
                 "type": "driver_status",
                 "driver_status": status,
@@ -1124,7 +1129,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             response_data = {
                 "success": True,
                 "message": "Ride request cancelled successfully",
-                "type": "passenger_cancelled_ride_request",
+                "type": "driver_cancelled_ride_request",
                 "data": {
                     "id": str(ride_request.id),
                     "pickup_latitude": ride_request.pickup_latitude,
@@ -1185,6 +1190,9 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         ride_request_id = data["ride_request_id"]
         ride_request = await database_sync_to_async(RideRequest.objects.get)(id=ride_request_id)
         cache_key = f"cg_{ride_request.user_id}"
+        driver = await database_sync_to_async(Driver.objects.get)(user_id=self.user.id)
+        driver.jobDriverStatus = Driver.STATUS_WAITING_PICKUP
+        await database_sync_to_async(driver.save)()
         group_name = cache.get(cache_key)
         response = {
             "success": True,
