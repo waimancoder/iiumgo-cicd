@@ -638,7 +638,11 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         driver = await sync_to_async(Driver.objects.get)(user=self.user)
 
-        if driver.jobDriverStatus == Driver.STATUS_ENROUTE_PICKUP or driver.jobDriverStatus == Driver.STATUS_IN_TRANSIT:
+        if (
+            driver.jobDriverStatus == Driver.STATUS_ENROUTE_PICKUP
+            or driver.jobDriverStatus == Driver.STATUS_IN_TRANSIT
+            or driver.jobDriverStatus == Driver.STATUS_WAITING_PICKUP
+        ):
             pass
         else:
             driver.jobDriverStatus = Driver.STATUS_UNAVAILABLE
