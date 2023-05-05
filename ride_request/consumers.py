@@ -463,7 +463,11 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
 
         cache.set(f"driverconsumer_{self.user_id}", self.channel_name, 86400)
 
-        if driver_status == "enroute_pickup" or driver_status == "in_transit":
+        if (
+            driver_status == "enroute_pickup"
+            or driver_status == "in_transit"
+            or driver_status == Driver.STATUS_WAITING_PICKUP
+        ):
             ride_request_id = driver.ride_request
             cache_key = f"cg_{ride_request_id}"
 
