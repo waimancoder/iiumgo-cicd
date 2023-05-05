@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import os
 import traceback
 from channels.db import database_sync_to_async
@@ -686,52 +686,49 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         )
 
     async def send_chat_message(self, event):
-        message = event["message"]
-        user_id = self.user_id
-        user_id = event.get("specialrequestpassenger_id", user_id)
-        automated_message = event.get("event") == "important_message"
+        try:
+            message = event["message"]
+            user_id = self.user_id
+            user_id = event.get("specialrequestpassenger_id", user_id)
+            automated_message = event.get("event") == "important_message"
 
-        logger.critical(f"automated_message: {automated_message}")
-        driver = await sync_to_async(Driver.objects.get)(user=self.user_id)
-        ride_request = await database_sync_to_async(RideRequest.objects.filter(driver=driver).latest)("created_at")
-        event_key = f"cg_{ride_request.user_id}"
-        if automated_message:
-            event_dict = {
-                "type": "automated_message",
-                "message": event["message"],
-                "time": datetime.now().isoformat(),
-            }
-            action = {
-                "type": "chat_message",
-                "event": "automated_message",
-                "user_id": user_id,
-                "message": message,
-                "time": datetime.now().isoformat(),
-            }
-        else:
-            event_dict = {
-                "type": "chat_message",
-                "message": event["message"],
-                "user_id": user_id,
-                "time": datetime.now().isoformat(),
-            }
-            action = {
-                "type": "chat_message",
-                "user_id": user_id,
-                "message": message,
-                "time": datetime.now().isoformat(),
-            }
-        redis_client.hset(name=event_key, key=datetime.now().timestamp(), value=json.dumps(event_dict))
-        # TODO letak ni dalam def connect
-        # messages = redis_client.hgetall(event_key)
-        # archived_messages = []
-        # for value in messages.values():
-        #     decoded_value = json.loads(value.decode("utf-8"))
-        #     archived_messages.append(decoded_value)
-        await self.channel_layer.group_send(
-            self.group_name,
-            action,
-        )
+            logger.critical(f"automated_message: {automated_message}")
+            driver = await sync_to_async(Driver.objects.get)(user=self.user_id)
+            ride_request = await database_sync_to_async(RideRequest.objects.filter(driver=driver).latest)("created_at")
+            event_key = f"cg_{ride_request.user_id}"
+            if automated_message:
+                event_dict = {
+                    "type": "automated_message",
+                    "message": event["message"],
+                    "time": datetime.now().isoformat(),
+                }
+                action = {
+                    "type": "chat_message",
+                    "event": "automated_message",
+                    "user_id": user_id,
+                    "message": message,
+                    "time": datetime.now().isoformat(),
+                }
+            else:
+                event_dict = {
+                    "type": "chat_message",
+                    "message": event["message"],
+                    "user_id": user_id,
+                    "time": datetime.now().isoformat(),
+                }
+                action = {
+                    "type": "chat_message",
+                    "user_id": user_id,
+                    "message": message,
+                    "time": datetime.now().isoformat(),
+                }
+            redis_client.hset(name=event_key, key=datetime.now().timestamp(), value=json.dumps(event_dict))
+            await self.channel_layer.group_send(
+                self.group_name,
+                action,
+            )
+        except Exception as e:
+            logger.critical(str(e))
 
     async def chat_message(self, event):
         try:
@@ -774,6 +771,7 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 waiting_period = hour - (datetime.now().timestamp() - updated_at.timestamp()) / 3600
                 waiting_period = round(waiting_period)
                 waiting_period = int(waiting_period)
+                enable_time = updated_at + timedelta(hours=hour)
                 message = (
                     f"You have been blocked from accepting any ride requests. Please wait for {waiting_period} hour(s)."
                 )
@@ -783,6 +781,8 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                         "success": True,
                         "type": "disable_driver",
                         "message": message,
+                        "reason": "Cancellation have been done 3 times in a row.",
+                        "enable_time": enable_time.isoformat(),
                     }
 
             if ride_request.status != RideRequest.STATUS_PENDING:
