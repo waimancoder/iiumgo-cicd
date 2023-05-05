@@ -688,44 +688,39 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     async def send_chat_message(self, event):
         message = event["message"]
         user_id = self.user_id
-        try:
-            if event["specialrequestpassenger_id"]:
-                user_id = event["specialrequestpassenger_id"]
-        except:
-            pass
+        user_id = event.get("specialrequestpassenger_id", user_id)
+        automated_message = event.get("event") == "important_message"
+
+        logger.critical(f"automated_message: {automated_message}")
         driver = await sync_to_async(Driver.objects.get)(user=self.user_id)
         ride_request = await database_sync_to_async(RideRequest.objects.filter(driver=driver).latest)("created_at")
         event_key = f"cg_{ride_request.user_id}"
-        event_dict = {
-            "type": "chat_message",
-            "message": event["message"],
-            "user_id": user_id,
-            "time": datetime.now().isoformat(),
-        }
-        action = {
-            "type": "chat_message",
-            "user_id": user_id,
-            "message": message,
-            "time": datetime.now().isoformat(),
-        }
-        try:
-            if event["event"] == "automated_message":
-                event_dict = {
-                    "type": "automated_message",
-                    "message": event["message"],
-                    "user_id": user_id,
-                    "time": datetime.now().isoformat(),
-                }
-
-                action = {
-                    "type": "chat_message",
-                    "event": "automated_message",
-                    "user_id": user_id,
-                    "message": message,
-                    "time": datetime.now().isoformat(),
-                }
-        except:
-            pass
+        if automated_message:
+            event_dict = {
+                "type": "automated_message",
+                "message": event["message"],
+                "time": datetime.now().isoformat(),
+            }
+            action = {
+                "type": "chat_message",
+                "event": "automated_message",
+                "user_id": user_id,
+                "message": message,
+                "time": datetime.now().isoformat(),
+            }
+        else:
+            event_dict = {
+                "type": "chat_message",
+                "message": event["message"],
+                "user_id": user_id,
+                "time": datetime.now().isoformat(),
+            }
+            action = {
+                "type": "chat_message",
+                "user_id": user_id,
+                "message": message,
+                "time": datetime.now().isoformat(),
+            }
         redis_client.hset(name=event_key, key=datetime.now().timestamp(), value=json.dumps(event_dict))
         # TODO letak ni dalam def connect
         # messages = redis_client.hgetall(event_key)
@@ -739,24 +734,25 @@ class DriverConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         )
 
     async def chat_message(self, event):
-        event_dict = {
-            "type": "chat_message",
-            "message": event["message"],
-            "user_id": event["user_id"],
-            "time": event["time"],
-        }
         try:
-            if event["event"] == "automated_message":
+            automated_message = event.get("event") == "automated_message"
+            if automated_message:
                 event_dict = {
                     "type": "automated_message",
+                    "message": event["message"],
+                    "time": event["time"],
+                }
+            else:
+                event_dict = {
+                    "type": "chat_message",
                     "message": event["message"],
                     "user_id": event["user_id"],
                     "time": event["time"],
                 }
-        except:
-            pass
 
-        await self.send(json.dumps(event_dict))
+            await self.send(json.dumps(event_dict))
+        except Exception as e:
+            logger.critical(str(e))
 
     async def add_consumers_to_group(self, group_name, channel_name, passenger_channel_name, data):
         await self.channel_layer.group_add(group_name, channel_name)
