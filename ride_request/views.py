@@ -79,7 +79,7 @@ class RideRequestHistoryView(generics.ListAPIView):
                     }
                     rating_info = {
                         "rating_id": ride_request["rating_id"],
-                        "rating": ride_request["rating"] if ride_request["rating"] else None,
+                        "rating": int(ride_request["rating"]) if ride_request["rating"] else None,
                         "israted": ride_request["israted"],
                     }
                     history = {
@@ -115,7 +115,7 @@ class RideRequestHistoryView(generics.ListAPIView):
                     }
                     rating_info = {
                         "rating_id": ride_request["rating_id"],
-                        "rating": ride_request["rating"] if ride_request["rating"] else None,
+                        "rating": int(ride_request["rating"]) if ride_request["rating"] else None,
                         "israted": ride_request["israted"],
                     }
                     history = {
@@ -515,6 +515,7 @@ class RatingAPI(generics.GenericAPIView):
             rating = Rating.objects.get(ride_request=ride_request)
             rating.rating = request.data.get("rating", rating.rating)
             rating.isRated = True
+            rating.comment = request.data.get("comment", rating.comment)
             rating.save()
             serializer = self.get_serializer(rating, data=request.data)
             serializer.is_valid(raise_exception=True)
