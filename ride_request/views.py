@@ -120,7 +120,8 @@ class RideRequestHistoryView(generics.ListAPIView):
                     }
                     history = {
                         "ride_request_info": ride_request_info,
-                        "driver_info": driver_info,
+                        "driver_info": None,
+                        "rating_info": None,
                     }
                     data.append(history)
 
