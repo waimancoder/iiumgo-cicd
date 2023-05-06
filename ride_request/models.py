@@ -2,6 +2,8 @@ from datetime import datetime
 from django.core.validators import FileExtensionValidator
 from django.db import models
 import uuid
+
+from django.dispatch import receiver
 from user_account.models import User
 from rides.models import Driver
 
@@ -70,6 +72,12 @@ class PopularLocation(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+@receiver(models.signals.post_save, sender=RideRequest)
+def create_rating(sender, instance, created, **kwargs):
+    if created:
+        Rating.objects.create(ride_request=instance, passenger=instance.user)
 
 
 class Passenger(models.Model):

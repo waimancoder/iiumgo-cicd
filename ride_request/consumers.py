@@ -207,25 +207,28 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
         )
 
     async def chat_message(self, event):
-        message = event["message"]
-        user_id = event["user_id"]
-        event_dict = {
-            "type": "chat_message",
-            "user_id": user_id,
-            "message": message,
-            "time": datetime.now().isoformat(),
-        }
         try:
-            if event["event"] == "automated_message":
+            message = event["message"]
+            user_id = event["user_id"]
+            automated_message = event.get("event") == "automated_message"
+            if automated_message:
                 event_dict = {
                     "type": "automated_message",
                     "message": event["message"],
                     "user_id": event["user_id"],
                     "time": event["time"],
                 }
-        except:
-            pass
-        await self.send(json.dumps(event_dict))
+            else:
+                event_dict = {
+                    "type": "chat_message",
+                    "user_id": user_id,
+                    "message": message,
+                    "time": datetime.now().isoformat(),
+                }
+
+            await self.send(json.dumps(event_dict))
+        except Exception as e:
+            logger.error(e)
 
     @database_sync_to_async
     def create_ride_request(self, data):
@@ -258,8 +261,7 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 passenger.passenger_status = Passenger.STATUS_PENDING
                 passenger.save()
                 ride_request.save()
-                rating = Rating.objects.create(ride_request=ride_request, passenger=self.user)
-                rating.save()
+
             response_data = {
                 "success": True,
                 "message": "Ride request created successfully",
