@@ -423,3 +423,9 @@ LOGGING = {
 
 LOGIN_REDIRECT_URL = "admin/home"
 LOGIN_URL = "/"
+
+MJML_BACKEND_MODE = "cmd"
+
+MJML_EXEC_CMD = BASE_DIR + "node_modules/.bin/mjml"
+
+MJML_CHECK_CMD_ON_STARTUP = False

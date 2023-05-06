@@ -5,6 +5,7 @@ from django.shortcuts import render
 from rest_framework import generics, permissions, serializers, status
 from rest_framework.response import Response
 from django.db.models import Q
+import ride_request
 from ride_request.pricing import get_pricing
 from rides.models import Driver
 from .models import CancelRateDriver, PopularLocation, Rating, RideRequest
@@ -479,9 +480,10 @@ class RatingAPI(generics.GenericAPIView):
     serializer_class = RatingSerializer
 
     def get(self, request, *args, **kwargs):
-        id = self.kwargs.get("rating_id")
+        id = self.kwargs.get("ride_request_id")
         try:
-            rating = Rating.objects.get(id=id)
+            ride_request = RideRequest.objects.get(id=id)
+            rating = Rating.objects.get(ride_request=ride_request)
             serializer = self.get_serializer(rating)
             response = serializer.data
             return Response(
@@ -489,7 +491,7 @@ class RatingAPI(generics.GenericAPIView):
                     "success": True,
                     "statusCode": status.HTTP_200_OK,
                     "data": {
-                        "rating_id": response["id"],
+                        "ride_request_id": response["id"],
                         "rating": response["rating"],
                         "comment": response["comment"] if response["comment"] else "",
                         "isRated": response["isRated"],
@@ -508,9 +510,10 @@ class RatingAPI(generics.GenericAPIView):
             )
 
     def post(self, request, *args, **kwargs):
-        id = self.kwargs.get("rating_id")
+        id = self.kwargs.get("ride_request_id")
         try:
-            rating = Rating.objects.get(id=id)
+            ride_request = RideRequest.objects.get(id=id)
+            rating = Rating.objects.get(ride_request=ride_request)
             rating.rating = request.data.get("rating", rating.rating)
             rating.isRated = True
             rating.save()
@@ -522,7 +525,7 @@ class RatingAPI(generics.GenericAPIView):
                     "success": True,
                     "statusCode": status.HTTP_200_OK,
                     "data": {
-                        "rating_id": response["id"],
+                        "ride_request_id": response["id"],
                         "rating": response["rating"],
                         "comment": response["comment"] if response["comment"] else "",
                         "isRated": response["isRated"],
