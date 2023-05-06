@@ -104,8 +104,6 @@ class RideRequestHistoryView(generics.ListAPIView):
                         "price": ride_request["price"],
                         "distance": ride_request["distance"],
                         "created_at": ride_request["created_at"],
-                        "rating": ride_request["rating"],
-                        "is_rated": ride_request["israted"],
                     }
                     driver_info = {
                         "driver_name": "",
