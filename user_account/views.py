@@ -36,6 +36,8 @@ from .models import StudentID
 from django.shortcuts import get_object_or_404, render
 from django.conf import settings
 from django.contrib.auth.signals import user_logged_in
+from mytaxi.scheme import KnoxTokenScheme
+
 import logging
 
 logger = logging.getLogger(__name__)

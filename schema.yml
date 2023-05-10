@@ -1,0 +1,2928 @@
+openapi: 3.0.3
+info:
+  title: iiumGO API
+  version: 0.0.0
+paths:
+  /api/advertisement:
+    get:
+      operationId: advertisement_retrieve
+      tags:
+      - advertisement
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Advertisement'
+          description: ''
+    post:
+      operationId: advertisement_create
+      tags:
+      - advertisement
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Advertisement'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Advertisement'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Advertisement'
+        required: true
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Advertisement'
+          description: ''
+    put:
+      operationId: advertisement_update
+      tags:
+      - advertisement
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Advertisement'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Advertisement'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Advertisement'
+        required: true
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Advertisement'
+          description: ''
+  /api/create-bill:
+    post:
+      operationId: create_bill_create
+      tags:
+      - create-bill
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBill'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateBill'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateBill'
+        required: true
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateBill'
+          description: ''
+  /api/driver/driver-detail:
+    get:
+      operationId: driver_driver_detail_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - driver
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserDriverDetailsList'
+          description: ''
+  /api/driver/driver-detail/{user_id}:
+    get:
+      operationId: driver_driver_detail_retrieve
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDriverDetails'
+          description: ''
+    put:
+      operationId: driver_driver_detail_update
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDriverDetails'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserDriverDetails'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserDriverDetails'
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDriverDetails'
+          description: ''
+  /api/driver/driver-job-status:
+    get:
+      operationId: driver_driver_job_status_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - driver
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDriverStatusList'
+          description: ''
+  /api/driver/driver-job-status/{user_id}:
+    get:
+      operationId: driver_driver_job_status_retrieve
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverStatus'
+          description: ''
+  /api/driver/driver-status:
+    get:
+      operationId: driver_driver_status_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - driver
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDriverStatusList'
+          description: ''
+  /api/driver/driver-status/{user_id}:
+    get:
+      operationId: driver_driver_status_retrieve
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverStatus'
+          description: ''
+    put:
+      operationId: driver_driver_status_update
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverStatus'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DriverStatus'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DriverStatus'
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverStatus'
+          description: ''
+  /api/driver/driver-submission:
+    get:
+      operationId: driver_driver_submission_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - driver
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserDriverDetailsList'
+          description: ''
+  /api/driver/driver-submission/{user_id}:
+    get:
+      operationId: driver_driver_submission_retrieve
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDriverDetails'
+          description: ''
+  /api/driver/driver-vehicle-detail:
+    get:
+      operationId: driver_driver_vehicle_detail_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - driver
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDriverVehicleInfoList'
+          description: ''
+  /api/driver/driver-vehicle-detail/{user_id}:
+    get:
+      operationId: driver_driver_vehicle_detail_retrieve
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverVehicleInfo'
+          description: ''
+    put:
+      operationId: driver_driver_vehicle_detail_update
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverVehicleInfo'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DriverVehicleInfo'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DriverVehicleInfo'
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverVehicleInfo'
+          description: ''
+  /api/driver/driverlicenses:
+    get:
+      operationId: driver_driverlicenses_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - driver
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDriverLicenseList'
+          description: ''
+  /api/driver/driverlicenses/{user_id}:
+    get:
+      operationId: driver_driverlicenses_retrieve
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverLicense'
+          description: ''
+    put:
+      operationId: driver_driverlicenses_update
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DriverLicense'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DriverLicense'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverLicense'
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverLicense'
+          description: ''
+    patch:
+      operationId: driver_driverlicenses_partial_update
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDriverLicense'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDriverLicense'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDriverLicense'
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverLicense'
+          description: ''
+    delete:
+      operationId: driver_driverlicenses_destroy
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/driver/driverlicenses/{user_id}/driver_license_img:
+    get:
+      operationId: driver_driverlicenses_driver_license_img_retrieve
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverLicense'
+          description: ''
+  /api/driver/driverlicenses/{user_id}/updateDriverLicense:
+    put:
+      operationId: driver_driverlicenses_updateDriverLicense_update
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DriverLicense'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DriverLicense'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverLicense'
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverLicense'
+          description: ''
+  /api/driver/id-confirmation:
+    get:
+      operationId: driver_id_confirmation_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - driver
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDriverIdConfirmationList'
+          description: ''
+    post:
+      operationId: driver_id_confirmation_create
+      tags:
+      - driver
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DriverIdConfirmation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DriverIdConfirmation'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverIdConfirmation'
+        required: true
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverIdConfirmation'
+          description: ''
+  /api/driver/id-confirmation/{user_id}:
+    get:
+      operationId: driver_id_confirmation_retrieve
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverIdConfirmation'
+          description: ''
+    put:
+      operationId: driver_id_confirmation_update
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DriverIdConfirmation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DriverIdConfirmation'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverIdConfirmation'
+        required: true
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverIdConfirmation'
+          description: ''
+    patch:
+      operationId: driver_id_confirmation_partial_update
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDriverIdConfirmation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDriverIdConfirmation'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDriverIdConfirmation'
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverIdConfirmation'
+          description: ''
+    delete:
+      operationId: driver_id_confirmation_destroy
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/driver/id-confirmation/{user_id}/driver_id_confirmation_img:
+    get:
+      operationId: driver_id_confirmation_driver_id_confirmation_img_retrieve
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverIdConfirmation'
+          description: ''
+  /api/driver/id-confirmation/{user_id}/update_idConfirm:
+    put:
+      operationId: driver_id_confirmation_update_idConfirm_update
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DriverIdConfirmation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DriverIdConfirmation'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverIdConfirmation'
+        required: true
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverIdConfirmation'
+          description: ''
+  /api/driver_ewallet/{user_id}:
+    get:
+      operationId: driver_ewallet_retrieve
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver_ewallet
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/driver_ride_request_history/{user_id}:
+    get:
+      operationId: driver_ride_request_history_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver_ride_request_history
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDriverRideRequestList'
+          description: ''
+  /api/fpx-payment:
+    post:
+      operationId: fpx_payment_create
+      tags:
+      - fpx-payment
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/fpx-payment-methods/:
+    get:
+      operationId: fpx_payment_methods_retrieve
+      tags:
+      - fpx-payment-methods
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/get_cancel_rate:
+    get:
+      operationId: get_cancel_rate_retrieve
+      tags:
+      - get_cancel_rate
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverCancelRate'
+          description: ''
+    post:
+      operationId: get_cancel_rate_create
+      tags:
+      - get_cancel_rate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverCancelRate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DriverCancelRate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DriverCancelRate'
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverCancelRate'
+          description: ''
+  /api/get_popular_locations:
+    get:
+      operationId: get_popular_locations_retrieve
+      tags:
+      - get_popular_locations
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PopularLocation'
+          description: ''
+    post:
+      operationId: get_popular_locations_create
+      tags:
+      - get_popular_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PopularLocation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PopularLocation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PopularLocation'
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PopularLocation'
+          description: ''
+    put:
+      operationId: get_popular_locations_update
+      tags:
+      - get_popular_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PopularLocation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PopularLocation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PopularLocation'
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PopularLocation'
+          description: ''
+  /api/get_price:
+    post:
+      operationId: get_price_create
+      tags:
+      - get_price
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Coordinate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Coordinate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Coordinate'
+        required: true
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Coordinate'
+          description: ''
+  /api/locations:
+    get:
+      operationId: locations_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - locations
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLocationList'
+          description: ''
+    post:
+      operationId: locations_create
+      tags:
+      - locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Location'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Location'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Location'
+        required: true
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+          description: ''
+    put:
+      operationId: locations_update
+      tags:
+      - locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Location'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Location'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Location'
+        required: true
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+          description: ''
+    patch:
+      operationId: locations_partial_update
+      tags:
+      - locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedLocation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedLocation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedLocation'
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+          description: ''
+  /api/locations/{name}/:
+    get:
+      operationId: locations_list_2
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: path
+        name: name
+        schema:
+          type: string
+        required: true
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - locations
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLocationList'
+          description: ''
+    post:
+      operationId: locations_create_2
+      parameters:
+      - in: path
+        name: name
+        schema:
+          type: string
+        required: true
+      tags:
+      - locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Location'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Location'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Location'
+        required: true
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+          description: ''
+    put:
+      operationId: locations_update_2
+      parameters:
+      - in: path
+        name: name
+        schema:
+          type: string
+        required: true
+      tags:
+      - locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Location'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Location'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Location'
+        required: true
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+          description: ''
+    patch:
+      operationId: locations_partial_update_2
+      parameters:
+      - in: path
+        name: name
+        schema:
+          type: string
+        required: true
+      tags:
+      - locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedLocation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedLocation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedLocation'
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+          description: ''
+  /api/login:
+    post:
+      operationId: login_create
+      tags:
+      - login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthToken'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AuthToken'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AuthToken'
+        required: true
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+          description: ''
+  /api/logout:
+    post:
+      operationId: logout_create
+      tags:
+      - logout
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/passenger/passenger-status:
+    get:
+      operationId: passenger_passenger_status_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - passenger
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPassengerStatusList'
+          description: ''
+  /api/passenger/passenger-status/{user_id}:
+    get:
+      operationId: passenger_passenger_status_retrieve
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - passenger
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PassengerStatus'
+          description: ''
+  /api/password_change:
+    post:
+      operationId: password_change_create
+      tags:
+      - password_change
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetInApp'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordResetInApp'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordResetInApp'
+        required: true
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordResetInApp'
+          description: ''
+  /api/password_reset:
+    post:
+      operationId: password_reset_create
+      tags:
+      - password_reset
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordReset'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordReset'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordReset'
+        required: true
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordReset'
+          description: ''
+  /api/password_reset_confirm/{uidb64}/{token}:
+    post:
+      operationId: password_reset_confirm_create
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: uidb64
+        schema:
+          type: string
+        required: true
+      tags:
+      - password_reset_confirm
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirm'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirm'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirm'
+        required: true
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordResetConfirm'
+          description: ''
+  /api/payment_callback:
+    post:
+      operationId: payment_callback_create
+      tags:
+      - payment_callback
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/payment_return:
+    get:
+      operationId: payment_return_retrieve
+      tags:
+      - payment_return
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/profile-pic:
+    get:
+      operationId: profile_pic_retrieve
+      tags:
+      - profile-pic
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfilePicture'
+          description: ''
+    put:
+      operationId: profile_pic_update
+      tags:
+      - profile-pic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfilePicture'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProfilePicture'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProfilePicture'
+        required: true
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfilePicture'
+          description: ''
+    patch:
+      operationId: profile_pic_partial_update
+      tags:
+      - profile-pic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProfilePicture'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProfilePicture'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProfilePicture'
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfilePicture'
+          description: ''
+  /api/rating/{ride_request_id}:
+    get:
+      operationId: rating_retrieve
+      parameters:
+      - in: path
+        name: ride_request_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - rating
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rating'
+          description: ''
+    post:
+      operationId: rating_create
+      parameters:
+      - in: path
+        name: ride_request_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - rating
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Rating'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Rating'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Rating'
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rating'
+          description: ''
+  /api/register:
+    post:
+      operationId: register_create
+      tags:
+      - register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Register'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Register'
+        required: true
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Register'
+          description: ''
+  /api/ride_request_history/{user_id}:
+    get:
+      operationId: ride_request_history_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - ride_request_history
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRideRequestList'
+          description: ''
+  /api/schema:
+    get:
+      operationId: schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - schema
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/top_up_history/{user_id}:
+    get:
+      operationId: top_up_history_retrieve
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - top_up_history
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bill'
+          description: ''
+  /api/userlist:
+    get:
+      operationId: userlist_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - userlist
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserList'
+          description: ''
+  /api/users:
+    get:
+      operationId: users_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - users
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserList'
+          description: ''
+  /api/users/{id}:
+    get:
+      operationId: users_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user.
+        required: true
+      tags:
+      - users
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    put:
+      operationId: users_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user.
+        required: true
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/userupdate/{email}:
+    get:
+      operationId: userupdate_retrieve
+      parameters:
+      - in: path
+        name: email
+        schema:
+          type: string
+        required: true
+      tags:
+      - userupdate
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    put:
+      operationId: userupdate_update
+      parameters:
+      - in: path
+        name: email
+        schema:
+          type: string
+        required: true
+      tags:
+      - userupdate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: userupdate_partial_update
+      parameters:
+      - in: path
+        name: email
+        schema:
+          type: string
+        required: true
+      tags:
+      - userupdate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/verify-email/{uidb64}/{token}:
+    get:
+      operationId: verify_email_retrieve
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: uidb64
+        schema:
+          type: string
+        required: true
+      tags:
+      - verify-email
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    Advertisement:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          maxLength: 100
+        details:
+          type: string
+          maxLength: 1000
+        image:
+          type: string
+        return_url:
+          type: string
+          maxLength: 1000
+        advertiser:
+          type: string
+          maxLength: 100
+        phone_no:
+          type: string
+          maxLength: 100
+        rental_time_from:
+          type: string
+          format: date-time
+        rental_time_to:
+          type: string
+          format: date-time
+        is_valid:
+          type: boolean
+      required:
+      - id
+      - title
+    AuthToken:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+      - email
+      - password
+    Bill:
+      type: object
+      properties:
+        type:
+          type: string
+        payment_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        commission_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        payment_date:
+          type: string
+          format: date-time
+        commission_payment_date:
+          type: string
+          format: date-time
+        transaction_id:
+          type: string
+        reference_no:
+          type: string
+      required:
+      - type
+    BlankEnum:
+      enum:
+      - ''
+    Coordinate:
+      type: object
+      properties:
+        role:
+          type: string
+        distance:
+          type: number
+          format: double
+        pickup_latitude:
+          type: number
+          format: double
+        pickup_longitude:
+          type: number
+          format: double
+        dropoff_latitude:
+          type: number
+          format: double
+        dropoff_longitude:
+          type: number
+          format: double
+      required:
+      - distance
+      - dropoff_latitude
+      - dropoff_longitude
+      - pickup_latitude
+      - pickup_longitude
+      - role
+    CreateBill:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+      required:
+      - amount
+      - user_id
+    DriverCancelRate:
+      type: object
+      properties:
+        cancel_rate:
+          type: integer
+        warning_rate:
+          type: integer
+    DriverIdConfirmation:
+      type: object
+      properties:
+        user_id:
+          type: string
+          readOnly: true
+        idConfirmation:
+          type: string
+      required:
+      - idConfirmation
+      - user_id
+    DriverLicense:
+      type: object
+      properties:
+        user_id:
+          type: string
+          readOnly: true
+        driver_license_img_front:
+          type: string
+        driver_license_img_back:
+          type: string
+        driver_license_expiry_date:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - user_id
+    DriverRideRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        status:
+          type: string
+          readOnly: true
+        pickup_latitude:
+          type: number
+          format: double
+        pickup_longitude:
+          type: number
+          format: double
+        dropoff_latitude:
+          type: number
+          format: double
+        dropoff_longitude:
+          type: number
+          format: double
+        pickup_address:
+          type: string
+          maxLength: 255
+        dropoff_address:
+          type: string
+          maxLength: 255
+        pickup_time:
+          type: string
+          readOnly: true
+        dropoff_time:
+          type: string
+          readOnly: true
+        polyline:
+          type: string
+          readOnly: true
+        price:
+          type: string
+          readOnly: true
+        distance:
+          type: string
+          readOnly: true
+        earning:
+          type: string
+          readOnly: true
+      required:
+      - distance
+      - dropoff_address
+      - dropoff_latitude
+      - dropoff_longitude
+      - dropoff_time
+      - earning
+      - id
+      - pickup_address
+      - pickup_latitude
+      - pickup_longitude
+      - pickup_time
+      - polyline
+      - price
+      - status
+    DriverStatus:
+      type: object
+      properties:
+        statusDriver:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/StatusDriverEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        statusMessage:
+          type: string
+          nullable: true
+          maxLength: 128
+    DriverVehicleInfo:
+      type: object
+      properties:
+        vehicle_manufacturer:
+          type: string
+        vehicle_model:
+          type: string
+        vehicle_color:
+          type: string
+        vehicle_ownership:
+          type: string
+        vehicle_registration_number:
+          type: string
+        vehicle_type:
+          oneOf:
+          - $ref: '#/components/schemas/VehicleTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        roadtax:
+          type: string
+    GenderEnum:
+      enum:
+      - male
+      - female
+      type: string
+      description: |-
+        * `male` - Male
+        * `female` - Female
+    Location:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        lat:
+          type: string
+          nullable: true
+          maxLength: 255
+        lng:
+          type: string
+          nullable: true
+          maxLength: 255
+        locality:
+          type: string
+          nullable: true
+          maxLength: 255
+        subLocality:
+          type: string
+          nullable: true
+          maxLength: 255
+      required:
+      - name
+    NullEnum:
+      enum:
+      - null
+    PaginatedDriverIdConfirmationList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DriverIdConfirmation'
+    PaginatedDriverLicenseList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DriverLicense'
+    PaginatedDriverRideRequestList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DriverRideRequest'
+    PaginatedDriverStatusList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DriverStatus'
+    PaginatedDriverVehicleInfoList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DriverVehicleInfo'
+    PaginatedLocationList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Location'
+    PaginatedPassengerStatusList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PassengerStatus'
+    PaginatedRideRequestList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RideRequest'
+    PaginatedUserDriverDetailsList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserDriverDetails'
+    PaginatedUserList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    PassengerStatus:
+      type: object
+      properties:
+        passenger_status:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/PassengerStatusEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+    PassengerStatusEnum:
+      enum:
+      - available
+      - accepted
+      - in_progress
+      - waiting
+      - pending
+      type: string
+      description: |-
+        * `available` - Available
+        * `accepted` - Accepted
+        * `in_progress` - In Progress
+        * `waiting` - Waiting
+        * `pending` - Pending
+    PasswordReset:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+      - email
+    PasswordResetConfirm:
+      type: object
+      properties:
+        uid:
+          type: string
+        token:
+          type: string
+        new_password1:
+          type: string
+        new_password2:
+          type: string
+      required:
+      - new_password1
+      - new_password2
+      - token
+      - uid
+    PasswordResetInApp:
+      type: object
+      properties:
+        current_password:
+          type: string
+        new_password:
+          type: string
+        confirm_password:
+          type: string
+      required:
+      - confirm_password
+      - current_password
+      - new_password
+    PatchedDriverIdConfirmation:
+      type: object
+      properties:
+        user_id:
+          type: string
+          readOnly: true
+        idConfirmation:
+          type: string
+    PatchedDriverLicense:
+      type: object
+      properties:
+        user_id:
+          type: string
+          readOnly: true
+        driver_license_img_front:
+          type: string
+        driver_license_img_back:
+          type: string
+        driver_license_expiry_date:
+          type: string
+          format: date-time
+          nullable: true
+    PatchedLocation:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        lat:
+          type: string
+          nullable: true
+          maxLength: 255
+        lng:
+          type: string
+          nullable: true
+          maxLength: 255
+        locality:
+          type: string
+          nullable: true
+          maxLength: 255
+        subLocality:
+          type: string
+          nullable: true
+          maxLength: 255
+    PatchedProfilePicture:
+      type: object
+      properties:
+        profile_img:
+          type: string
+    PatchedUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        fullname:
+          type: string
+          maxLength: 125
+        dialCode:
+          type: string
+          nullable: true
+          maxLength: 5
+        phone_no:
+          type: string
+          maxLength: 12
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          readOnly: true
+        isVerified:
+          type: boolean
+          readOnly: true
+        birthdate:
+          type: string
+          format: date-time
+        gender:
+          oneOf:
+          - $ref: '#/components/schemas/GenderEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        nationality:
+          type: string
+          nullable: true
+          maxLength: 125
+        matricNo:
+          type: string
+          readOnly: true
+        student_pic:
+          type: string
+          readOnly: true
+    PopularLocation:
+      type: object
+      properties:
+        name:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        address:
+          type: string
+        image:
+          type: string
+        subLocality:
+          type: string
+        locality:
+          type: string
+    ProfilePicture:
+      type: object
+      properties:
+        profile_img:
+          type: string
+      required:
+      - profile_img
+    Rating:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        rating:
+          type: integer
+        comment:
+          type: string
+        isRated:
+          type: boolean
+    Register:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+        fullname:
+          type: string
+          maxLength: 100
+        password:
+          type: string
+          writeOnly: true
+          maxLength: 128
+        phone_no:
+          type: string
+          maxLength: 12
+        dialCode:
+          type: string
+          nullable: true
+          maxLength: 5
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        gender:
+          type: string
+          maxLength: 10
+      required:
+      - email
+      - fullname
+      - id
+      - password
+      - phone_no
+      - role
+    RideRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        status:
+          type: string
+          readOnly: true
+        pickup_latitude:
+          type: number
+          format: double
+        pickup_longitude:
+          type: number
+          format: double
+        dropoff_latitude:
+          type: number
+          format: double
+        dropoff_longitude:
+          type: number
+          format: double
+        pickup_address:
+          type: string
+          maxLength: 255
+        dropoff_address:
+          type: string
+          maxLength: 255
+        pickup_time:
+          type: string
+          readOnly: true
+        dropoff_time:
+          type: string
+          readOnly: true
+        polyline:
+          type: string
+          readOnly: true
+        price:
+          type: string
+          readOnly: true
+        distance:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          readOnly: true
+        driver_name:
+          type: string
+          readOnly: true
+        vehicle_registration_number:
+          type: string
+          readOnly: true
+        vehicle_manufacturer:
+          type: string
+          readOnly: true
+        vehicle_model:
+          type: string
+          readOnly: true
+        vehicle_color:
+          type: string
+          readOnly: true
+        vehicle_type:
+          type: string
+          readOnly: true
+        rating:
+          type: string
+          readOnly: true
+        israted:
+          type: string
+          readOnly: true
+        comment:
+          type: string
+          readOnly: true
+        rating_id:
+          type: string
+          readOnly: true
+      required:
+      - comment
+      - created_at
+      - distance
+      - driver_name
+      - dropoff_address
+      - dropoff_latitude
+      - dropoff_longitude
+      - dropoff_time
+      - id
+      - israted
+      - pickup_address
+      - pickup_latitude
+      - pickup_longitude
+      - pickup_time
+      - polyline
+      - price
+      - rating
+      - rating_id
+      - status
+      - vehicle_color
+      - vehicle_manufacturer
+      - vehicle_model
+      - vehicle_registration_number
+      - vehicle_type
+    RoleEnum:
+      enum:
+      - student
+      - staff
+      - alumni
+      - outsider
+      type: string
+      description: |-
+        * `student` - Student
+        * `staff` - Staff
+        * `alumni` - Alumni
+        * `outsider` - Outsider
+    StatusDriverEnum:
+      enum:
+      - submitting
+      - pending
+      - activated
+      - failed
+      - verified
+      type: string
+      description: |-
+        * `submitting` - Submitting
+        * `pending` - Pending
+        * `activated` - Activated
+        * `failed` - Failed
+        * `verified` - Verified
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        fullname:
+          type: string
+          maxLength: 125
+        dialCode:
+          type: string
+          nullable: true
+          maxLength: 5
+        phone_no:
+          type: string
+          maxLength: 12
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          readOnly: true
+        isVerified:
+          type: boolean
+          readOnly: true
+        birthdate:
+          type: string
+          format: date-time
+        gender:
+          oneOf:
+          - $ref: '#/components/schemas/GenderEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        nationality:
+          type: string
+          nullable: true
+          maxLength: 125
+        matricNo:
+          type: string
+          readOnly: true
+        student_pic:
+          type: string
+          readOnly: true
+      required:
+      - birthdate
+      - email
+      - fullname
+      - id
+      - isVerified
+      - matricNo
+      - phone_no
+      - role
+      - student_pic
+    UserDriverDetails:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+        fullname:
+          type: string
+        dialCode:
+          type: string
+        phone_no:
+          type: string
+        birthdate:
+          type: string
+          format: date-time
+        gender:
+          type: string
+        nationality:
+          type: string
+        profile_img:
+          type: string
+        profile_img_url:
+          type: string
+          readOnly: true
+      required:
+      - profile_img_url
+      - user_id
+    VehicleTypeEnum:
+      enum:
+      - 4pax
+      - 6pax
+      type: string
+      description: "* `4pax` - 4pax\n* `6pax` - 6pax\n* `` - "
+  securitySchemes:
+    knoxTokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"

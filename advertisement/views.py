@@ -10,6 +10,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from advertisement.models import Advertisement
 from advertisement.serializers import AdvertisementSerializer
+from mytaxi.scheme import KnoxTokenScheme
 
 
 # Create your views here.

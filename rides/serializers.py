@@ -303,10 +303,10 @@ class DriverStatusSerializer(serializers.ModelSerializer):
 class DriverJobStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Driver
-        fields = "statusJob"
+        fields = ["statusJob"]
 
 
 class PassengerStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Passenger
-        fields = "passenger_status"
+        fields = ["passenger_status"]
