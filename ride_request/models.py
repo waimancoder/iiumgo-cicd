@@ -151,13 +151,3 @@ class PassengerCancel(models.Model):
 
     def __str__(self):
         return f"PassengerCancel ID: {self.id}"
-
-
-@receiver(models.signals.post_save, sender=PassengerCancel)
-def check_cumulative_penalty(sender, instance, **kwargs):
-    if instance.cumulative_penalty > 5:
-        instance.is_disable = True
-        instance.save()
-    else:
-        instance.is_disable = False
-        instance.save()

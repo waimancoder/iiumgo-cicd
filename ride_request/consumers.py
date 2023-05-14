@@ -328,15 +328,19 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 driver = await database_sync_to_async(Driver.objects.get)(id=driver_id)
 
                 if driver.jobDriverStatus == Driver.STATUS_ENROUTE_PICKUP:
+                    logger.info("Driver is enroute pickup")
                     passengerCancel = await database_sync_to_async(PassengerCancel.objects.get)(user=self.user)
                     passengerCancel.cancel_rate += 1
                     passengerCancel.cumulative_penalty += 0.5
                     await database_sync_to_async(passengerCancel.save)()
+                    logger.info("Successfully updated passenger cancel rate")
                 elif driver.jobDriverStatus == Driver.STATUS_WAITING_PICKUP:
+                    logger.info("Driver is waiting pickup")
                     passengerCancel = await database_sync_to_async(PassengerCancel.objects.get)(user=self.user)
                     passengerCancel.cancel_rate += 1
                     passengerCancel.cumulative_penalty += 1.0
                     await database_sync_to_async(passengerCancel.save)()
+                    logger.info("Successfully updated passenger cancel rate")
 
                 driver_user_id = driver.user_id
                 driver_channel_name = cache.get(f"driverconsumer_{driver_user_id}")
@@ -353,6 +357,12 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             passenger = await database_sync_to_async(Passenger.objects.get)(user_id=self.user_id)
             passenger.passenger_status = Passenger.STATUS_AVAILABLE
             await database_sync_to_async(passenger.save)()
+
+            passengerCancel = await database_sync_to_async(PassengerCancel.objects.get)(user=self.user)
+            if passengerCancel.cumulative_penalty >= 5.0:
+                passengerCancel.is_disable = True
+                await database_sync_to_async(passengerCancel.save)()
+                logger.info("Successfully updated passenger is_disable to True")
 
             ride_request.status = RideRequest.STATUS_CANCELED
             ride_request.cancel_reason = cancel_reason
