@@ -234,6 +234,13 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     def create_ride_request(self, data):
         try:
             passenger = Passenger.objects.get(user_id=self.user_id)
+            passengerCancel = PassengerCancel.objects.get(user=self.user)
+            if not passengerCancel.isDisable:
+                return {
+                    "success": False,
+                    "message": "You have an outstanding penalty balance, please pay to continue using our services.",
+                }
+
             if (
                 passenger.passenger_status == Passenger.STATUS_ACCEPTED
                 or passenger.passenger_status == Passenger.STATUS_IN_PROGRESS
