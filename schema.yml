@@ -15,7 +15,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Advertisement'
+                $ref: '#/components/schemas/ResponseSchema200'
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseSchema500'
           description: ''
     post:
       operationId: advertisement_create
@@ -40,7 +46,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Advertisement'
+                $ref: '#/components/schemas/ResponseSchema200'
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseSchema500'
           description: ''
     put:
       operationId: advertisement_update
@@ -2701,6 +2713,38 @@ components:
       - password
       - phone_no
       - role
+    ResponseSchema200:
+      type: object
+      properties:
+        status:
+          type: boolean
+          default: true
+        statusCode:
+          type: integer
+          default: 200
+        data:
+          $ref: '#/components/schemas/Advertisement'
+      required:
+      - data
+    ResponseSchema500:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: false
+        statusCode:
+          type: integer
+          default: 500
+        error:
+          type: string
+          default: Internal Server Error
+        message:
+          type: string
+          default: Please Contact Server Admin
+        traceback:
+          type: string
+      required:
+      - traceback
     RideRequest:
       type: object
       properties:

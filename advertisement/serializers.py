@@ -1,4 +1,5 @@
 import base64
+from email.policy import default
 import random
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -55,3 +56,25 @@ class AdvertisementSerializer(serializers.ModelSerializer):
         advertisement.save()
 
         return advertisement
+
+
+class ResponseSchema200(serializers.Serializer):
+    status = serializers.BooleanField(default=True)
+    statusCode = serializers.IntegerField(default=200)
+    data = serializers.Serializer()
+
+    def __init__(self, *args, **kwargs):
+        context = kwargs.get("context", {})
+        data_serializer = context.get("data", serializers.Serializer)
+
+        self.fields["data"] = data_serializer()
+
+        super().__init__(*args, **kwargs)
+
+
+class ResponseSchema500(serializers.Serializer):
+    success = serializers.BooleanField(default=False)
+    statusCode = serializers.IntegerField(default=500)
+    error = serializers.CharField(default="Internal Server Error")
+    message = serializers.CharField(default="Please Contact Server Admin")
+    traceback = serializers.CharField()

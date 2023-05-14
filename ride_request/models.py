@@ -138,3 +138,16 @@ class Rating(models.Model):
     def set_passenger(self):
         self.passenger = self.ride_request.user
         self.save()
+
+
+class PassengerCancel(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    cancel_rate = models.IntegerField(default=0, null=True, blank=True)
+    warning_rate = models.IntegerField(default=0, null=True, blank=True)
+    cumulative_penalty = models.FloatField(default=0, null=True, blank=True)
+    is_disable = models.BooleanField(default=False, null=True, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    passenger = models.OneToOneField(Passenger, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"PassengerCancel ID: {self.id}"

@@ -9,7 +9,7 @@ from ride_request.pricing import get_commission_amount
 from user_account.models import User
 import json
 from channels.layers import get_channel_layer
-from .models import CancelRateDriver, Rating, RideRequest, Passenger
+from .models import CancelRateDriver, PassengerCancel, Rating, RideRequest, Passenger
 from django.core.cache import cache
 from .mixins import RideRequestMixin
 from collections import OrderedDict
@@ -293,10 +293,15 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
     async def cancel_ride_request(self, data):
         try:
             ride_request_id = data["ride_request_id"]
+            cancel_reason = data["cancel_reason"]
+
             pending = True
 
             ride_request = await database_sync_to_async(RideRequest.objects.get)(id=ride_request_id)
-            if ride_request.status == RideRequest.STATUS_ACCEPTED:
+            if (
+                ride_request.status == RideRequest.STATUS_ACCEPTED
+                or ride_request.status == RideRequest.STATUS_IN_PROGRESS
+            ):
                 group_name = cache.get(f"cg_{self.user_id}")
                 redis_client.delete(f"cg_{self.user_id}")
                 response = {
@@ -314,6 +319,18 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
                 # Driver
                 driver_id = ride_request.driver_id
                 driver = await database_sync_to_async(Driver.objects.get)(id=driver_id)
+
+                if driver.jobDriverStatus == Driver.STATUS_ENROUTE_PICKUP:
+                    passengerCancel = await database_sync_to_async(PassengerCancel.objects.get)(user=self.user)
+                    passengerCancel.cancel_rate += 1
+                    passengerCancel.cumulative_penalty += 0.5
+                    await database_sync_to_async(passengerCancel.save)()
+                elif driver.jobDriverStatus == Driver.STATUS_WAITING_PICKUP:
+                    passengerCancel = await database_sync_to_async(PassengerCancel.objects.get)(user=self.user)
+                    passengerCancel.cancel_rate += 1
+                    passengerCancel.cumulative_penalty += 1.0
+                    await database_sync_to_async(passengerCancel.save)()
+
                 driver_user_id = driver.user_id
                 driver_channel_name = cache.get(f"driverconsumer_{driver_user_id}")
                 driver.jobDriverStatus = Driver.STATUS_AVAILABLE
@@ -331,6 +348,7 @@ class PassengerConsumer(RideRequestMixin, AsyncWebsocketConsumer):
             await database_sync_to_async(passenger.save)()
 
             ride_request.status = RideRequest.STATUS_CANCELED
+            ride_request.cancel_reason = cancel_reason
             await database_sync_to_async(ride_request.save)()
 
             response_data = {

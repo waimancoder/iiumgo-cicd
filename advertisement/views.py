@@ -5,12 +5,13 @@ from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.shortcuts import render
 
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, serializers, status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from advertisement.models import Advertisement
-from advertisement.serializers import AdvertisementSerializer
+from advertisement.serializers import AdvertisementSerializer, ResponseSchema200, ResponseSchema500
 from mytaxi.scheme import KnoxTokenScheme
+from drf_spectacular.utils import extend_schema
 
 
 # Create your views here.
@@ -27,6 +28,9 @@ class AdvertisementView(generics.GenericAPIView):
         queryset = Advertisement.objects.all().order_by("id")
         return queryset
 
+    @extend_schema(
+        responses={200: ResponseSchema200(context={"data": AdvertisementSerializer}), 500: ResponseSchema500},
+    )
     def get(self, request, *args, **kwargs):
         try:
             queryset = self.get_queryset()
@@ -63,6 +67,9 @@ class AdvertisementView(generics.GenericAPIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+    @extend_schema(
+        responses={200: ResponseSchema200(context={"data": AdvertisementSerializer}), 500: ResponseSchema500},
+    )
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
