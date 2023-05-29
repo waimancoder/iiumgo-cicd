@@ -5,7 +5,7 @@ from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import serializers
 
-from advertisement.models import Advertisement
+from advertisement.models import Advertisement, TodoTask
 
 
 class AdvertisementSerializer(serializers.ModelSerializer):
@@ -78,3 +78,37 @@ class ResponseSchema500(serializers.Serializer):
     error = serializers.CharField(default="Internal Server Error")
     message = serializers.CharField(default="Please Contact Server Admin")
     traceback = serializers.CharField()
+
+
+class TodoTaskSerializer(serializers.Serializer):
+    id = serializers.UUIDField(required=False)
+    name = serializers.CharField()
+    description = serializers.CharField()
+    status = serializers.BooleanField(required=False)
+
+    class Meta:
+        model = TodoTask
+        fields = ("id", "name", "description", "status")
+
+    def create(self, validated_data):
+        task = TodoTask.objects.create(name=validated_data["name"], description=validated_data["description"])
+        task.save()
+
+        return task
+
+
+class TodoTaskChangeStatusSerializer(serializers.Serializer):
+    id = serializers.UUIDField(required=False)
+    name = serializers.CharField(required=False)
+    description = serializers.CharField(required=False)
+    status = serializers.BooleanField(required=False)
+
+    class Meta:
+        model = TodoTask
+        fields = ("id", "name", "description", "status")
+
+    def update(self, instance, validated_data):
+        instance.status = validated_data["status"]
+        instance.save()
+
+        return instance
