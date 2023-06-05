@@ -17,11 +17,14 @@ from django.conf.urls import handler500
 from django.contrib import admin
 from django.urls import path, include
 from user_account.views import custom_404_page_not_found, custom_500_page_not_found
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
 handler404 = custom_404_page_not_found
 handler500 = custom_500_page_not_found
 
+
 urlpatterns = [
+    path("admin", admin.site.urls),
     path("", include("user_account.urls")),
     path("", include("rides.urls")),
     path("", include("ride_request.urls")),
@@ -29,5 +32,8 @@ urlpatterns = [
     path("", include("website.urls")),
     path("", include("advertisement.urls")),
     path("", include("administrationApp.urls")),
+    path("api/schema", SpectacularAPIView.as_view(), name="schema"),
+    path("api/schema/docs", SpectacularSwaggerView.as_view(url_name="schema")),
+    path("api/schema/git/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
     path("__reload__/", include("django_browser_reload.urls")),
 ]

@@ -135,6 +135,7 @@ class Location(models.Model):
     keywords = models.CharField(max_length=255, null=True, blank=True)
     subLocality = models.CharField(max_length=255, blank=True, null=True)
     locality = models.CharField(max_length=255, blank=True, null=True)
+    polygon = models.TextField(blank=True, null=True)
 
 
 class Block(models.Model):

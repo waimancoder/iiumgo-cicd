@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from payment.models import DriverEarning
 import ride_request
-from .models import PopularLocation, RideRequest
+from .models import CancelRateDriver, PopularLocation, Rating, RideRequest
 import base64
 from django.core.files.base import ContentFile
 
@@ -15,8 +15,7 @@ class RideRequestSerializer(serializers.ModelSerializer):
     pickup_time = serializers.SerializerMethodField()
     dropoff_time = serializers.SerializerMethodField()
     price = serializers.SerializerMethodField()
-    rating = serializers.SerializerMethodField()
-    israted = serializers.SerializerMethodField()
+
     # driver = serializers.SerializerMethodField()
     distance = serializers.SerializerMethodField()
     polyline = serializers.SerializerMethodField()
@@ -30,6 +29,12 @@ class RideRequestSerializer(serializers.ModelSerializer):
     vehicle_model = serializers.SerializerMethodField()
     vehicle_color = serializers.SerializerMethodField()
     vehicle_type = serializers.SerializerMethodField()
+
+    # RATING INFO
+    rating_id = serializers.SerializerMethodField()
+    rating = serializers.SerializerMethodField()
+    israted = serializers.SerializerMethodField()
+    comment = serializers.SerializerMethodField()
 
     # payment_method = serializers.SerializerMethodField()
 
@@ -59,6 +64,8 @@ class RideRequestSerializer(serializers.ModelSerializer):
             "vehicle_type",
             "rating",
             "israted",
+            "comment",
+            "rating_id"
             # "commission_paid",
             # "payment_method",
         )
@@ -79,10 +86,16 @@ class RideRequestSerializer(serializers.ModelSerializer):
         return obj.price if obj.price else ""
 
     def get_rating(self, obj):
-        return obj.rating if obj.rating else ""
+        return obj.rating.rating if obj.rating.rating else None
 
     def get_israted(self, obj):
-        return obj.isRated if obj.isRated else False
+        return obj.rating.isRated if obj.rating.isRated else False
+
+    def get_comment(self, obj):
+        return obj.rating.comment if obj.rating.comment else ""
+
+    def get_rating_id(self, obj):
+        return obj.rating.id if obj.rating.id else ""
 
     def get_price(self, obj):
         return obj.price if obj.price else ""
@@ -242,3 +255,29 @@ class PopularLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = PopularLocation
         fields = ("name", "latitude", "longitude", "address", "image", "subLocality", "locality")
+
+
+class DriverCancelRateSerializer(serializers.Serializer):
+    cancel_rate = serializers.IntegerField(required=False)
+    warning_rate = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = CancelRateDriver
+        fields = ("cancel_rate", "warning_rate")
+
+
+class RatingSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(required=False)
+    rating = serializers.IntegerField(required=False)
+    comment = serializers.CharField(required=False)
+    isRated = serializers.BooleanField(required=False)
+
+    class Meta:
+        model = Rating
+        fields = ("id", "rating", "comment", "isRated")
+
+    def validate(self, attrs):
+        rating = attrs.get("rating")
+        if rating < 1 or rating > 5:
+            raise serializers.ValidationError("Rating must be between 1 and 5")
+        return attrs

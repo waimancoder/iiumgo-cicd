@@ -2,7 +2,9 @@ import traceback
 from django.http import Http404, JsonResponse
 import requests
 from rest_framework import generics, permissions, status, serializers, mixins, viewsets
+from rest_framework.exceptions import ErrorDetail
 from .serializers import (
+    PasswordResetInAppSerializer,
     UserSerializer,
     AuthTokenSerializer,
     RegisterSerializer,
@@ -34,6 +36,11 @@ from .models import StudentID
 from django.shortcuts import get_object_or_404, render
 from django.conf import settings
 from django.contrib.auth.signals import user_logged_in
+from mytaxi.scheme import KnoxTokenScheme
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 User = get_user_model()
@@ -469,3 +476,62 @@ def verify_email_page(request, uidb64, token):
     }
 
     return render(request, "verification.html", context)
+
+
+class PasswordResetAPI(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = PasswordResetInAppSerializer
+
+    def post(self, request, *args, **kwargs):
+        try:
+            user = self.request.user
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            if not user.check_password(serializer.data["current_password"]):
+                return Response(
+                    {
+                        "success": False,
+                        "statusCode": status.HTTP_400_BAD_REQUEST,
+                        "error": "Bad Request",
+                        "message": "Current password is incorrect",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            logger.info("Password reset request for user: " + str(user))
+            user.set_password(serializer.data["new_password"])
+            user.save()
+
+            return Response(
+                {
+                    "success": True,
+                    "statusCode": status.HTTP_200_OK,
+                    "message": "Password changed successfully",
+                },
+                status=status.HTTP_200_OK,
+            )
+        except serializers.ValidationError as e:
+            error_detail = e.detail.get("non_field_errors", [])[0]
+            error_message = error_detail.__str__()
+
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_400_BAD_REQUEST,
+                    "error": "Bad Request",
+                    "message": error_message,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        except Exception as e:
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_400_BAD_REQUEST,
+                    "error": "Bad Request",
+                    "message": str(e),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )

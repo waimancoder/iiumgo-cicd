@@ -13,4 +13,6 @@ urlpatterns = [
     ),
     path("api/get_price", views.FareEstimationView.as_view(), name="get_price"),
     path("api/get_popular_locations", views.PopularLocationView.as_view(), name="get_popular_locations"),
+    path("api/get_cancel_rate", views.DriverCancelRate.as_view(), name="driver_cancel_rate"),
+    path("api/rating/<uuid:ride_request_id>", views.RatingAPI.as_view(), name="rating"),
 ]

@@ -1,6 +1,9 @@
+from datetime import datetime
 from django.core.validators import FileExtensionValidator
 from django.db import models
 import uuid
+
+from django.dispatch import receiver
 from user_account.models import User
 from rides.models import Driver
 
@@ -48,10 +51,9 @@ class RideRequest(models.Model):
     distance = models.FloatField(null=True, blank=True)
     duration = models.IntegerField(null=True, blank=True)
     special_requests = models.CharField(max_length=1000, null=True, blank=True)
-    rating = models.FloatField(null=True, blank=True)
     vehicle_type = models.CharField(max_length=255, null=True, blank=True, choices=Driver.typeChoices)
     isFemaleDriver = models.BooleanField(default=False, null=True, blank=True)
-    isRated = models.BooleanField(default=False, null=True, blank=True)
+    cancel_reason = models.TextField(null=True, blank=True)
 
 
 class PopularLocation(models.Model):
@@ -70,6 +72,12 @@ class PopularLocation(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+@receiver(models.signals.post_save, sender=RideRequest)
+def create_rating(sender, instance, created, **kwargs):
+    if created:
+        Rating.objects.create(ride_request=instance, passenger=instance.user)
 
 
 class Passenger(models.Model):
@@ -91,3 +99,55 @@ class Passenger(models.Model):
     )
 
     passenger_status = models.CharField(max_length=255, null=True, blank=True, choices=STATUS_CHOICES)
+
+
+class CancelRateDriver(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    driver = models.OneToOneField(Driver, on_delete=models.CASCADE)
+    cancel_rate = models.IntegerField(default=0, null=True, blank=True)
+    warning_rate = models.IntegerField(default=0, null=True, blank=True)
+    warning_start_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def update_warning_rate(self):
+        if self.cancel_rate % 3 == 0:
+            self.warning_rate += 1
+            self.warning_start_at = datetime.now()
+            self.save()
+
+    def reset_warning_rate(self):
+        self.warning_rate = 0
+        self.save()
+
+
+class Rating(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    ride_request = models.OneToOneField(RideRequest, on_delete=models.CASCADE)
+    passenger = models.ForeignKey(User, on_delete=models.CASCADE)
+    driver = models.ForeignKey(Driver, on_delete=models.CASCADE, null=True, blank=True)
+    rating = models.FloatField(null=True, blank=True)
+    comment = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    isRated = models.BooleanField(default=False)
+
+    def set_driver(self):
+        self.driver = self.ride_request.driver
+        self.save()
+
+    def set_passenger(self):
+        self.passenger = self.ride_request.user
+        self.save()
+
+
+class PassengerCancel(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    cancel_rate = models.IntegerField(default=0, null=True, blank=True)
+    warning_rate = models.IntegerField(default=0, null=True, blank=True)
+    cumulative_penalty = models.FloatField(default=0, null=True, blank=True)
+    is_disable = models.BooleanField(default=False, null=True, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    passenger = models.OneToOneField(Passenger, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"PassengerCancel ID: {self.id}"

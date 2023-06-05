@@ -214,6 +214,25 @@ class PasswordResetSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
 
+class PasswordResetInAppSerializer(serializers.Serializer):
+    current_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+    confirm_password = serializers.CharField(required=True)
+
+    def validate(self, attrs):
+        current_password = attrs.get("current_password")
+        new_password = attrs.get("new_password")
+        confirm_password = attrs.get("confirm_password")
+
+        if current_password == new_password:
+            raise serializers.ValidationError("New password cannot be the same as the old password")
+
+        if new_password != confirm_password:
+            raise serializers.ValidationError("New password and confirm password must be the same")
+
+        return attrs
+
+
 class PasswordResetConfirmSerializer(serializers.Serializer):
     uid = serializers.CharField()
     token = serializers.CharField()

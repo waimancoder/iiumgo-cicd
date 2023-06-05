@@ -1,8 +1,11 @@
+from datetime import timedelta
 import logging
 from pathlib import Path
+from django.conf.global_settings import LOGIN_REDIRECT_URL
 from dotenv import load_dotenv, find_dotenv
 import os
 import redis
+from celery.schedules import crontab
 
 
 load_dotenv(find_dotenv())
@@ -51,7 +54,9 @@ INSTALLED_APPS = [
     "theme",
     "django_browser_reload",
     "advertisement",
+    "drf_spectacular",
 ]
+
 
 TAILWIND_APP_NAME = "theme"
 
@@ -59,6 +64,20 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
+CELERY_BROKER_URL = "redis://" + os.environ.get("REDIS_LOCATION")
+CELERY_RESULT_BACKEND = "redis://" + os.environ.get("REDIS_LOCATION")
+CELERY_TIMEZONE = "Asia/Kuala_Lumpur"
+
+
+CELERY_BEAT_SCHEDULE = {
+    "reset_warning_rates": {
+        "task": "ride_request.tasks.reset_warning_rates",
+        "schedule": crontab(minute=0, hour=0, day_of_week=0),
+        "options": {
+            "timezone": CELERY_TIMEZONE,
+        },
+    },
+}
 
 MJML_BACKEND_MODE = "cmd"
 MJML_EXEC_CMD = "node_modules/.bin/mjml"
@@ -72,6 +91,11 @@ REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "mytaxi.customexceptions.custom_exception_handler",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 10,
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "iiumGO API",
 }
 
 MIDDLEWARE = [
@@ -181,8 +205,8 @@ USE_TZ = True
 # AWS s3 Bucket Settings
 AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
-# AWS_STORAGE_BUCKET_NAME = "mytaxi-1"
-AWS_STORAGE_BUCKET_NAME = "iiumgo"
+AWS_STORAGE_BUCKET_NAME = "mytaxi-1"
+# AWS_STORAGE_BUCKET_NAME = "iiumgo"
 AWS_S3_REGION_NAME = "ap-northeast-1"
 AWS_S3_CUSTOM_DOMAIN = "%s.s3.amazonaws.com" % AWS_STORAGE_BUCKET_NAME
 AWS_S3_OBJECT_PARAMETERS = {
@@ -337,7 +361,7 @@ LOGGING = {
         "django": {
             "handlers": ["console", "info_handler"],
             "level": "INFO",
-            "propagate": True,
+            "propagate": False,
         },
         "django.request": {
             "handlers": ["console"],
@@ -379,10 +403,29 @@ LOGGING = {
             "level": "DEBUG",
             "propagate": False,
         },
+        "administrationApp": {
+            "handlers": ["console", "info_handler"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
         "user_account": {
+            "handlers": ["console", "info_handler"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+        "celery": {
             "handlers": ["console", "info_handler"],
             "level": "DEBUG",
             "propagate": False,
         },
     },
 }
+
+LOGIN_REDIRECT_URL = "admin/home"
+LOGIN_URL = "/"
+
+MJML_BACKEND_MODE = "cmd"
+
+MJML_EXEC_CMD = BASE_DIR + "node_modules/.bin/mjml"
+
+MJML_CHECK_CMD_ON_STARTUP = False

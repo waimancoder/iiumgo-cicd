@@ -1,18 +1,20 @@
 import base64
 import random
-from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.shortcuts import render
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, serializers, status
 from rest_framework.response import Response
 from django.db.models import Q
+import ride_request
 from ride_request.pricing import get_pricing
 from rides.models import Driver
-from .models import PopularLocation, RideRequest
+from .models import CancelRateDriver, PopularLocation, Rating, RideRequest
 from .serializers import (
     CoordinateSerializer,
+    DriverCancelRateSerializer,
     DriverRideRequestSerializer,
     PopularLocationSerializer,
+    RatingSerializer,
     RideRequestSerializer,
 )
 from rest_framework.pagination import PageNumberPagination
@@ -66,8 +68,6 @@ class RideRequestHistoryView(generics.ListAPIView):
                         "price": ride_request["price"],
                         "distance": ride_request["distance"],
                         "created_at": ride_request["created_at"],
-                        "rating": ride_request["rating"],
-                        "is_rated": ride_request["israted"],
                     }
                     driver_info = {
                         "driver_name": ride_request["driver_name"],
@@ -77,9 +77,15 @@ class RideRequestHistoryView(generics.ListAPIView):
                         "vehicle_color": ride_request["vehicle_color"],
                         "vehicle_type": ride_request["vehicle_type"],
                     }
+                    rating_info = {
+                        "rating_id": ride_request["rating_id"],
+                        "rating": int(ride_request["rating"]) if ride_request["rating"] else None,
+                        "israted": ride_request["israted"],
+                    }
                     history = {
                         "ride_request_info": ride_request_info,
                         "driver_info": driver_info,
+                        "rating_info": rating_info,
                     }
                     data.append(history)
                 else:
@@ -98,8 +104,6 @@ class RideRequestHistoryView(generics.ListAPIView):
                         "price": ride_request["price"],
                         "distance": ride_request["distance"],
                         "created_at": ride_request["created_at"],
-                        "rating": ride_request["rating"],
-                        "is_rated": ride_request["israted"],
                     }
                     driver_info = {
                         "driver_name": "",
@@ -109,9 +113,15 @@ class RideRequestHistoryView(generics.ListAPIView):
                         "vehicle_color": "",
                         "vehicle_type": "",
                     }
+                    rating_info = {
+                        "rating_id": ride_request["rating_id"],
+                        "rating": int(ride_request["rating"]) if ride_request["rating"] else None,
+                        "israted": ride_request["israted"],
+                    }
                     history = {
                         "ride_request_info": ride_request_info,
-                        "driver_info": driver_info,
+                        "driver_info": None,
+                        "rating_info": None,
                     }
                     data.append(history)
 
@@ -379,3 +389,167 @@ class PopularLocationView(generics.GenericAPIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class DriverCancelRate(generics.GenericAPIView):
+    serializer_class = DriverCancelRateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        try:
+            user = self.request.user
+            driver = Driver.objects.get(user=user)
+            driver_cancel_rate = CancelRateDriver.objects.get(driver=driver)
+            if driver_cancel_rate:
+                serializer = self.get_serializer(driver_cancel_rate)
+                return Response(
+                    {
+                        "success": True,
+                        "statusCode": status.HTTP_200_OK,
+                        "data": serializer.data,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    {
+                        "success": False,
+                        "statusCode": status.HTTP_404_NOT_FOUND,
+                        "message": "Driver cancel rate not found",
+                    },
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+        except Exception as e:
+            print(e)
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "error": "Internal Server Error",
+                    "message": "Please Contact Server Admin",
+                    "traceback": str(e),
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def post(self, request, *args, **kwargs):
+        try:
+            user = self.request.user
+            driver = Driver.objects.get(user=user)
+            driver_cancel_rate = CancelRateDriver.objects.get(driver=driver)
+            if driver_cancel_rate:
+                driver_cancel_rate.cancel_rate += 1
+                driver_cancel_rate.update_warning_rate()
+                driver_cancel_rate.save()
+                serializer = self.get_serializer(driver_cancel_rate)
+                return Response(
+                    {
+                        "success": True,
+                        "statusCode": status.HTTP_200_OK,
+                        "data": serializer.data,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    {
+                        "success": False,
+                        "statusCode": status.HTTP_404_NOT_FOUND,
+                        "message": "Driver cancel rate not found",
+                    },
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+        except Exception as e:
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "error": "Internal Server Error",
+                    "message": "Please Contact Server Admin",
+                    "traceback": str(e),
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class RatingAPI(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = RatingSerializer
+
+    def get(self, request, *args, **kwargs):
+        id = self.kwargs.get("ride_request_id")
+        try:
+            ride_request = RideRequest.objects.get(id=id)
+            rating = Rating.objects.get(ride_request=ride_request)
+            serializer = self.get_serializer(rating)
+            response = serializer.data
+            return Response(
+                {
+                    "success": True,
+                    "statusCode": status.HTTP_200_OK,
+                    "data": {
+                        "ride_request_id": response["id"],
+                        "rating": response["rating"],
+                        "comment": response["comment"] if response["comment"] else "",
+                        "isRated": response["isRated"],
+                    },
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_404_NOT_FOUND,
+                    "message": str(e),
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+    def post(self, request, *args, **kwargs):
+        id = self.kwargs.get("ride_request_id")
+        try:
+            ride_request = RideRequest.objects.get(id=id)
+            rating = Rating.objects.get(ride_request=ride_request)
+            rating.rating = request.data.get("rating", rating.rating)
+            rating.isRated = True
+            rating.comment = request.data.get("comment", rating.comment)
+            rating.save()
+            serializer = self.get_serializer(rating, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            response = serializer.data
+            return Response(
+                {
+                    "success": True,
+                    "statusCode": status.HTTP_200_OK,
+                    "data": {
+                        "ride_request_id": response["id"],
+                        "rating": response["rating"],
+                        "comment": response["comment"] if response["comment"] else "",
+                        "isRated": response["isRated"],
+                    },
+                },
+                status=status.HTTP_200_OK,
+            )
+        except serializers.ValidationError as e:
+            for key in e.detail.keys():
+                error_message = e.detail[key][0].__str__()
+
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_400_BAD_REQUEST,
+                    "message": error_message,
+                }
+            )
+        except Exception as e:
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_404_NOT_FOUND,
+                    "message": str(e),
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )

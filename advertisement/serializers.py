@@ -1,10 +1,11 @@
 import base64
+from email.policy import default
 import random
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import serializers
 
-from advertisement.models import Advertisement
+from advertisement.models import Advertisement, TodoTask
 
 
 class AdvertisementSerializer(serializers.ModelSerializer):
@@ -55,3 +56,59 @@ class AdvertisementSerializer(serializers.ModelSerializer):
         advertisement.save()
 
         return advertisement
+
+
+class ResponseSchema200(serializers.Serializer):
+    status = serializers.BooleanField(default=True)
+    statusCode = serializers.IntegerField(default=200)
+    data = serializers.Serializer()
+
+    def __init__(self, *args, **kwargs):
+        context = kwargs.get("context", {})
+        data_serializer = context.get("data", serializers.Serializer)
+
+        self.fields["data"] = data_serializer()
+
+        super().__init__(*args, **kwargs)
+
+
+class ResponseSchema500(serializers.Serializer):
+    success = serializers.BooleanField(default=False)
+    statusCode = serializers.IntegerField(default=500)
+    error = serializers.CharField(default="Internal Server Error")
+    message = serializers.CharField(default="Please Contact Server Admin")
+    traceback = serializers.CharField()
+
+
+class TodoTaskSerializer(serializers.Serializer):
+    id = serializers.UUIDField(required=False)
+    name = serializers.CharField()
+    description = serializers.CharField()
+    status = serializers.BooleanField(required=False)
+
+    class Meta:
+        model = TodoTask
+        fields = ("id", "name", "description", "status")
+
+    def create(self, validated_data):
+        task = TodoTask.objects.create(name=validated_data["name"], description=validated_data["description"])
+        task.save()
+
+        return task
+
+
+class TodoTaskChangeStatusSerializer(serializers.Serializer):
+    id = serializers.UUIDField(required=False)
+    name = serializers.CharField(required=False)
+    description = serializers.CharField(required=False)
+    status = serializers.BooleanField(required=False)
+
+    class Meta:
+        model = TodoTask
+        fields = ("id", "name", "description", "status")
+
+    def update(self, instance, validated_data):
+        instance.status = validated_data["status"]
+        instance.save()
+
+        return instance

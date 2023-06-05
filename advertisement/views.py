@@ -1,15 +1,24 @@
 import base64
+from os import name
 import random
 import uuid
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.shortcuts import render
 
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, serializers, status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from advertisement.models import Advertisement
-from advertisement.serializers import AdvertisementSerializer
+from advertisement.models import Advertisement, TodoTask
+from advertisement.serializers import (
+    AdvertisementSerializer,
+    ResponseSchema200,
+    ResponseSchema500,
+    TodoTaskChangeStatusSerializer,
+    TodoTaskSerializer,
+)
+from mytaxi.scheme import KnoxTokenScheme
+from drf_spectacular.utils import extend_schema
 
 
 # Create your views here.
@@ -26,6 +35,9 @@ class AdvertisementView(generics.GenericAPIView):
         queryset = Advertisement.objects.all().order_by("id")
         return queryset
 
+    @extend_schema(
+        responses={200: ResponseSchema200(context={"data": AdvertisementSerializer}), 500: ResponseSchema500},
+    )
     def get(self, request, *args, **kwargs):
         try:
             queryset = self.get_queryset()
@@ -62,6 +74,9 @@ class AdvertisementView(generics.GenericAPIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+    @extend_schema(
+        responses={200: ResponseSchema200(context={"data": AdvertisementSerializer}), 500: ResponseSchema500},
+    )
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -145,3 +160,124 @@ class AdvertisementView(generics.GenericAPIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class TodoTaskAPI(generics.GenericAPIView):
+    serializer_class = TodoTaskSerializer
+    pagination_class = CustomPageNumberPagination
+
+    def get_queryset(self):
+        queryset = TodoTask.objects.all()
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        try:
+            queryset = self.get_queryset()
+            serializer = self.get_serializer(queryset, many=True)
+
+            data = serializer.data
+            response = {
+                "status": True,
+                "statusCode": status.HTTP_200_OK,
+                "data": data,
+            }
+            return Response(response, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "error": "Internal Server Error",
+                    "message": "Please Contact Server Admin",
+                    "traceback": str(e),
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def post(self, request, *args, **kwargs):
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            task = serializer.save()
+
+            return Response(
+                {
+                    "success": True,
+                    "statusCode": status.HTTP_200_OK,
+                    "data": {"id": task.id, "name": task.name, "description": task.description, "status": task.status},
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "error": "Internal Server Error",
+                    "message": "Please Contact Server Admin",
+                    "traceback": str(e),
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class TodoTaskChangeStatusAPI(generics.GenericAPIView):
+    serializer_class = TodoTaskChangeStatusSerializer
+    pagination_class = CustomPageNumberPagination
+    http_method_names = ["get", "post"]
+    lookup_field = "id"
+
+    def get(self, request, id, *args, **kwargs):
+        try:
+            task = TodoTask.objects.get(id=id)
+            serializer = self.get_serializer(task)
+
+            data = serializer.data
+            response = {
+                "status": True,
+                "statusCode": status.HTTP_200_OK,
+                "data": data,
+            }
+            return Response(response, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "error": "Internal Server Error",
+                    "message": "Please Contact Server Admin",
+                    "traceback": str(e),
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def post(self, request, id, *args, **kwargs):
+        try:
+            task = TodoTask.objects.get(id=id)  # Retrieve the task by ID
+            serializer = self.get_serializer(instance=task, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            task = serializer.save()
+
+            return Response(
+                {
+                    "success": True,
+                    "statusCode": status.HTTP_200_OK,
+                    "data": {"id": task.id, "name": task.name, "description": task.description, "status": task.status},
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "error": "Internal Server Error",
+                    "message": "Please Contact Server Admin",
+                    "traceback": str(e),
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
