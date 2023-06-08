@@ -675,20 +675,22 @@ class DriverStatusViewset(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         try:
-            queryset = Driver.objects.all()
+            queryset = (
+                Driver.objects.all()
+                .prefetch_related("user")
+                .values("user__id", "user__fullname", "statusDriver", "statusMessage")
+            )
 
-            driver_data = []
-            for driver in queryset:
-                user = driver.user
-                if driver.statusDriver == "verified":
-                    continue
-                data = {
-                    "user_id": user.id,
-                    "fullname": user.fullname,
-                    "statusDriver": driver.statusDriver,
-                    "message": driver.statusMessage if driver.statusMessage else "",
+            driver_data = [
+                {
+                    "user_id": driver["user__id"],
+                    "fullname": driver["user__fullname"],
+                    "statusDriver": driver["statusDriver"],
+                    "message": driver["statusMessage"] if driver["statusMessage"] else "",
                 }
-                driver_data.append(data)
+                for driver in queryset
+                if driver["statusDriver"] != "verified"
+            ]
 
             page = self.paginate_queryset(driver_data)
             if page is not None:
