@@ -680,6 +680,8 @@ class DriverStatusViewset(viewsets.ModelViewSet):
             driver_data = []
             for driver in queryset:
                 user = driver.user
+                if driver.statusDriver == "verified":
+                    continue
                 data = {
                     "user_id": user.id,
                     "fullname": user.fullname,
