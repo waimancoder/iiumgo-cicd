@@ -295,9 +295,11 @@ class LocationSerializer(serializers.ModelSerializer):
 
 
 class DriverStatusSerializer(serializers.ModelSerializer):
+    fullname = serializers.CharField(required=False)
+
     class Meta:
         model = Driver
-        fields = ("statusDriver", "statusMessage")
+        fields = ("user_id", "fullname", "statusDriver", "statusMessage")
 
 
 class DriverJobStatusSerializer(serializers.ModelSerializer):

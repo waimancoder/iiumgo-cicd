@@ -673,6 +673,41 @@ class DriverStatusViewset(viewsets.ModelViewSet):
 
     metadata_class = CustomMetadata
 
+    def list(self, request, *args, **kwargs):
+        try:
+            queryset = Driver.objects.all()
+
+            driver_data = []
+            for driver in queryset:
+                user = driver.user
+                data = {
+                    "user_id": user.id,
+                    "fullname": user.fullname,
+                    "statusDriver": driver.statusDriver,
+                    "message": driver.statusMessage if driver.statusMessage else "",
+                }
+                driver_data.append(data)
+
+            page = self.paginate_queryset(driver_data)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+
+            serializer = self.get_serializer(queryset, many=True)
+
+            return Response(serializer.data)
+
+        except Http404:
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_404_NOT_FOUND,
+                    "error": "Not Found",
+                    "message": "Driver not found",
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
     def retrieve(self, request, *args, **kwargs):
         try:
             driver = self.get_object()
