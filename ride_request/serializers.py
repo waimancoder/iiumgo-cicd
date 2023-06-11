@@ -195,7 +195,7 @@ class DriverRideRequestSerializer(serializers.ModelSerializer):
         return obj.status if obj.status else ""
 
     def get_pickup_time(self, obj):
-        return obj.pickup_time if obj.pickup_time else ""
+        return obj.pickup_time if obj.pickup_time else None
 
     def get_dropoff_time(self, obj):
         return obj.dropoff_time if obj.dropoff_time else ""
