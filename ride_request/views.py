@@ -62,7 +62,7 @@ class RideRequestHistoryView(generics.ListAPIView):
                         "dropoff_longitude": ride_request["dropoff_longitude"],
                         "pickup_address": ride_request["pickup_address"],
                         "dropoff_address": ride_request["dropoff_address"],
-                        "pickup_time": ride_request["pickup_time"],
+                        "pickup_time": ride_request["pickup_time"] if ride_request["pickup_time"] is not "" else None,
                         "dropoff_time": ride_request["dropoff_time"],
                         "polyline": ride_request["polyline"],
                         "price": ride_request["price"],
