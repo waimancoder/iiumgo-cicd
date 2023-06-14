@@ -7,6 +7,7 @@ import requests
 from rest_framework import generics, permissions, status, serializers, mixins, viewsets
 from rest_framework.exceptions import ErrorDetail
 from .serializers import (
+    DeleteUserSerializer,
     PasswordResetInAppSerializer,
     RegisterSerializerV2,
     UserSerializer,
@@ -573,7 +574,7 @@ class RegisterAPIv2(generics.GenericAPIView):
         base32secret = uuid_to_base32(user_object)
         logger.critical("BASE32SECRET: " + str(base32secret))
         totp = TOTP(base32secret)
-        totp.interval = 120
+        totp.interval = 300
         logger.critical(totp.interval)
         otp = totp.now()
         logger.critical("OTP: " + str(otp))
@@ -651,8 +652,8 @@ class VerifyEmailAPI(generics.GenericAPIView):
             base32secret = uuid_to_base32(user)
             logger.critical("BASE32SECRET: " + str(base32secret))
             totp = TOTP(base32secret)
-            totp.interval = 120
-            logger.critical(totp.interval)
+            totp.interval = 300
+            logger.critical(serializer.data["otp"])
 
             if totp.verify(serializer.data["otp"]):
                 user.isVerified = True
@@ -693,3 +694,15 @@ def uuid_to_base32(user):
     uuid_bytes = user.id.bytes
     base32_bytes = base64.b32encode(uuid_bytes).rstrip(b"=").decode("ascii")
     return base32_bytes
+
+
+class DeleteUser(generics.GenericAPIView):
+    serializer_class = DeleteUserSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ["post"]
+    lookup_field = "id"
+
+    #  def post(self, request, id, *args, **kwargs):
+    #     try:
+    #         serializer = self.get_serializer(data=request.data)
+    #         serializer.is_valid(raise_exception=True)

@@ -368,7 +368,22 @@ class RegisterSerializerV2(serializers.ModelSerializer):
 
 
 class VerifyEmailSerializer(serializers.Serializer):
-    otp = serializers.CharField(required=True, max_length=6)
+    otp = serializers.CharField(required=True, max_length=6, min_length=6)
 
     class Meta:
         fields = ["otp"]
+
+
+class DeleteUserSerializer(serializers.Serializer):
+    password = serializers.CharField(required=True)
+
+    class Meta:
+        fields = ["password"]
+
+    def validate(self, attrs):
+        password = attrs.get("password")
+
+        if not self.instance.check_password(password):
+            raise serializers.ValidationError("Incorrect password")
+
+        return attrs
