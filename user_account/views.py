@@ -700,9 +700,30 @@ class DeleteUser(generics.GenericAPIView):
     serializer_class = DeleteUserSerializer
     permission_classes = [IsAuthenticated]
     http_method_names = ["post"]
-    lookup_field = "id"
 
-    #  def post(self, request, id, *args, **kwargs):
-    #     try:
-    #         serializer = self.get_serializer(data=request.data)
-    #         serializer.is_valid(raise_exception=True)
+    def post(self, request, *args, **kwargs):
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = User.objects.get(email=serializer.data["email"])
+            user.delete()
+
+            return Response(
+                {
+                    "success": True,
+                    "statusCode": status.HTTP_200_OK,
+                    "message": "User deleted successfully",
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_400_BAD_REQUEST,
+                    "error": "Bad Request",
+                    "message": str(e),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )

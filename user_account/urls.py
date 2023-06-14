@@ -3,6 +3,7 @@ from django.urls import path, reverse
 from knox import views as knox_views
 from . import views
 from .views import (
+    DeleteUser,
     PasswordResetAPI,
     RegisterAPI,
     LoginAPI,
@@ -45,6 +46,7 @@ urlpatterns = [
     path("api/userlist", UserListView.as_view(), name="userlist"),
     path("api/profile-pic", ProfilePictureView.as_view(), name="profile-pic"),
     path("api/verify-email-page/<str:uidb64>/<str:token>/", verify_email_page, name="verify-email-page"),
+    path("api/delete-account", DeleteUser.as_view(), name="delete-account"),
 ]
 
 urlpatterns += router.urls
