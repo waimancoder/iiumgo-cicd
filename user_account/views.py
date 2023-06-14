@@ -574,6 +574,7 @@ class RegisterAPIv2(generics.GenericAPIView):
         logger.critical("BASE32SECRET: " + str(base32secret))
         totp = TOTP(base32secret)
         totp.interval = 120
+        logger.critical(totp.interval)
         otp = totp.now()
         logger.critical("OTP: " + str(otp))
 
@@ -651,6 +652,7 @@ class VerifyEmailAPI(generics.GenericAPIView):
             logger.critical("BASE32SECRET: " + str(base32secret))
             totp = TOTP(base32secret)
             totp.interval = 120
+            logger.critical(totp.interval)
 
             if totp.verify(serializer.data["otp"]):
                 user.isVerified = True
