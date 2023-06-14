@@ -6,6 +6,8 @@ from dotenv import load_dotenv, find_dotenv
 import os
 import redis
 from celery.schedules import crontab
+from datetime import timedelta
+from rest_framework.settings import api_settings
 
 
 load_dotenv(find_dotenv())
@@ -79,9 +81,6 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
-MJML_BACKEND_MODE = "cmd"
-MJML_EXEC_CMD = "node_modules/.bin/mjml"
-
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         # 'rest_framework.authentication.BasicAuthentication',
@@ -92,6 +91,16 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 10,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+REST_KNOX = {
+    "SECURE_HASH_ALGORITHM": "cryptography.hazmat.primitives.hashes.SHA512",
+    "AUTH_TOKEN_CHARACTER_LENGTH": 64,
+    "TOKEN_TTL": None,
+    "USER_SERIALIZER": "knox.serializers.UserSerializer",
+    "TOKEN_LIMIT_PER_USER": None,
+    "AUTO_REFRESH": False,
+    "EXPIRY_DATETIME_FORMAT": api_settings.DATETME_FORMAT,
 }
 
 SPECTACULAR_SETTINGS = {
@@ -427,5 +436,3 @@ LOGIN_URL = "/"
 MJML_BACKEND_MODE = "cmd"
 
 MJML_EXEC_CMD = BASE_DIR + "node_modules/.bin/mjml"
-
-MJML_CHECK_CMD_ON_STARTUP = False
