@@ -1,10 +1,14 @@
+import base64
+from calendar import c
 import traceback
+import uuid
 from django.http import Http404, JsonResponse
 import requests
 from rest_framework import generics, permissions, status, serializers, mixins, viewsets
 from rest_framework.exceptions import ErrorDetail
 from .serializers import (
     PasswordResetInAppSerializer,
+    RegisterSerializerV2,
     UserSerializer,
     AuthTokenSerializer,
     RegisterSerializer,
@@ -12,6 +16,7 @@ from .serializers import (
     PasswordResetConfirmSerializer,
     PasswordResetSerializer,
     ProfilePictureSerializer,
+    VerifyEmailSerializer,
 )
 from rest_framework.response import Response
 from knox.models import AuthToken
@@ -37,6 +42,8 @@ from django.shortcuts import get_object_or_404, render
 from django.conf import settings
 from django.contrib.auth.signals import user_logged_in
 from mytaxi.scheme import KnoxTokenScheme
+from pyotp import TOTP
+
 
 import logging
 
@@ -230,17 +237,17 @@ class LoginAPI(KnoxLoginView):
             )
 
     #         # TODO: bila ada email company nanti uncomment
-    #         # if user.isVerified is False:
-    #         #     return Response({
-    #         #     "success": False,
-    #         #     "statusCode": status.HTTP_400_BAD_REQUEST,
-    #         #     "error": "Bad Request",
-    #         #     "message": "User is not verified",
-    #         #      }, status=status.HTTP_400_BAD_REQUEST)
-    #         # else:
-    #         login(request, user)
-    #         response_data = {'id': user.id, 'email': user.email}
-    #         response_data.update(super().post(request, format=None).data)
+    # if user.isVerified is False:
+    #     return Response({
+    #     "success": False,
+    #     "statusCode": status.HTTP_400_BAD_REQUEST,
+    #     "error": "Bad Request",
+    #     "message": "User is not verified",
+    #      }, status=status.HTTP_400_BAD_REQUEST)
+    # else:
+    #     login(request, user)
+    #     response_data = {'id': user.id, 'email': user.email}
+    #     response_data.update(super().post(request, format=None).data)
 
 
 @api_view(["GET"])
@@ -535,3 +542,151 @@ class PasswordResetAPI(generics.GenericAPIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+class RegisterAPIv2(generics.GenericAPIView):
+    serializer_class = RegisterSerializerV2
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            user = serializer.save()
+        except serializers.ValidationError as e:
+            errors = e.detail
+            message = str(errors[list(errors.keys())[0]][0])
+            message = "Email already exists." if message == "This field must be unique." else message
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_400_BAD_REQUEST,
+                    "error": "Bad Request",
+                    "message": message,
+                    "line": sys.exc_info()[-1].tb_lineno,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        current_site = get_current_site(request)
+        subject = "Verify your email address"
+        message = render_to_string(
+            "verification_emailv2.html",
+            {
+                "user": user,
+                "fullname": user.fullname,
+                "domain": current_site.domain,
+                "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+                "token": auth_token_generator.make_token(user),
+                "otp": otp,
+            },
+        )
+
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[user.email],
+            html_message=message,
+        )
+        user_data = UserSerializer(user, context=self.get_serializer_context()).data
+        user_object = User.objects.get(id=user_data.get("id"))
+        # GENERATE OTP
+        base32secret = uuid_to_base32(user_object)
+        logger.critical("BASE32SECRET: " + str(base32secret))
+        totp = TOTP(base32secret)
+        totp.interval = 120
+        otp = totp.now()
+        logger.critical("OTP: " + str(otp))
+
+        userinfo = {
+            "id": user_data.get("id"),
+            "email": user_data.get("email"),
+            "fullname": user_data.get("fullname"),
+            "dialCode": user_data.get("dialCode"),
+            "phone_no": user_data.get("phone_no"),
+            "role": user_data.get("role"),
+            "isVerified": user_data.get("isVerified"),
+            # "birthdate": user_data.get("birthdate") if user_data.get("birthdate") else "",
+            "gender": user_data.get("gender") if user_data.get("gender") else "",
+            # "nationality": user_data.get("nationality") if user_data.get("nationality") else "",
+        }
+
+        # if user_data.get("role") == "student":
+        #     userinfo["matricNo"] = user_data.get("matricNo")
+        #     userinfo["student_pic"] = user_data.get("student_pic")
+
+        return Response({"user": userinfo, "token": AuthToken.objects.create(user)[1]})
+
+    def options(self, request, *args, **kwargs):
+        methods = ["POST", "OPTIONS"]
+        content_types = ["application/json"]
+        headers = {
+            "Allow": ", ".join(methods),
+            "Content-Type": ", ".join(content_types),
+        }
+        return Response(
+            {"methods": methods, "content_types": content_types, "headers": headers},
+            status=status.HTTP_200_OK,
+            headers=headers,
+        )
+
+
+class VerifyEmailAPI(generics.GenericAPIView):
+    """
+    Verify Email API
+    Description: Verify email using OTP
+    """
+
+    serializer_class = VerifyEmailSerializer
+    http_method_names = ["post"]
+    lookup_field = "id"
+
+    def post(self, request, id, *args, **kwargs):
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = User.objects.get(id=id)
+            base32secret = uuid_to_base32(user)
+            logger.critical("BASE32SECRET: " + str(base32secret))
+            totp = TOTP(base32secret)
+            totp.interval = 120
+
+            if totp.verify(serializer.data["otp"]):
+                user.isVerified = True
+                user.save()
+                return Response(
+                    {
+                        "success": True,
+                        "statusCode": status.HTTP_200_OK,
+                        "message": "Email verified successfully",
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    {
+                        "success": False,
+                        "statusCode": status.HTTP_400_BAD_REQUEST,
+                        "error": "Bad Request",
+                        "message": "Invalid OTP",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        except Exception as e:
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_400_BAD_REQUEST,
+                    "error": "Bad Request",
+                    "message": str(e),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+# GENERATE BASE32 SECRET
+def uuid_to_base32(user):
+    uuid_bytes = user.id.bytes
+    base32_bytes = base64.b32encode(uuid_bytes).rstrip(b"=").decode("ascii")
+    return base32_bytes

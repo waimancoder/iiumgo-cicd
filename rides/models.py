@@ -132,7 +132,7 @@ class Location(models.Model):
     name = models.CharField(unique=True, max_length=255)
     lat = models.CharField(max_length=255, null=True, blank=True)
     lng = models.CharField(max_length=255, null=True, blank=True)
-    keywords = models.CharField(max_length=255, null=True, blank=True)
+    keywords = models.TextField(null=True, blank=True)
     subLocality = models.CharField(max_length=255, blank=True, null=True)
     locality = models.CharField(max_length=255, blank=True, null=True)
     polygon = models.TextField(blank=True, null=True)

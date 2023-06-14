@@ -6,10 +6,12 @@ from .views import (
     PasswordResetAPI,
     RegisterAPI,
     LoginAPI,
+    RegisterAPIv2,
     UserRetrieveAPIView,
     PasswordResetView,
     PasswordResetConfirmView,
     ProfilePictureView,
+    VerifyEmailAPI,
     verify_email_page,
 )
 from .views import UserUpdateAPI, UserListView
@@ -28,7 +30,9 @@ urlpatterns = [
     path("api/login", LoginAPI.as_view(), name="login"),
     path("api/logout", knox_views.LogoutView.as_view(), name="logout"),
     path("api/register", RegisterAPI.as_view(), name="register"),
+    path("api/v2/register", RegisterAPIv2.as_view(), name="registerv2"),
     # path('api/studentverification', StudentIDVerificationView.as_view(), name='studentverification'),
+    path("api/v2/verify-email/<str:id>", VerifyEmailAPI.as_view(), name="verify-email"),
     path("api/verify-email/<str:uidb64>/<str:token>", views.verify_email, name="verify-email"),
     path("api/password_reset", PasswordResetView.as_view(), name="password_reset"),
     path(

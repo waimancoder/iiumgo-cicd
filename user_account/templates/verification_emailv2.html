@@ -1,0 +1,40 @@
+{% load mjml %} {% mjml %}
+
+<mjml>
+  <mj-head>
+    <mj-style>
+      h2 { font-size: 18px; font-weight: bold; margin-bottom: 8px; } p {
+      margin-bottom: 16px; font-weight:bold; } a { color: #FFFFFF!important;
+      text-decoration: none!important; }
+    </mj-style>
+    <mj-title>Verify Email</mj-title>
+  </mj-head>
+  <mj-body>
+    <mj-section background-color="#f2f2f2" padding="16px">
+      <mj-column
+        background-color="white"
+        padding="16px"
+        border-radius="1%"
+        css-class="shadow"
+      >
+        <mj-text>
+          <h2>Dear ,</h2>
+          <p class="text-lg">{{ user.fullname }}</p>
+        </mj-text>
+        <mj-text> Thank you for registering with our service. </mj-text>
+
+        <mj-button background-color="blue" css-class="button">
+          <mj-text color="white">
+            Here is your 6-digit OTP code: {{ otp }}
+          </mj-text>
+        </mj-button>
+        <mj-text>
+          If you did not request this OTP code, please ignore this email.
+        </mj-text>
+        <mj-text>Best regards,</mj-text>
+        <mj-text>The team at {{ domain }}</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
+{% endmjml %}

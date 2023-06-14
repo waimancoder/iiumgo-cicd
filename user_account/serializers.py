@@ -1,3 +1,4 @@
+from random import Random
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth import get_user_model, authenticate, update_session_auth_hash
@@ -5,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from payment.models import DriverEwallet
 
 from ride_request.models import Passenger
-from .models import User, StudentID
+from .models import User, StudentID, UserOTP
 from django.shortcuts import get_list_or_404, get_object_or_404
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -277,3 +278,97 @@ class ProfilePictureSerializer(serializers.ModelSerializer):
             instance.profile_img = data
             instance.save()
         return instance
+
+
+class RegisterSerializerV2(serializers.ModelSerializer):
+    email = serializers.EmailField(required=True, validators=[UniqueValidator(queryset=get_user_model().objects.all())])
+    fullname = serializers.CharField(max_length=100)
+    phone_no = serializers.CharField(max_length=12)
+    # matricNo = serializers.CharField(max_length=12, required=False)
+    # student_pic = serializers.CharField(required=False)
+    gender = serializers.CharField(max_length=10, required=False)
+
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "email",
+            "fullname",
+            "password",
+            "phone_no",
+            "dialCode",
+            "role",
+            "gender",
+        )
+        extra_kwargs = {"password": {"write_only": True}}
+
+    def create_unique_username(self, local_part):
+        while True:
+            random_str = secrets.token_hex(3)
+            username = f"{local_part}_{random_str}"
+            if not User.objects.filter(username=username).exists():
+                return username
+
+    def create(self, validated_data):
+        try:
+            email = validated_data["email"]
+            local_part = email.split("@")[0]
+
+            username = self.create_unique_username(local_part)
+
+            user = User.objects.create_user(username, validated_data["email"], validated_data["password"])
+            user.fullname = validated_data["fullname"]
+            user.phone_no = validated_data["phone_no"]
+            user.dialCode = validated_data["dialCode"]
+            user.role = validated_data["role"]
+            user.gender = validated_data["gender"]
+
+            user.save()
+
+            if user.role == "student":
+                Driver.objects.create(
+                    user=user,
+                    vehicle_manufacturer="",
+                    vehicle_model="",
+                    vehicle_color="",
+                    vehicle_ownership="",
+                    vehicle_registration_number="",
+                    driver_license_id="",
+                    driver_license_img_front=None,
+                    driver_license_img_back=None,
+                    idConfirmation=None,
+                    vehicle_img=None,
+                    statusDriver="submitting",
+                    statusMessage="submitting",
+                )
+                DriverLocation.objects.create(
+                    user=user,
+                    latitude=None,
+                    longitude=None,
+                )
+                # if validated_data["matricNo"] and validated_data["student_pic"]:
+                #     student_pic = validated_data["student_pic"]
+                #     format, imgstr = student_pic.split(";base64,")
+                #     ext = format.split("/")[-1]
+                #     data = ContentFile(base64.b64decode(imgstr), name=f"{user.username}_student_pic.{ext}")
+                #     matricNo = validated_data["matricNo"]
+                #     StudentID.objects.create(
+                #         user=user,
+                #         matricNo=matricNo,
+                #         student_pic=data,
+                #     )
+
+            DriverEwallet.objects.create(user=user)
+            Passenger.objects.create(user=user, passenger_status=Passenger.STATUS_AVAILABLE)
+
+            return user
+        except Exception as e:
+            print(e)
+            raise e
+
+
+class VerifyEmailSerializer(serializers.Serializer):
+    otp = serializers.CharField(required=True, max_length=6)
+
+    class Meta:
+        fields = ["otp"]

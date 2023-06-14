@@ -58,3 +58,10 @@ class StudentID(models.Model):
     student_pic = models.ImageField(
         upload_to="student-pic/", null=True, blank=True, validators=[FileExtensionValidator(["jpg", "jpeg", "png"])]
     )
+
+
+class UserOTP(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
