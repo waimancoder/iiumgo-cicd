@@ -2,6 +2,7 @@ import base64
 from calendar import c
 import traceback
 import uuid
+from constantly import ValueConstant
 from django.http import Http404, JsonResponse
 import requests
 from rest_framework import generics, permissions, status, serializers, mixins, viewsets
@@ -715,6 +716,17 @@ class DeleteUser(generics.GenericAPIView):
                     "message": "User deleted successfully",
                 },
                 status=status.HTTP_200_OK,
+            )
+
+        except serializers.ValidationError as e:
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_400_BAD_REQUEST,
+                    "error": "Bad Request",
+                    "message": str(e.__dict__["detail"]["non_field_errors"][0]),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         except Exception as e:
