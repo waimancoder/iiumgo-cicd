@@ -567,6 +567,16 @@ class RegisterAPIv2(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        user_data = UserSerializer(user, context=self.get_serializer_context()).data
+        user_object = User.objects.get(id=user_data.get("id"))
+        # GENERATE OTP
+        base32secret = uuid_to_base32(user_object)
+        logger.critical("BASE32SECRET: " + str(base32secret))
+        totp = TOTP(base32secret)
+        totp.interval = 120
+        otp = totp.now()
+        logger.critical("OTP: " + str(otp))
+
         current_site = get_current_site(request)
         subject = "Verify your email address"
         message = render_to_string(
@@ -588,15 +598,6 @@ class RegisterAPIv2(generics.GenericAPIView):
             recipient_list=[user.email],
             html_message=message,
         )
-        user_data = UserSerializer(user, context=self.get_serializer_context()).data
-        user_object = User.objects.get(id=user_data.get("id"))
-        # GENERATE OTP
-        base32secret = uuid_to_base32(user_object)
-        logger.critical("BASE32SECRET: " + str(base32secret))
-        totp = TOTP(base32secret)
-        totp.interval = 120
-        otp = totp.now()
-        logger.critical("OTP: " + str(otp))
 
         userinfo = {
             "id": user_data.get("id"),
