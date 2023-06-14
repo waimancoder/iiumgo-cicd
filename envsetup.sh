@@ -23,6 +23,8 @@ source /root/iiumgo/venv/bin/activate
 
 pip3 install -r requirements.txt
 
+npm install 
+
 cp /root/iiumgo/settings.py /root/iiumgo/venv/lib/python3.9/site-packages/knox/settings.py
 
 if [ -d "logs" ] 
