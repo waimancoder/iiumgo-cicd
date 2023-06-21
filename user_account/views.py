@@ -36,6 +36,22 @@ from django.conf import settings
 from django.contrib.auth.signals import user_logged_in
 from mytaxi.scheme import KnoxTokenScheme
 from pyotp import TOTP
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+
+
+# class MyFavoritePagination(PageNumberPagination):
+#     def get_paginated_response(self, data):
+#         nl = self.get_next_link()
+#         pl = self.get_previous_link()
+#         return Response(
+#             {
+#                 "count": self.page.paginator.count,
+#                 "next": nl[nl.find("/api") :] if nl is not None else None,
+#                 "previous": pl[pl.find("/api") :] if pl is not None else None,
+#                 "results": data,
+#             }
+#         )
 
 
 import logging
@@ -80,8 +96,9 @@ class UserRetrieveAPIView(viewsets.ModelViewSet):
     queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ["get", "put", "options"]
+    http_method_names = ["get", "put", "options", "delete"]
     lookup_field = "id"
+    # pagination_class = MyFavoritePagination
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -97,6 +114,20 @@ class UserRetrieveAPIView(viewsets.ModelViewSet):
                 "success": True,
                 "statusCode": status.HTTP_200_OK,
                 "data": data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def destroy(self, request, id, *args, **kwargs):
+        user = User.objects.get(id=id)
+        user.delete()
+
+        return Response(
+            {
+                "success": True,
+                "statusCode": status.HTTP_200_OK,
+                "user_id": id,
+                "message": "User deleted successfully",
             },
             status=status.HTTP_200_OK,
         )

@@ -33,10 +33,22 @@ class User(AbstractUser):
     GENDER_CHOICES = [("male", "Male"), ("female", "Female")]
     gender = models.CharField(blank=True, max_length=10, choices=[("male", "Male"), ("female", "Female")])
 
-    CHOICES = [("student", "Student"), ("staff", "Staff"), ("alumni", "Alumni"), ("outsider", "Outsider")]
+    CHOICES = [
+        ("student", "Student"),
+        ("staff", "Staff"),
+        ("alumni", "Alumni"),
+        ("outsider", "Outsider"),
+        ("admin", "Admin"),
+    ]
     role = models.CharField(
         max_length=10,
-        choices=[("student", "Student"), ("staff", "Staff"), ("alumni", "Alumni"), ("outsider", "Outsider")],
+        choices=[
+            ("student", "Student"),
+            ("staff", "Staff"),
+            ("alumni", "Alumni"),
+            ("outsider", "Outsider"),
+            ("admin", "Admin"),
+        ],
     )
 
     class Meta:
