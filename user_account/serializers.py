@@ -69,10 +69,11 @@ class UserSerializer(serializers.ModelSerializer):
     def get_student_pic(self, instance):
         try:
             student_id = StudentID.objects.get(user=instance)
-            student_pic = student_id.student_pic.url
+            student_pic = student_id.student_pic.url if student_id.student_pic else None
             return student_pic
         except StudentID.DoesNotExist:
             student_pic = None
+            return student_pic
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

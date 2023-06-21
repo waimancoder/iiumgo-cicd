@@ -1,10 +1,6 @@
 import base64
-from calendar import c
 import traceback
-import uuid
-from constantly import ValueConstant
 from django.http import Http404, JsonResponse
-import requests
 from rest_framework import generics, permissions, status, serializers, mixins, viewsets
 from rest_framework.exceptions import ErrorDetail
 from .serializers import (
@@ -14,7 +10,6 @@ from .serializers import (
     UserSerializer,
     AuthTokenSerializer,
     RegisterSerializer,
-    StudentIDVerificationSerializer,
     PasswordResetConfirmSerializer,
     PasswordResetSerializer,
     ProfilePictureSerializer,
@@ -34,13 +29,9 @@ from django.contrib.sites.shortcuts import get_current_site
 from mytaxi import settings
 from rest_framework.decorators import api_view
 from .models import User
-from rest_framework.authtoken.models import Token
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
 import sys
-from django.core.mail import EmailMessage
-from .models import StudentID
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import render
 from django.conf import settings
 from django.contrib.auth.signals import user_logged_in
 from mytaxi.scheme import KnoxTokenScheme
