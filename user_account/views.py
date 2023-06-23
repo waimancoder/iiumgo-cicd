@@ -596,7 +596,7 @@ class RegisterAPIv2(generics.GenericAPIView):
         # GENERATE OTP
         base32secret = uuid_to_base32(user_object)
         logger.critical("BASE32SECRET: " + str(base32secret))
-        totp = TOTP(base32secret)
+        totp = TOTP(s=base32secret, digits=4)
         totp.interval = 300
         logger.critical(totp.interval)
         otp = totp.now()
@@ -674,7 +674,7 @@ class VerifyEmailAPI(generics.GenericAPIView):
             user = User.objects.get(id=id)
             base32secret = uuid_to_base32(user)
             logger.critical("BASE32SECRET: " + str(base32secret))
-            totp = TOTP(base32secret)
+            totp = TOTP(s=base32secret, digits=4)
             totp.interval = 300
             logger.critical(serializer.data["otp"])
 
