@@ -1,4 +1,5 @@
 from random import Random
+from pkg_resources import require
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth import get_user_model, authenticate, update_session_auth_hash
@@ -369,7 +370,7 @@ class RegisterSerializerV2(serializers.ModelSerializer):
 
 
 class VerifyEmailSerializer(serializers.Serializer):
-    otp = serializers.CharField(required=True, max_length=6, min_length=6)
+    otp = serializers.CharField(required=True, max_length=4, min_length=4)
 
     class Meta:
         fields = ["otp"]
@@ -389,3 +390,11 @@ class DeleteUserSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid email or password")
 
         return attrs
+
+
+class ResendSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp = serializers.CharField(required=False, max_length=4, min_length=4)
+
+    class Meta:
+        fields = ["email", "otp"]

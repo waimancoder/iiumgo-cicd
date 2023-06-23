@@ -8,6 +8,7 @@ from .views import (
     RegisterAPI,
     LoginAPI,
     RegisterAPIv2,
+    ResendOTP,
     UserRetrieveAPIView,
     PasswordResetView,
     PasswordResetConfirmView,
@@ -34,6 +35,7 @@ urlpatterns = [
     path("api/v2/register", RegisterAPIv2.as_view(), name="registerv2"),
     # path('api/studentverification', StudentIDVerificationView.as_view(), name='studentverification'),
     path("api/v2/verify-email/<str:id>", VerifyEmailAPI.as_view(), name="verify-email"),
+    path("api/resend-otp", ResendOTP.as_view(), name="resend-otp"),
     path("api/verify-email/<str:uidb64>/<str:token>", views.verify_email, name="verify-email"),
     path("api/password_reset", PasswordResetView.as_view(), name="password_reset"),
     path(

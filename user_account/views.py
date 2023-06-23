@@ -7,6 +7,7 @@ from .serializers import (
     DeleteUserSerializer,
     PasswordResetInAppSerializer,
     RegisterSerializerV2,
+    ResendSerializer,
     UserSerializer,
     AuthTokenSerializer,
     RegisterSerializer,
@@ -761,3 +762,82 @@ class DeleteUser(generics.GenericAPIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+class ResendOTP(generics.GenericAPIView):
+    serializer_class = ResendSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            email = serializer.validated_data["email"]
+            user_object = User.objects.get(email=email)
+            # GENERATE OTP
+            base32secret = uuid_to_base32(user_object)
+            logger.critical("BASE32SECRET: " + str(base32secret))
+            totp = TOTP(s=base32secret, digits=4)
+            totp.interval = 300
+            logger.critical(totp.interval)
+            otp = totp.now()
+            logger.critical("OTP: " + str(otp))
+            current_site = get_current_site(request)
+            subject = "Verify your email address"
+            message = render_to_string(
+                "verification_emailv2.html",
+                {
+                    "user": user_object,
+                    "fullname": user_object.fullname,
+                    "domain": current_site.domain,
+                    "uid": urlsafe_base64_encode(force_bytes(user_object.pk)),
+                    "token": auth_token_generator.make_token(user_object),
+                    "otp": otp,
+                },
+            )
+
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[user_object.email],
+                html_message=message,
+            )
+
+            # if user_data.get("role") == "student":
+            #     userinfo["matricNo"] = user_data.get("matricNo")
+            #     userinfo["student_pic"] = user_data.get("student_pic")
+
+            return Response(
+                {
+                    "success": True,
+                    "statusCode": status.HTTP_200_OK,
+                    "message": f"Email has been successfully sent to the {user_object.email}",
+                }
+            )
+        except serializers.ValidationError as e:
+            errors = e.detail
+            message = str(errors[list(errors.keys())[0]][0])
+            message = "Email already exists." if message == "This field must be unique." else message
+            return Response(
+                {
+                    "success": False,
+                    "statusCode": status.HTTP_400_BAD_REQUEST,
+                    "error": "Bad Request",
+                    "message": message,
+                    "line": sys.exc_info()[-1].tb_lineno,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    def options(self, request, *args, **kwargs):
+        methods = ["POST", "OPTIONS"]
+        content_types = ["application/json"]
+        headers = {
+            "Allow": ", ".join(methods),
+            "Content-Type": ", ".join(content_types),
+        }
+        return Response(
+            {"methods": methods, "content_types": content_types, "headers": headers},
+            status=status.HTTP_200_OK,
+            headers=headers,
+        )
