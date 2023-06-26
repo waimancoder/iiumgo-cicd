@@ -177,8 +177,8 @@ class RegisterSerializer(serializers.ModelSerializer):
                 #     )
 
             DriverEwallet.objects.create(user=user)
-            Passenger.objects.create(user=user, passenger_status=Passenger.STATUS_AVAILABLE)
-            PassengerCancel.objects.create(user=user)
+            passenger = Passenger.objects.create(user=user, passenger_status=Passenger.STATUS_AVAILABLE)
+            PassengerCancel.objects.create(user=user, passenger=passenger)
 
             return user
         except Exception as e:

@@ -24,7 +24,7 @@ handler500 = custom_500_page_not_found
 
 
 urlpatterns = [
-    # path("admin", admin.site.urls),
+    path("admin", admin.site.urls),
     path("", include("user_account.urls")),
     path("", include("rides.urls")),
     path("", include("ride_request.urls")),

@@ -28,7 +28,6 @@ class User(AbstractUser):
     nationality = models.CharField(max_length=125, null=True, blank=True)
     dialCode = models.CharField(max_length=5, null=True, blank=True)
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["native_name"]
 
     GENDER_CHOICES = [("male", "Male"), ("female", "Female")]
     gender = models.CharField(blank=True, max_length=10, choices=[("male", "Male"), ("female", "Female")])
@@ -50,6 +49,8 @@ class User(AbstractUser):
             ("admin", "Admin"),
         ],
     )
+
+    REQUIRED_FIELDS = ["fullname", "username"]
 
     class Meta:
         # set the ordering to use the UUID field
