@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from payment.models import DriverEwallet
 
 from ride_request.models import Passenger
-from .models import User, StudentID, UserOTP
+from .models import User, StudentID
 from django.shortcuts import get_list_or_404, get_object_or_404
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
