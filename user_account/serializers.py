@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model, authenticate, update_session_aut
 from django.utils.translation import gettext_lazy as _
 from payment.models import DriverEwallet
 
-from ride_request.models import Passenger
+from ride_request.models import Passenger, PassengerCancel
 from .models import User, StudentID
 from django.shortcuts import get_list_or_404, get_object_or_404
 from django.utils.encoding import force_bytes, force_str
@@ -178,6 +178,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
             DriverEwallet.objects.create(user=user)
             Passenger.objects.create(user=user, passenger_status=Passenger.STATUS_AVAILABLE)
+            PassengerCancel.objects.create(user=user)
 
             return user
         except Exception as e:
